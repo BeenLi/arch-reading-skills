@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Generate an image via OpenAI's gpt-image-2 through the codex CLI.
+# Generate an image via Codex's image_generation tool (GPT Image 2.5).
+# Codex selects the image backend; this wrapper does not pin a model.
+# The gpt-image-2 executable name is retained for existing callers.
 # Uses the logged-in ChatGPT subscription — no API key required.
 #
 # Usage: gpt-image-2 "<prompt>" <output.png> [--size WxH]
@@ -60,7 +62,7 @@ if command -v cygpath >/dev/null 2>&1; then
   codex_workdir="$(cygpath -m "$workdir")"
 fi
 
-full_prompt="Use your image_generation tool (gpt-image-2) to create an image.
+full_prompt="Use your image_generation tool to create an image.
 
 PROMPT: ${prompt}${size_line}
 

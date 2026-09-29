@@ -1,11 +1,13 @@
 ---
 name: gpt-image-bridge
-description: Use when the user asks for an image, mockup, logo, avatar, hero image, illustration, diagram, visual reference, or any generated picture, or when a design skill needs an image produced. Bridges to OpenAI's gpt-image-2 through the codex CLI using a ChatGPT subscription — no API key.
+description: Use when the user asks for an image, mockup, logo, avatar, hero image, illustration, diagram, visual reference, or any generated picture, or when a design skill needs an image produced. Bridges to OpenAI's GPT Image 2.5 through the codex CLI using a ChatGPT subscription — no API key.
 ---
 
 # gpt-image-bridge
 
-Claude Code has no native image generation tool. This skill bridges that gap by shelling out to the `codex` CLI, which calls OpenAI's `gpt-image-2` model under the hood. Codex is authenticated via the user's ChatGPT subscription, so no API key is required.
+This skill adds image generation to Claude Code by shelling out to the `codex` CLI and its `image_generation` tool. OpenAI's [Images 2.5 announcement](https://openai.com/index/introducing-chatgpt-images-2-5/) includes availability in Codex. Codex is authenticated via the user's ChatGPT subscription, so no API key is required.
+
+The bridge uses the image model provided by Codex; it does not select or verify a particular backend model. The executable name `gpt-image-2` is retained for compatibility and does not pin the model to GPT Image 2. Do not pass an image-model ID to `codex --model`: that option selects the coding model, not the image backend.
 
 ## When to use
 
