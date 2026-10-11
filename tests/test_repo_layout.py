@@ -72,6 +72,19 @@ class RepoLayoutTests(unittest.TestCase):
             self.assertTrue((root / "scripts" / name).exists(), name)
         self.assertTrue((root / "assets" / "paper-note-template.md").exists())
 
+    def test_daily_papers_layout(self):
+        root = SKILLS / "daily-papers"
+        self.assertEqual(sorted(root.glob("*.py")), [])
+        for name in ("fetch_and_score.py", "enrich_papers.py", "parse_arxiv.py",
+                     "extract_affiliations.py", "download_note_images.py"):
+            self.assertTrue((root / "scripts" / name).exists(), name)
+
+    def test_readme_and_architecture_state_directory_convention(self):
+        for doc in (REPO_ROOT / "README.md", REPO_ROOT / "ARCHITECTURE.md"):
+            text = doc.read_text(encoding="utf-8")
+            for cell in ("`scripts/`", "`references/`", "`assets/`"):
+                self.assertIn(cell, text, doc.name)
+
 
 if __name__ == "__main__":
     unittest.main()

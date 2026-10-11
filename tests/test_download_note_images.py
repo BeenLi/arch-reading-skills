@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = REPO_ROOT / "skills" / "daily-papers" / "download_note_images.py"
+MODULE_PATH = REPO_ROOT / "skills" / "daily-papers" / "scripts" / "download_note_images.py"
 
 
 def load_module():

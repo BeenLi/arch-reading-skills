@@ -155,22 +155,34 @@ python3 skills/_shared/scripts/generate_paper_mocs.py
 
 ```text
 skills/
-├── daily-papers/          # 每日推荐一句话入口
+├── daily-papers/          # 每日推荐一句话入口；scripts/ 抓取、打分、富化、图片本地化
 ├── daily-papers-fetch/    # 抓取、打分、富化
 ├── daily-papers-review/   # 推荐点评生成
 ├── daily-papers-notes/    # 可选批量精读
 ├── generate-mocs/         # 手动刷新目录页
-├── paper-reader/          # 单篇论文阅读与 Zotero 集成
+├── paper-reader/          # 单篇论文阅读与 Zotero 集成；scripts/ references/ assets/
 ├── book-reader/           # 整本书读书笔记与全书思维导图（MIT, Tao Jiang）
 └── _shared/               # 共享配置；scripts/ MOC 生成、概念扫描、转义检查；references/ 画图规则
 ```
+
+### 目录约定
+
+每个 skill 目录内按职责分三类子目录：
+
+| 目录 | 放什么 | 判断标准 |
+|---|---|---|
+| `scripts/` | 可执行代码 | `python3 …` 能跑的东西 |
+| `references/` | agent 读进上下文的规则、指南、分类标准 | 读完影响 agent 怎么做 |
+| `assets/` | 填充或复制到输出里的模板 | 内容会出现在生成物里 |
+
+`book-reader` 已按此布局，新增文件按此归位。
 
 ## 开发维护
 
 ```bash
 pytest tests/
-python3 skills/daily-papers/fetch_and_score.py > /tmp/daily_papers_top30.json
-cat /tmp/daily_papers_top30.json | python3 skills/daily-papers/enrich_papers.py /tmp/daily_papers_enriched.json
+python3 skills/daily-papers/scripts/fetch_and_score.py > /tmp/daily_papers_top30.json
+cat /tmp/daily_papers_top30.json | python3 skills/daily-papers/scripts/enrich_papers.py /tmp/daily_papers_enriched.json
 ```
 
 Zotero helper 兼容期规则：

@@ -7,7 +7,7 @@ from urllib.error import HTTPError
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = REPO_ROOT / "skills" / "daily-papers" / "fetch_and_score.py"
+MODULE_PATH = REPO_ROOT / "skills" / "daily-papers" / "scripts" / "fetch_and_score.py"
 
 
 def load_module():

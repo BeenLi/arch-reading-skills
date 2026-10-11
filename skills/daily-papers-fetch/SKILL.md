@@ -50,8 +50,8 @@ description: |
 运行：
 
 ```bash
-python3 ../daily-papers/fetch_and_score.py > /tmp/daily_papers_top30.json
-python3 ../daily-papers/fetch_and_score.py --days N > /tmp/daily_papers_top30.json
+python3 ../daily-papers/scripts/fetch_and_score.py > /tmp/daily_papers_top30.json
+python3 ../daily-papers/scripts/fetch_and_score.py --days N > /tmp/daily_papers_top30.json
 ```
 
 脚本负责：
@@ -73,7 +73,7 @@ python3 ../daily-papers/fetch_and_score.py --days N > /tmp/daily_papers_top30.js
 运行：
 
 ```bash
-cat /tmp/daily_papers_top30.json | python3 ../daily-papers/enrich_papers.py /tmp/daily_papers_enriched.json
+cat /tmp/daily_papers_top30.json | python3 ../daily-papers/scripts/enrich_papers.py /tmp/daily_papers_enriched.json
 ```
 
 脚本自动并发抓取 arXiv HTML/PDF 页面，补全：

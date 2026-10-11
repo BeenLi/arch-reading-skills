@@ -29,7 +29,19 @@
 | `paper-reader` | `skills/paper-reader/SKILL.md` | 单篇 / 批量论文阅读和笔记生成 |
 | `_shared` 配置 | `skills/_shared/scripts/user_config.py` | 统一读取 Obsidian、Zotero、关键词和自动化配置 |
 | Zotero helper | `skills/paper-reader/scripts/zotero_helper.py` | 解析 item、collection、PDF、保存路径和已有笔记 |
-| MOC | `skills/_shared/generate_*_mocs.py` | 递归生成 `_index_*.md` 目录页 |
+| MOC | `skills/_shared/scripts/generate_*_mocs.py` | 递归生成 `_index_*.md` 目录页 |
+
+### 目录约定
+
+每个 skill 目录内按职责分三类子目录：
+
+| 目录 | 放什么 | 判断标准 |
+|---|---|---|
+| `scripts/` | 可执行代码 | `python3 …` 能跑的东西 |
+| `references/` | agent 读进上下文的规则、指南、分类标准 | 读完影响 agent 怎么做 |
+| `assets/` | 填充或复制到输出里的模板 | 内容会出现在生成物里 |
+
+`book-reader` 已按此布局，新增文件按此归位。
 
 ## 总体流程
 
@@ -58,8 +70,8 @@ flowchart LR
 |---|---|---|
 | `daily-papers` | `skills/daily-papers/SKILL.md` | 一句话推荐入口，默认串 fetch + review |
 | `daily-papers-fetch` | `skills/daily-papers-fetch/SKILL.md` | 运行抓取、打分、富化脚本 |
-| `fetch_and_score.py` | `skills/daily-papers/fetch_and_score.py` | DBLP / program / arXiv / Semantic Scholar 抓取、打分、去重、配额 |
-| `enrich_papers.py` | `skills/daily-papers/enrich_papers.py` | 补全作者、机构、摘要、图表、方法名和点评信号 |
+| `fetch_and_score.py` | `skills/daily-papers/scripts/fetch_and_score.py` | DBLP / program / arXiv / Semantic Scholar 抓取、打分、去重、配额 |
+| `enrich_papers.py` | `skills/daily-papers/scripts/enrich_papers.py` | 补全作者、机构、摘要、图表、方法名和点评信号 |
 | `daily-papers-review` | `skills/daily-papers-review/SKILL.md` | 生成主推 / 备选 / 可跳过推荐文件 |
 | `daily-papers-notes` | `skills/daily-papers-notes/SKILL.md` | 可选批量精读，调用 `paper-reader` 并回填笔记链接 |
 | `paper-reader` | `skills/paper-reader/SKILL.md` | 单篇论文阅读、概念补全、Obsidian 保存 |
@@ -283,8 +295,8 @@ MOC 文件名前缀来自 `mocs.filename_prefix`，当前推荐 `_index_`。内�
 | 想了解 | 优先看 |
 |---|---|
 | 用户入口 | `skills/daily-papers/SKILL.md`、`skills/paper-reader/SKILL.md`、`skills/generate-mocs/SKILL.md` |
-| 抓取打分 | `skills/daily-papers/fetch_and_score.py` |
-| 元数据富化 | `skills/daily-papers/enrich_papers.py`、`parse_arxiv.py`、`extract_affiliations.py` |
+| 抓取打分 | `skills/daily-papers/scripts/fetch_and_score.py` |
+| 元数据富化 | `skills/daily-papers/scripts/enrich_papers.py`、`parse_arxiv.py`、`extract_affiliations.py` |
 | 推荐生成 | `skills/daily-papers-review/SKILL.md` |
 | 批量笔记 | `skills/daily-papers-notes/SKILL.md` |
 | Zotero 解析 | `skills/paper-reader/scripts/zotero_helper.py` |

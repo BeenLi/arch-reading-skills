@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = REPO_ROOT / "skills" / "daily-papers" / "enrich_papers.py"
+MODULE_PATH = REPO_ROOT / "skills" / "daily-papers" / "scripts" / "enrich_papers.py"
 
 
 def load_module():

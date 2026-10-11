@@ -23,7 +23,7 @@ from urllib.parse import quote
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-_SHARED_DIR = Path(__file__).resolve().parents[1] / "_shared" / "scripts"
+_SHARED_DIR = Path(__file__).resolve().parents[2] / "_shared" / "scripts"
 if str(_SHARED_DIR) not in sys.path:
     sys.path.insert(0, str(_SHARED_DIR))
 
