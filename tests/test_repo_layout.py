@@ -1,5 +1,8 @@
+import importlib.util
+import json
 import re
-import sys
+import shutil
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -32,6 +35,14 @@ def resolve_script_ref(md_path: Path, ref: str):
     return (REPO_ROOT / ref).resolve()
 
 
+def load_module_from_path(name: str, path: Path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
 class RepoLayoutTests(unittest.TestCase):
     def test_shared_scripts_live_in_scripts_dir(self):
         self.assertEqual(sorted((SKILLS / "_shared").glob("*.py")), [])
@@ -57,12 +68,20 @@ class RepoLayoutTests(unittest.TestCase):
         ]
         self.assertEqual(offenders, [])
 
-    def test_user_config_loads_repo_config(self):
-        sys.path.insert(0, str(SKILLS / "_shared" / "scripts"))
-        import user_config  # noqa: E402
+    def test_user_config_reads_json_one_level_above_scripts_dir(self):
+        """user_config.py lives in _shared/scripts/ and must read _shared/user-config.json, not a file beside itself."""
+        with tempfile.TemporaryDirectory() as tmp:
+            shared = Path(tmp) / "_shared"
+            (shared / "scripts").mkdir(parents=True)
+            shutil.copy(SKILLS / "_shared" / "scripts" / "user_config.py", shared / "scripts" / "user_config.py")
+            (shared / "user-config.json").write_text(
+                json.dumps({"daily_papers": {"keywords": ["sentinel-keyword-from-json"]}}), encoding="utf-8"
+            )
+            module = load_module_from_path("user_config_under_test", shared / "scripts" / "user_config.py")
 
-        keywords = user_config.load_user_config()["daily_papers"]["keywords"]
-        self.assertIn("kv cache", keywords)
+            keywords = module.load_user_config()["daily_papers"]["keywords"]
+
+        self.assertIn("sentinel-keyword-from-json", keywords)
 
     def test_paper_reader_layout(self):
         root = SKILLS / "paper-reader"
