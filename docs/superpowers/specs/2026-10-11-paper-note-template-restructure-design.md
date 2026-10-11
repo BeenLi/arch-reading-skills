@@ -124,7 +124,7 @@
 
 新增：
 
-- `这篇论文为什么重要` 和 `问题定义` 不放图、表、数字、公式；证据只在 `动机实验与核心 Insights` 出现一次。
+- `这篇论文为什么重要` 和 `问题定义` 不放图、表、数字；公式只允许出现在 `现有方法与设计空间` 作为定义。所有定量证据只在 `动机实验与核心 Insights` 出现一次。
 - 每个 Insight 必须以 **设计启发** 收尾并链接到对应机制；没有实验证据的 insight 标注"作者论证"。
 - 锚点与跳转约定（见 3.4）。
 
@@ -262,7 +262,7 @@ Python 内部：
 
 测试：11 个 `MODULE_PATH` / `SCRIPT_PATH` / `sys.path.insert` 常量对应加 `scripts/`。`test_zotero_helper.py` 里扫描全仓找旧 Zotero 命令的用例不依赖具体路径，不用改。
 
-`.gitignore` 中 `skills/_shared/user-config.local.json` 和 `skills/paper-reader/assets/collection_mapping.json` 路径不变。已确认仓库外（`~/.claude/skills` 下其他 skill、`~/.claude/CLAUDE.md`）没有引用这些路径。
+`.gitignore` 中 `skills/_shared/user-config.local.json` 和 `skills/paper-reader/assets/collection_mapping.json` 路径不变。已确认仓库外（`~/.claude/skills` 下其他 skill、`~/.claude/CLAUDE.md`）没有引用这些路径。例外：Obsidian vault 的 `CLAUDE.md` 与 `AGENTS.md` 各两处引用 `~/.claude/skills/_shared/md_escape_check.py`，随迁移一并改为 `_shared/scripts/`。
 
 ## 6. 测试与验证
 
