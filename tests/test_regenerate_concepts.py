@@ -23,11 +23,11 @@ from unittest.mock import patch
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT_PATH = REPO_ROOT / "skills" / "_shared" / "regenerate_concepts.py"
+SCRIPT_PATH = REPO_ROOT / "skills" / "_shared" / "scripts" / "regenerate_concepts.py"
 
 
 def load_module():
-    sys.path.insert(0, str(REPO_ROOT / "skills" / "_shared"))
+    sys.path.insert(0, str(REPO_ROOT / "skills" / "_shared" / "scripts"))
     spec = importlib.util.spec_from_file_location("regenerate_concepts", SCRIPT_PATH)
     module = importlib.util.module_from_spec(spec)
     assert spec.loader is not None

@@ -15,7 +15,7 @@ import tempfile
 from pathlib import Path
 from typing import Any, Optional
 
-_SHARED_DIR = Path(__file__).resolve().parents[2] / "_shared"
+_SHARED_DIR = Path(__file__).resolve().parents[2] / "_shared" / "scripts"
 if str(_SHARED_DIR) not in sys.path:
     sys.path.insert(0, str(_SHARED_DIR))
 

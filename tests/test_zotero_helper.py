@@ -13,7 +13,7 @@ from unittest.mock import patch
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MODULE_PATH = REPO_ROOT / "skills" / "paper-reader" / "assets" / "zotero_helper.py"
-GENERATE_PAPER_MOCS = REPO_ROOT / "skills" / "_shared" / "generate_paper_mocs.py"
+GENERATE_PAPER_MOCS = REPO_ROOT / "skills" / "_shared" / "scripts" / "generate_paper_mocs.py"
 
 
 def load_module():

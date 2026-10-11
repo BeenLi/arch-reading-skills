@@ -35,13 +35,13 @@ description: |
 1. 运行概念目录页脚本：
 
 ```bash
-python3 ../_shared/generate_concept_mocs.py
+python3 ../_shared/scripts/generate_concept_mocs.py
 ```
 
 2. 运行论文目录页脚本：
 
 ```bash
-python3 ../_shared/generate_paper_mocs.py
+python3 ../_shared/scripts/generate_paper_mocs.py
 ```
 
 3. 汇报：

@@ -143,10 +143,10 @@ hardware / software-abstraction / metric / theory-model
 常用命令：
 
 ```bash
-python3 skills/_shared/scan_missing_concepts.py --dry-run
-python3 skills/_shared/scan_missing_concepts.py --with-seed --output /tmp/missing_concepts.csv
-python3 skills/_shared/generate_concept_mocs.py
-python3 skills/_shared/generate_paper_mocs.py
+python3 skills/_shared/scripts/scan_missing_concepts.py --dry-run
+python3 skills/_shared/scripts/scan_missing_concepts.py --with-seed --output /tmp/missing_concepts.csv
+python3 skills/_shared/scripts/generate_concept_mocs.py
+python3 skills/_shared/scripts/generate_paper_mocs.py
 ```
 
 扫描器会排除 `_concepts/`、`_inbox/`、`_index_*.md` 和论文笔记之间的互链。
@@ -162,7 +162,7 @@ skills/
 ├── generate-mocs/         # 手动刷新目录页
 ├── paper-reader/          # 单篇论文阅读与 Zotero 集成
 ├── book-reader/           # 整本书读书笔记与全书思维导图（MIT, Tao Jiang）
-└── _shared/               # 配置、MOC 生成、概念扫描
+└── _shared/               # 共享配置；scripts/ MOC 生成、概念扫描、转义检查；references/ 画图规则
 ```
 
 ## 开发维护

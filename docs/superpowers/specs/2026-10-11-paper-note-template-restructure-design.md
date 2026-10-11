@@ -262,7 +262,7 @@ Python 内部：
 
 测试：11 个 `MODULE_PATH` / `SCRIPT_PATH` / `sys.path.insert` 常量对应加 `scripts/`。`test_zotero_helper.py` 里扫描全仓找旧 Zotero 命令的用例不依赖具体路径，不用改。
 
-`.gitignore` 中 `skills/_shared/user-config.local.json` 和 `skills/paper-reader/assets/collection_mapping.json` 路径不变。已确认仓库外（`~/.claude/skills` 下其他 skill、`~/.claude/CLAUDE.md`）没有引用这些路径。例外：Obsidian vault 的 `CLAUDE.md` 与 `AGENTS.md` 各两处引用 `~/.claude/skills/_shared/md_escape_check.py`，随迁移一并改为 `_shared/scripts/`。
+`.gitignore` 中 `skills/_shared/user-config.local.json` 和 `skills/paper-reader/assets/collection_mapping.json` 路径不变。已确认仓库外（`~/.claude/skills` 下其他 skill、`~/.claude/CLAUDE.md`）没有引用这些路径。例外：Obsidian vault 的 `CLAUDE.md` 与 `AGENTS.md` 各两处引用 `~/.claude/skills/_shared/md_escape_check.py`，合并到 main 后一并改为 `_shared/scripts/`（实施期间 `~/.claude/skills` 仍指向 main）。
 
 ## 6. 测试与验证
 

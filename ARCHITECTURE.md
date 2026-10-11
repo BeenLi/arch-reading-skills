@@ -27,7 +27,7 @@
 | Skill | `skills/*/SKILL.md` | 用户意图到具体流程的入口说明 |
 | 三步流水线 | `daily-papers-fetch` → `daily-papers-review` → `daily-papers-notes` | 抓取、点评、可选精读 |
 | `paper-reader` | `skills/paper-reader/SKILL.md` | 单篇 / 批量论文阅读和笔记生成 |
-| `_shared` 配置 | `skills/_shared/user_config.py` | 统一读取 Obsidian、Zotero、关键词和自动化配置 |
+| `_shared` 配置 | `skills/_shared/scripts/user_config.py` | 统一读取 Obsidian、Zotero、关键词和自动化配置 |
 | Zotero helper | `skills/paper-reader/assets/zotero_helper.py` | 解析 item、collection、PDF、保存路径和已有笔记 |
 | MOC | `skills/_shared/generate_*_mocs.py` | 递归生成 `_index_*.md` 目录页 |
 
@@ -241,8 +241,8 @@ paper-method 不是正式 `concept_type`。如果是论文首创且只在本论�
 Missing concept scan：
 
 ```bash
-python3 skills/_shared/scan_missing_concepts.py --dry-run
-python3 skills/_shared/scan_missing_concepts.py --with-seed --output /tmp/missing_concepts.csv
+python3 skills/_shared/scripts/scan_missing_concepts.py --dry-run
+python3 skills/_shared/scripts/scan_missing_concepts.py --with-seed --output /tmp/missing_concepts.csv
 ```
 
 扫描器排除 `_concepts/`、`_inbox/`、`_index_*.md`，并排除论文笔记之间的互链，避免把论文标题误报成概念。
@@ -250,8 +250,8 @@ python3 skills/_shared/scan_missing_concepts.py --with-seed --output /tmp/missin
 MOC 入口：
 
 ```bash
-python3 skills/_shared/generate_concept_mocs.py
-python3 skills/_shared/generate_paper_mocs.py
+python3 skills/_shared/scripts/generate_concept_mocs.py
+python3 skills/_shared/scripts/generate_paper_mocs.py
 ```
 
 MOC 文件名前缀来自 `mocs.filename_prefix`，当前推荐 `_index_`。内容不变时不重写，保持幂等。
@@ -260,7 +260,7 @@ MOC 文件名前缀来自 `mocs.filename_prefix`，当前推荐 `_index_`。内�
 
 配置加载顺序：
 
-1. `skills/_shared/user_config.py` 内置 `DEFAULT_CONFIG`
+1. `skills/_shared/scripts/user_config.py` 内置 `DEFAULT_CONFIG`
 2. `skills/_shared/user-config.json`
 3. `skills/_shared/user-config.local.json`
 
@@ -291,8 +291,8 @@ MOC 文件名前缀来自 `mocs.filename_prefix`，当前推荐 `_index_`。内�
 | Zotero 批量 | `skills/paper-reader/paper_daemon.py` |
 | 论文模板 | `skills/paper-reader/assets/paper-note-template.md` |
 | 概念分类 | `skills/paper-reader/references/concept-categories.md` |
-| 配置加载 | `skills/_shared/user_config.py` |
-| MOC 生成 | `skills/_shared/moc_builder.py`、`generate_concept_mocs.py`、`generate_paper_mocs.py` |
+| 配置加载 | `skills/_shared/scripts/user_config.py` |
+| MOC 生成 | `skills/_shared/scripts/moc_builder.py`、`generate_concept_mocs.py`、`generate_paper_mocs.py` |
 | 测试 | `tests/test_fetch_and_score.py`、`tests/test_zotero_helper.py`、`tests/test_scan_missing_concepts.py`、`tests/test_paper_daemon.py` |
 
 ## 排错与验证

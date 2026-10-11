@@ -131,7 +131,7 @@ def _deep_merge(base: dict, override: dict) -> dict:
 @lru_cache(maxsize=1)
 def load_user_config() -> dict:
     config = copy.deepcopy(DEFAULT_CONFIG)
-    config_dir = Path(__file__).resolve().parent
+    config_dir = Path(__file__).resolve().parent.parent
 
     for filename in ("user-config.json", "user-config.local.json"):
         config_path = config_dir / filename

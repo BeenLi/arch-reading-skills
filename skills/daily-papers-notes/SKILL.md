@@ -138,8 +138,8 @@ description: |
 只有在 `AUTO_REFRESH_INDEXES=true` 时才执行：
 
 ```bash
-python3 ../_shared/generate_concept_mocs.py
-python3 ../_shared/generate_paper_mocs.py
+python3 ../_shared/scripts/generate_concept_mocs.py
+python3 ../_shared/scripts/generate_paper_mocs.py
 ```
 
 默认配置下这个开关是开启的，所以新增的概念和论文笔记通常会自动反映到各分类目录页中。

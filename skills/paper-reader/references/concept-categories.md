@@ -137,10 +137,10 @@ tags: [status/paper-specific]  # 仅在 paper-specific 时加
 6. **反向核对**：换一个角度把同一结论再算一遍（例如按"每个元素读几次"核对"总流量"），能发现推导中的系数错误。
 7. **配图**：
    - 空间结构类（矩阵分块、内存布局、数据摆放）优先用 matplotlib 等脚本画示意图，因为 Mermaid 画不了网格。图存到笔记同级的 `00_assets/<note-name>_<desc>.png`，用 `![[00_assets/...|说明]]` 嵌入，说明文字要写出图在表达什么。
-   - 流程或组件类用 Mermaid，并遵守 `../../_shared/mermaid-rules.md`。
+   - 流程或组件类用 Mermaid，并遵守 `../../_shared/references/mermaid-rules.md`。
    - 不论哪种图，都必须渲染出来、打开看过，确认没有裁切、重叠和缺字（中文字体要配回退字体，否则 ³、² 这类上标会缺字）后再嵌入。
 8. **点出最容易误解的地方**：如果直觉结论和推导结果不同（如 1/T vs 2/T），要单独说明原因。
-9. **文本转义**：正文中的 `C[i][j]`、`$`、`|` 等符号按 vault 根目录 `AGENTS.md` 的"Markdown 特殊符号转义"一节处理；写完后运行 `python3 ~/.claude/skills/_shared/md_escape_check.py <笔记>` 自检，发现问题用 `--fix` 修正。
+9. **文本转义**：正文中的 `C[i][j]`、`$`、`|` 等符号按 vault 根目录 `AGENTS.md` 的"Markdown 特殊符号转义"一节处理；写完后运行 `python3 ~/.claude/skills/_shared/scripts/md_escape_check.py <笔记>` 自检，发现问题用 `--fix` 修正。
 
 ## 按 concept_type 差异化段(必加)
 
@@ -151,7 +151,7 @@ tags: [status/paper-specific]  # 仅在 paper-specific 时加
 | `data-structure` | `## 内存视图 / 字段布局` | 字段分布、字节大小、对齐、布局图 |
 | `algorithm` | `## 步骤` + `## 复杂度` | 伪代码 / 步骤列表;时空复杂度;典型变体 |
 | `mechanism` | `## 状态与触发条件` + `## 关键参数` | 触发条件、状态转移、可调参数 |
-| `architecture` | `## 组件与接口` | **必须** Mermaid `flowchart` 画组件图（按规则选 LR / TB）(遵守 `~/.claude/skills/_shared/mermaid-rules.md`:label 引号包裹、节点 ID 语义化、配色 ≤5);不允许 ASCII 状态图替代;描述接口契约;生成后按该规则渲染成 PNG、看图并重排 |
+| `architecture` | `## 组件与接口` | **必须** Mermaid `flowchart` 画组件图（按规则选 LR / TB）(遵守 `~/.claude/skills/_shared/references/mermaid-rules.md`:label 引号包裹、节点 ID 语义化、配色 ≤5);不允许 ASCII 状态图替代;描述接口契约;生成后按该规则渲染成 PNG、看图并重排 |
 | `hardware` | `## 接口与典型参数` | 指令 / API 接口、峰值算力 / 带宽、典型规格、演进史 |
 | `software-abstraction` | `## API 与生命周期` | 关键 API 签名、初始化-使用-销毁的生命周期 |
 | `metric` | `## 测量方法` | 怎么测、单位、典型范围、好 / 坏阈值参考 |
