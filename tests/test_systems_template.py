@@ -21,24 +21,36 @@ def assert_table_header(testcase, text, columns):
     testcase.assertRegex(text, pattern)
 
 
+def heading_index(text, heading):
+    """Offset of a heading line; the template's HTML comment also names headings, so anchor at line start."""
+    match = re.search(r"(?m)^" + re.escape(heading) + r"\s*$", text)
+    assert match is not None, heading
+    return match.start()
+
+
 class SystemsTemplateTests(unittest.TestCase):
     def test_asset_template_uses_systems_sections(self):
         text = ASSET_TEMPLATE.read_text(encoding="utf-8")
 
         required_sections = [
             "## 这篇论文为什么重要",
-            "## 问题定义与瓶颈",
-            "## 作者核心 Insights",
-            "## 动机实验 / Characterization",
+            "## 核心贡献",
+            "## 问题定义",
+            "### 系统范围与层次",
+            "### 要解决的问题",
+            "### 现有方法与设计空间",
+            "## 动机实验与核心 Insights",
+            "### Insight 1：",
+            "### 设计原则到机制的映射",
             "## 系统设计总览",
-            "### 系统架构与执行流",
+            "### 系统架构",
+            "### 执行流",
             "### 优化目标与度量口径",
-            "### 系统组成与职责",
-            "#### 模块关系图",
             "## 关键机制拆解",
             "## 实验设置",
             "## 核心结果",
             "## Overhead 与兼容性",
+            "### 实现改动清单",
             "## 批判性思考",
             "## 经验与可迁移启示",
             "## 复现",
@@ -63,6 +75,16 @@ class SystemsTemplateTests(unittest.TestCase):
             "#### 参数选择 / 设计空间扫描",
             "### 与实验设置强相关的图 / 公式",
             "### 可复现性评估",
+            "## 问题定义与瓶颈",
+            "## 作者核心 Insights",
+            "## 动机实验 / Characterization",
+            "### 系统瓶颈",
+            "### 本文的动机",
+            "### 特征图与数字证据",
+            "### 由实验得到的设计原则",
+            "### 系统架构与执行流",
+            "### 系统组成与职责",
+            "#### 模块关系图",
         ]
         for section in forbidden_sections:
             self.assertNotRegex(text, rf"(?m)^{re.escape(section)}(?:\s|$)")
@@ -74,14 +96,6 @@ class SystemsTemplateTests(unittest.TestCase):
         self.assertIn("```mermaid", text)
         self.assertIn("flowchart LR", text)
         self.assertIn("flowchart TB", text)
-        self.assertRegex(
-            text,
-            r"### 系统组成与职责[\s\S]*#### 模块关系图[\s\S]*```mermaid[\s\S]*核心决策模块[\s\S]*状态表 / metadata / profile[\s\S]*反馈模块[\s\S]*策略 / 参数配置",
-        )
-        self.assertNotRegex(
-            text,
-            r"### 系统组成与职责[\s\S]*#### 模块关系图[\s\S]*Source\[",
-        )
         assert_table_header(self, text, ["组件", "职责", "输入输出", "关键状态或参数", "关联概念"])
 
     def test_asset_template_removes_cv_robotics_defaults(self):
@@ -330,6 +344,51 @@ class SystemsTemplateTests(unittest.TestCase):
             self.assertIn(phrase, text, phrase)
         self.assertIn("-f xml", text)          # .mmd 先转 .drawio，再导出
         self.assertNotIn("-f svg", text)       # 不走 SVG
+
+    def test_template_section_order_follows_problem_evidence_design_chain(self):
+        text = ASSET_TEMPLATE.read_text(encoding="utf-8")
+        idx = lambda heading: heading_index(text, heading)
+        self.assertLess(idx("## 问题定义"), idx("## 动机实验与核心 Insights"))
+        self.assertLess(idx("## 动机实验与核心 Insights"), idx("## 系统设计总览"))
+        self.assertLess(idx("## 系统设计总览"), idx("## 关键机制拆解"))
+        self.assertLess(idx("## Overhead 与兼容性"), idx("### 实现改动清单"))
+        self.assertLess(idx("### 实现改动清单"), idx("### Overhead"))
+        overview = text[idx("## 系统设计总览"):idx("## 关键机制拆解")]
+        self.assertNotIn("### 实现改动清单", overview)
+
+    def test_template_summary_and_problem_sections_carry_no_evidence(self):
+        text = ASSET_TEMPLATE.read_text(encoding="utf-8")
+        summary = text[heading_index(text, "## 这篇论文为什么重要"):heading_index(text, "## 核心贡献")]
+        problem = text[heading_index(text, "## 问题定义"):heading_index(text, "## 动机实验与核心 Insights")]
+        for marker in ("![", "$$", "|---"):
+            self.assertNotIn(marker, summary, marker)
+        for marker in ("![", "|---"):
+            self.assertNotIn(marker, problem, marker)
+
+    def test_template_system_architecture_offers_original_figure_or_self_drawn(self):
+        text = ASSET_TEMPLATE.read_text(encoding="utf-8")
+        arch = text[heading_index(text, "### 系统架构"):heading_index(text, "### 执行流")]
+        flow = text[heading_index(text, "### 执行流"):heading_index(text, "### 优化目标与度量口径")]
+        self.assertEqual(arch.count("![Figure"), 1)
+        self.assertEqual(arch.count("```mermaid"), 1)
+        self.assertIn("二选一", arch)
+        self.assertIn("diagram-rules.md", arch)
+        self.assertNotIn("```mermaid", flow)
+        self.assertRegex(flow, r"(?m)^1\. ")
+        self.assertIn("[[#机制1：", flow)
+
+    def test_template_anchor_examples(self):
+        text = ASSET_TEMPLATE.read_text(encoding="utf-8")
+        self.assertGreaterEqual(len(re.findall(r"\) \^fig\d+\s*$", text, re.M)), 2)
+        self.assertIn("\n\n^tab-components\n\n", text)
+        self.assertRegex(text, r"(?m)^\d\. .+ \^contrib-\d$")
+        for link in ("[[#^fig1|Figure 1]]", "[[#^contrib-1|贡献1]]", "[[#^tab-components|组件表]]"):
+            self.assertIn(link, text, link)
+        for heading, short in (("机制1", "机制1"), ("Insight 1", "Insight 1")):
+            m = re.search(rf"(?m)^### {re.escape(heading)}：(.+)$", text)
+            self.assertIsNotNone(m, heading)
+            self.assertIn(f"[[#{heading}：{m.group(1)}|{short}]]", text)
+        self.assertIn("## 笔记内跳转", QUALITY_STANDARDS.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

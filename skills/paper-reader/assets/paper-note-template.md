@@ -17,7 +17,7 @@ created: {date}
 <!--
 写作约束：
 1. 不要单独设置“关键公式”或“关键图表”章节。
-2. 公式和图表必须嵌入对应叙事位置：问题定义与瓶颈、系统设计总览、关键机制拆解、实验设置、核心结果、Overhead 与兼容性。
+2. 公式和图表必须嵌入对应叙事位置：动机实验与核心 Insights、系统设计总览、关键机制拆解、实验设置、核心结果、Overhead 与兼容性。
 3. 每次出现图或公式，都要用自然段说明它在论文论证链中的位置、关键趋势或定量证据，以及它支撑的设计或结论；不要只堆素材，也不要保留模板字段名。
 4. “批判性思考”合并原来的局限、隐含假设和失效场景分析。
 5. 保留“关联笔记”和“速查卡片”，方便 Obsidian 中后续导航和回顾。
@@ -26,6 +26,10 @@ created: {date}
 8. `相关工作定位` 中：
    - `论文` 列优先写 `[[笔记名]]`，没有内部笔记时写纯标题。
    - `外部链接` 列写 `[arXiv](...)` / `[DOI](...)` / `[Paper](...)`，没有就留空。
+9. `## 这篇论文为什么重要` 和 `## 问题定义` 只写结论：不放图、表、数字；公式只允许出现在 `### 现有方法与设计空间` 作为定义。所有定量证据只在 `## 动机实验与核心 Insights` 出现一次。
+10. 每个 `### Insight N：…` 以 **设计启发** 收尾并链接到对应机制；没有实验证据、靠作者推理得出的 insight 标注"作者论证"而不是"实验"。纯 characterization 论文允许所有 insight 来自实验、没有机制可映射。
+11. `### 系统架构` 的结构图：论文有总体架构图时直接嵌入原图并挂 `^figN`；没有、或原图看不出模块边界与数据流时，才按 `../../_shared/references/diagram-rules.md` 自画一张（锚点 `^diag-arch`）。二选一，不并存。`### 执行流` 用编号步骤走读，不画第二张框图。
+12. 锚点与跳转：Figure 行尾 ` ^figN`（子图 `^fig8a`）；表格结束后空一行、单独一行 `^tab-…`、再空一行；公式锚点挂在公式下方解释段末尾；Insight / 机制 / 章节用标题链接 `[[#标题|短名]]`，标题部分必须与目标标题逐字一致；核心贡献条目末尾 ` ^contrib-N`。id 只用小写字母、数字、连字符，全文唯一。正文提到 Figure / Table / 公式 / Insight / 机制 / 贡献时一律写跳转链接，不写裸文字。表格单元格里的 wikilink 别名分隔符写成 `\|`，否则会切坏表格。
 -->
 
 # 论文笔记：{Title}
@@ -52,89 +56,126 @@ created: {date}
 
 ## 这篇论文为什么重要
 
-- **核心问题**: {这篇论文真正打中的系统 bottleneck}
-- **关键 insight**: {作者最值得记住的设计洞察}
-- **实际价值**: {为什么这件事对部署、性能或系统设计有意义}
+> 不读正文也能带走的三句话。只写结论，不放图、表、数字；证据留给 `## 动机实验与核心 Insights`。
+
+- **系统范围与问题**: {在栈的哪一层、边界内外是什么、本文回答的是哪个问题，一句话}
+- **最关键的 insight**: {作者最值得记住的那一个设计洞察，一句话}
+- **实际价值**: {为什么这件事对部署、性能或系统设计有意义，一句话}
 
 ---
 
 ## 核心贡献
 
-1. **{贡献1标题}**: {简要说明}
-2. **{贡献2标题}**: {简要说明}
-3. **{贡献3标题}**: {简要说明}
+1. **{贡献1标题}**: {简要说明} ^contrib-1
+2. **{贡献2标题}**: {简要说明} ^contrib-2
+3. **{贡献3标题}**: {简要说明} ^contrib-3
 
 ---
 
-## 作者核心 Insights
+## 问题定义
 
-> 记录论文中显式提出的 Observation / Insight / Takeaway，优先保留作者自己的表述逻辑。
+### 系统范围与层次
 
-1. **Insight 1**:
-   - **现象 / 证据**: {作者用什么实验、图或数字支持这个 insight}
-   - **设计启发**: {这个 insight 如何导向系统设计}
-2. **Insight 2**:
-   - **现象 / 证据**: {作者用什么实验、图或数字支持这个 insight}
-   - **设计启发**: {这个 insight 如何导向系统设计}
-3. **Insight 3**:
-   - **现象 / 证据**: {作者用什么实验、图或数字支持这个 insight}
-   - **设计启发**: {这个 insight 如何导向系统设计}
+{论文把系统边界画在哪里：栈的哪一层（硬件微架构 / runtime / 调度器 / 网络协议 / 存储 …）、边界内外各是什么、哪些东西当作给定不动（模型、硬件、workload 分布）、输入输出是什么。读者据此判断“这篇论文和我的问题是否在同一层”。}
 
----
+### 要解决的问题
 
-## 问题定义与瓶颈
+{目标 workload 或 deployment 场景、优化对象（延迟 / 吞吐 / 面积 / 带宽 …）、约束条件，以及瓶颈落在哪一类资源（算力、内存、存储、网络、调度、运行时还是框架兼容性）；一句定性判断，不带数字。}
 
-### 目标场景
+**本文回答的问题是**：{一句话}
 
-{这篇论文针对什么工作负载 / deployment 场景？}
+### 现有方法与设计空间
 
-### 系统瓶颈
+{按类别而不是逐篇写前人方法：每一类优化什么轴、隐含什么假设、卡在哪。只做定性判断；定量失效证据写在 `## 动机实验与核心 Insights`，逐篇对照和链接写在文末 `## 相关工作定位`。}
 
-{瓶颈在算力、内存、存储、网络、调度、运行时还是框架兼容性？证据是什么？}
-
-### 现有方法的局限
-
-{之前方法为什么不够好？主要卡在什么地方？}
-
-### 本文的动机
-
-{作者为什么认为自己的设计能解决这个问题？}
-
----
-
-## 动机实验 / Characterization
-
-### 特征图与数字证据
-
-![Figure X: Motivation / characterization](...)
+1. **{方法类别1}**: {优化轴 / 隐含假设 / 卡点}
+2. **{方法类别2}**: {优化轴 / 隐含假设 / 卡点}
+3. **{方法类别3}**: {优化轴 / 隐含假设 / 卡点}
 
 $$
 ...
 $$
 
-{用 2-4 句自然段解读这组 characterization 图：先说明它在动机论证链中的作用，再提炼关键趋势或定量证据，最后说明这些证据如何导向本文的设计原则。必要时在段落中点明覆盖的 workload / 场景。}
+{只有在需要给出前人方法的定义性公式（例如 baseline 的分解式或度量口径）时才保留上面的公式块，并用自然段说明它定义的对象和主要变量；不要在这里放实验数字。} ^eq-baseline
 
-### 由实验得到的设计原则
+---
 
-1. {设计原则1}
-2. {设计原则2}
-3. {设计原则3}
+## 动机实验与核心 Insights
+
+> 每个 Insight 一个小节，内部顺序固定：证据 → 解读 → 设计启发。这里是定量证据在全文唯一出现的位置。没有实验、靠作者推理得出的 insight 也可以列，但在解读段开头标注“作者论证”而不是“实验”。数量 2-4 个。
+
+### Insight 1：{一句话结论}
+
+![Figure 2: Motivation / characterization](...) ^fig2
+
+{用 2-4 句自然段解读：先说明这组 characterization 在动机论证链中的作用，再提炼关键趋势或定量证据（必要时点明覆盖的 workload / 场景），最后说明它为什么成立。}
+
+**设计启发**：{这个 insight 导向什么设计原则} → [[#机制1：{名称}|机制1]]
+
+### Insight 2：{一句话结论}
+
+![Figure 3: Motivation / characterization](...) ^fig3
+
+$$
+...
+$$
+
+{解读自然段：现象、定量证据、它支撑的设计或结论；若有公式，用自然段解释它建模的系统现象和主要变量的角色，锚点挂在本段末尾。} ^eq-motivation
+
+**设计启发**：{这个 insight 导向什么设计原则} → [[#机制2：{名称}|机制2]]
+
+### 设计原则到机制的映射
+
+| 设计原则 | 来自 | 落到 |
+|---|---|---|
+| {原则一句话} | [[#Insight 1：{一句话结论}\|Insight 1]] | [[#机制1：{名称}\|机制1]] |
+| {原则一句话} | [[#Insight 2：{一句话结论}\|Insight 2]] | [[#机制2：{名称}\|机制2]] |
+
+^tab-principles
 
 ---
 
 ## 系统设计总览
 
-### 系统架构与执行流
+### 系统架构
+
+![Figure 1: System overview / 系统总览](...) ^fig1
+
+<!-- 结构图二选一：论文有总体架构图用上面的原图；没有或看不清模块边界与数据流时删掉原图行，改用下面按 ../../_shared/references/diagram-rules.md 自画的一张（Mermaid 或 draw.io 嵌图），锚点 ^diag-arch。不要原图和自画图都放。 -->
 
 ```mermaid
-flowchart LR
-    Input["输入：{请求 / trace / workload}"] --> Frontend["入口：{frontend / runtime / controller}"]
-    Frontend --> Decision["决策：{调度 / 映射 / 压缩 / 预测}"]
-    Decision --> Execute["执行：{CPU / GPU / NIC / memory / storage}"]
-    Execute --> Output["输出：{结果 / schedule / hint / metric}"]
+flowchart TB
+    Monitor["监控 / 采样 / 反馈"]
+    State["状态表 / metadata / profile"]
+    Policy["策略 / 参数配置"]
+    Core["核心决策模块"]
+    Executor["执行模块 / cache / memory / device"]
+
+    Monitor -- "统计 / miss / latency / counter" --> State
+    State -- "lookup / update" --> Core
+    Policy -. "threshold / mapping / rule" .-> Core
+    Core -- "hint / schedule / prediction / action" --> Executor
+    Executor -. "执行结果 / 反馈" .-> Monitor
 ```
 
-{用自然段解释这张架构图在论文论证链中的作用：说明系统位于哪一层、边界在哪里、输入输出是什么、离线 / 在线如何分工，以及图中的关键趋势或结构关系如何支撑的设计或结论。若论文是协议或多角色交互，改用 `sequenceDiagram`。}
+^diag-arch
+
+{用自然段解释结构图在论文论证链中的作用：系统位于哪一层、边界在哪里、输入输出是什么、离线 / 在线如何分工，哪些模块是本文新增、哪些是复用的，以及图中的结构关系如何支撑的设计或结论。自画图时数据流用实线、控制流用虚线，若论文是硬件机制优先标出 pipeline stage、cache / predictor / controller 等模块，若是分布式系统优先标出 client、scheduler、worker、runtime、storage / network 等角色。}
+
+| 组件 | 职责 | 输入输出 | 关键状态或参数 | 关联概念 |
+|------|------|----------|----------------|----------|
+| {组件1} | {它在系统中负责什么} | {输入 → 输出} | {队列 / cache / counter / cap / profile 等} | [[{概念1}]] |
+| {组件2} | {它和其他组件如何协作} | {输入 → 输出} | {关键配置或状态} | [[{概念2}]] |
+
+^tab-components
+
+### 执行流
+
+{按一次请求 / 一个周期 / 一次调度决策的时间顺序走读，每步引用结构图和 [[#^tab-components|组件表]] 里的模块名，并指向后面的机制；不画第二张框图。多角色协议交互的论文可按 `../../_shared/references/diagram-rules.md` 改用时序图代替文字。}
+
+1. {模块A} → {模块B}：{输入什么、做什么判断}（见 [[#^fig1|Figure 1]]）
+2. {模块B} → {模块C}：{关键决策如何做出}（[[#机制1：{名称}|机制1]]）
+3. {模块C} → {输出 / 反馈}：{结果如何写回、反馈如何闭环}（[[#机制2：{名称}|机制2]]）
 
 ### 优化目标与度量口径
 
@@ -144,41 +185,7 @@ $$
 ...
 $$
 
-{用自然段解释公式建模的系统现象、主要变量的角色，以及它如何影响系统设计或评测口径。}
-
-### 系统组成与职责
-
-#### 模块关系图
-
-```mermaid
-flowchart TB
-    Core["核心决策模块"]
-    State["状态表 / metadata / profile"]
-    Monitor["监控 / 采样 / 反馈模块"]
-    Executor["执行模块 / cache / memory / device"]
-    Policy["策略 / 参数配置"]
-
-    Monitor -- "统计 / miss / latency / counter" --> State
-    State -- "lookup / update" --> Core
-    Policy -- "threshold / mapping / replacement rule" --> Core
-    Core -- "hint / schedule / prediction / action" --> Executor
-    Executor -- "执行结果 / 反馈" --> Monitor
-```
-
-{用自然段解释模块之间的依赖关系：核心决策模块依赖哪些状态或参数，监控 / 采样 / 反馈模块如何更新状态，执行模块如何消费 hint / metadata / schedule / prediction，反馈路径如何闭环，以及这种模块划分如何支撑论文的核心设计。若论文是硬件机制，优先标出 pipeline stage、cache / predictor / prefetcher / controller 等模块；若论文是分布式系统，优先标出 client、scheduler、worker、runtime、storage / network 等角色。}
-
-| 组件 | 职责 | 输入输出 | 关键状态或参数 | 关联概念 |
-|------|------|----------|----------------|----------|
-| {组件1} | {它在系统中负责什么} | {输入 → 输出} | {队列 / cache / counter / cap / profile 等} | [[{概念1}]] |
-| {组件2} | {它和其他组件如何协作} | {输入 → 输出} | {关键配置或状态} | [[{概念2}]] |
-
-### 实现改动清单
-
-> 只有论文确实提出实现改动时才保留本小节；纯 characterization 或没有新实现的论文可省略。
-
-| 改动对象 | 类型 | 新增状态 / 参数 | 所在路径 | 开销或约束 |
-|----------|------|-----------------|----------|------------|
-| {模块1} | {硬件 SRAM/CAM/逻辑 或 software/runtime} | {容量 / 位宽 / 队列 / cap / profile} | {流水级 / runtime path / scheduler path} | {cycle / area / power / latency / 工程复杂度} |
+{用自然段解释公式建模的系统现象、主要变量的角色，以及它如何影响系统设计或评测口径。} ^eq-objective
 
 ---
 
@@ -190,19 +197,19 @@ flowchart TB
 
 #### 设计动机
 
-{为什么需要这个机制}
+{为什么需要这个机制；来自 [[#Insight 1：{一句话结论}|Insight 1]]，解决 [[#^contrib-1|贡献1]] 对应的问题。}
 
 #### 机制说明
 
-{它是怎么工作的}
+{它是怎么工作的；它在总览图中的位置见 [[#^fig1|Figure 1]]。}
 
 $$
 ...
 $$
 
-![Figure X: Mechanism-1](...)
+![Figure X: Mechanism-1](...) ^figX
 
-{在机制说明中自然嵌入公式、Figure 或 Mermaid：用自然段把它们和机制工作流程串起来，说明它们刻画什么执行过程或系统状态，指出关键趋势 / 结构关系，并解释它们支撑的设计或结论。}
+{在机制说明中自然嵌入公式、Figure 或自画图：用自然段把它们和机制工作流程串起来，说明它们刻画什么执行过程或系统状态，指出关键趋势 / 结构关系，并解释它们支撑的设计或结论。公式锚点挂在本段末尾。} ^eq-mechanism-1
 
 #### 实现要点
 
@@ -212,7 +219,7 @@ $$
 
 #### 参数与权衡
 
-![Figure X: Design space](...)
+![Figure X: Design space](...) ^figX
 
 {用 2-4 句自然段解读设计空间图：说明横纵轴或候选参数如何组织，指出性能、面积、复杂度或兼容性之间的关键趋势，并解释作者为什么选取最终配置。}
 
@@ -220,7 +227,7 @@ $$
 
 #### 设计动机
 
-{为什么需要这个机制}
+{为什么需要这个机制；来自 [[#Insight 2：{一句话结论}|Insight 2]]。}
 
 #### 机制说明
 
@@ -230,9 +237,9 @@ $$
 ...
 $$
 
-![Figure X: Mechanism-2](...)
+![Figure X: Mechanism-2](...) ^figX
 
-{在机制说明中自然嵌入公式、Figure 或 Mermaid：用自然段把它们和机制工作流程串起来，说明它们刻画什么执行过程或系统状态，指出关键趋势 / 结构关系，并解释它们支撑的设计或结论。}
+{在机制说明中自然嵌入公式、Figure 或自画图：用自然段把它们和机制工作流程串起来，说明它们刻画什么执行过程或系统状态，指出关键趋势 / 结构关系，并解释它们支撑的设计或结论。} ^eq-mechanism-2
 
 #### 实现要点
 
@@ -242,7 +249,7 @@ $$
 
 #### 参数与权衡
 
-![Figure X: Design space](...)
+![Figure X: Design space](...) ^figX
 
 {用 2-4 句自然段解读设计空间图：说明横纵轴或候选参数如何组织，指出性能、面积、复杂度或兼容性之间的关键趋势，并解释作者为什么选取最终配置。}
 
@@ -257,6 +264,8 @@ $$
 | {Workload1} | {domain} | {size / footprint} | {key metrics} | {suite / trace} |
 | {Workload2} | {domain} | {size / footprint} | {key metrics} | {suite / trace} |
 
+^tab-workloads
+
 ### Baselines
 
 | Baseline | 类型 | 为什么重要 |
@@ -264,12 +273,16 @@ $$
 | {Baseline1} | {system/type} | {说明} |
 | {Baseline2} | {system/type} | {说明} |
 
+^tab-baselines
+
 ### 评测指标
 
 | 指标 | 公式 / 定义 | 含义 | 越大 / 越小越好 |
 |------|-------------|------|-----------------|
 | {指标1} | {公式 / 定义} | {含义} | {越大 / 越小} |
 | {指标2} | {公式 / 定义} | {含义} | {越大 / 越小} |
+
+^tab-metrics
 
 ### 模拟器与微架构参数
 
@@ -283,7 +296,9 @@ flowchart LR
     system --> metrics["Metrics collector"]
 ```
 
-{根据论文的 evaluation platform 改写这张图：只展示测试系统大概长什么样、组件如何连接、需要哪些硬件或模拟资源。优先画 client / benchmark driver / scheduler or runtime / worker / accelerator / memory / network / storage / simulator 的连接关系；不要把 CPU pipeline、cache level、BTB、ROB 等微架构细节硬塞进图里，除非它们就是论文评测对象。}
+^diag-platform
+
+{根据论文的 evaluation platform 改写这张图：只展示测试系统大概长什么样、组件如何连接、需要哪些硬件或模拟资源。优先画 client / benchmark driver / scheduler or runtime / worker / accelerator / memory / network / storage / simulator 的连接关系；不要把 CPU pipeline、cache level、BTB、ROB 等微架构细节硬塞进图里，除非它们就是论文评测对象。按 `../../_shared/references/diagram-rules.md` 选型，若选 draw.io，用 `![[00_assets/<note-name>_platform.drawio.png|说明]]` 嵌入替换上面的 Mermaid 块。}
 
 | 资源 / 组件 | 配置 | 在评测中的作用 |
 |-------------|------|----------------|
@@ -293,6 +308,8 @@ flowchart LR
 | Network / Fabric | {NIC / PCIe / NVLink / Ethernet / InfiniBand 等，如适用} | {承担通信、远程访问或分布式训练 / serving 流量} |
 | Scale / Run length | {节点数、batch、trace 长度、warmup、采样长度等} | {决定实验规模与可复现边界} |
 
+^tab-platform
+
 {如果有定义 workload、trace、platform 或评测边界的 Figure / Table / 公式，直接嵌入对应小节的自然段中解释，不单独拆出图表小节。}
 
 ---
@@ -301,33 +318,43 @@ flowchart LR
 
 ### 主结果
 
-![Figure X: Main result](...)
+![Figure X: Main result](...) ^figX
 
-{用 2-4 句自然段解读主结果：先给出主要结论，再引用最能支撑结论的定量证据，最后解释这些结果对系统设计或部署判断意味着什么。}
+{用 2-4 句自然段解读主结果：先给出主要结论，再引用最能支撑结论的定量证据，最后解释这些结果对系统设计或部署判断意味着什么。引用实验配置时跳转到 [[#^tab-baselines|Baselines]] 或 [[#^tab-platform|评测平台]]。}
 
 ### 消融 / 敏感性分析
 
-![Figure X: Ablation / sensitivity](...)
+![Figure X: Ablation / sensitivity](...) ^figX
 
-{用 2-4 句自然段解读消融或敏感性图：先说明被移除的模块或变化的参数，再提炼性能变化趋势，最后解释作者想证明的因果关系。}
+{用 2-4 句自然段解读消融或敏感性图：先说明被移除的模块或变化的参数（链接到对应 [[#机制1：{名称}|机制1]]），再提炼性能变化趋势，最后解释作者想证明的因果关系。}
 
 ### 结果解读
 
-{把主结果和消融结果串起来解释，不要只复述数字}
+{把主结果和消融结果串起来解释，不要只复述数字；回指 [[#Insight 1：{一句话结论}|Insight 1]] 等 insight 是否被实验验证。}
 
 ---
 
 ## Overhead 与兼容性
 
+### 实现改动清单
+
+> 只有论文确实提出实现改动时才保留本小节；纯 characterization 或没有新实现的论文可省略。读者此时已读完所有机制，`改动对象` 列链回对应机制，最后一列直接引出下面的 Overhead 讨论。
+
+| 改动对象 | 类型 | 新增状态 / 参数 | 所在路径 | 开销或约束 |
+|----------|------|-----------------|----------|------------|
+| [[#机制1：{名称}\|机制1]] 的 {模块} | {硬件 SRAM/CAM/逻辑 或 software/runtime} | {容量 / 位宽 / 队列 / cap / profile} | {流水级 / runtime path / scheduler path} | {cycle / area / power / latency / 工程复杂度} |
+
+^tab-changes
+
 ### Overhead
 
-![Figure X: Overhead](...)
+![Figure X: Overhead](...) ^figX
 
-{用 2-4 句自然段解读 overhead 图或表：说明新增开销来自哪些状态、逻辑、通信或运行时步骤，作者如何摊销 / 隐藏它，以及工程复杂度是否值得。}
+{用 2-4 句自然段解读 overhead 图或表：说明新增开销来自 [[#^tab-changes|实现改动清单]] 里的哪些状态、逻辑、通信或运行时步骤，作者如何摊销 / 隐藏它，以及工程复杂度是否值得。}
 
 ### 兼容性
 
-![Figure X: Compatibility](...)
+![Figure X: Compatibility](...) ^figX
 
 #### 适用硬件 / 平台
 
@@ -450,7 +477,7 @@ flowchart LR
 
 > [!summary] {Title}
 > - **核心**: {最核心价值}
-> - **方法**: {关键机制}
+> - **方法**: {关键机制，链接 [[#机制1：{名称}|机制1]]}
 > - **结果**: {核心收益}
 > - **适用场景**: {在哪些环境最有效}
 > - **未来工作**: {可能的改进方向}
