@@ -12,6 +12,7 @@ README = REPO_ROOT / "README.md"
 PAPER_DAEMON = REPO_ROOT / "skills" / "paper-reader" / "scripts" / "paper_daemon.py"
 QUALITY_STANDARDS = REPO_ROOT / "skills" / "paper-reader" / "references" / "quality-standards.md"
 CONCEPT_CATEGORIES = REPO_ROOT / "skills" / "paper-reader" / "references" / "concept-categories.md"
+DIAGRAM_RULES = REPO_ROOT / "skills" / "_shared" / "references" / "diagram-rules.md"
 
 
 def assert_table_header(testcase, text, columns):
@@ -315,6 +316,20 @@ class SystemsTemplateTests(unittest.TestCase):
 
         self.assertIn("![[00_assets/", combined)
         self.assertNotRegex(combined, r"!\[\[00_assets/[^]]*\|600\]\]")
+
+    def test_diagram_rules_define_selection_table_and_fallback(self):
+        text = DIAGRAM_RULES.read_text(encoding="utf-8")
+
+        assert_table_header(self, text, ["图的类型", "默认工具", "备注"])
+        for phrase in [
+            "drawio --version", "DRAWIO_SKILL_DIR", "VERILOG_DIAGRAM_DIR",
+            "seqlayout.py", "arch2drawio.py", "validate.py", "repair_png.py",
+            "退回 Mermaid", ".drawio.png", "00_assets/", "^diag-",
+            "references/mermaid-rules.md",
+        ]:
+            self.assertIn(phrase, text, phrase)
+        self.assertIn("-f xml", text)          # .mmd 先转 .drawio，再导出
+        self.assertNotIn("-f svg", text)       # 不走 SVG
 
 
 if __name__ == "__main__":
