@@ -390,6 +390,19 @@ class SystemsTemplateTests(unittest.TestCase):
             self.assertIn(f"[[#{heading}：{m.group(1)}|{short}]]", text)
         self.assertIn("## 笔记内跳转", QUALITY_STANDARDS.read_text(encoding="utf-8"))
 
+    def test_skill_and_daemon_follow_new_structure(self):
+        skill = PAPER_READER_SKILL.read_text(encoding="utf-8")
+        daemon = PAPER_DAEMON.read_text(encoding="utf-8")
+        for name, blob in (("SKILL.md", skill), ("paper_daemon.py", daemon)):
+            for stale in ["问题定义与瓶颈", "作者核心 Insights", "动机实验 / Characterization",
+                          "系统架构与执行流", "系统组成与职责", "模块关系图"]:
+                self.assertNotIn(stale, blob, f"{name} still mentions {stale}")
+            for fresh in ["动机实验与核心 Insights", "### 系统架构", "执行流", "实现改动清单",
+                          "diagram-rules.md", "论文原图", "[[#^"]:
+                self.assertIn(fresh, blob, f"{name} lacks {fresh}")
+        self.assertIn("../_shared/references/diagram-rules.md", skill)
+        self.assertIn("退回 Mermaid", skill)
+
 
 if __name__ == "__main__":
     unittest.main()

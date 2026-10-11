@@ -476,16 +476,17 @@ Zotero ItemID: {item_id}
 2. **内联概念链接**: 在正文中使用 `[[KV Cache]]`、`[[Roofline Model]]`、`[[AllReduce]]` 链接概念，不只是在文末；`skills/paper-reader/references/concept-categories.md` 的 seed list 命中词，首次出现必须写成 `[[概念名]]`
 3. **公式格式**: 每个公式后用自然段解读它建模的系统现象、变量角色，以及它支撑的设计或结论；必要时在段落中解释符号
 4. **图片格式**: 图片引用自身包含题注/alt（如 `![Figure X: 英文标题 / 中文标题](...)`）+ 自然段解读；不要在图片上方单独写 `**Figure ...**` 标题；优先在线 URL，本地图源必须用 `![[00_assets/<note-name>_<原图片名>]]`；说明图片在论文论证链中的作用、关键趋势或定量证据，禁止保留填空式模板标签；不要把普通 Figure / Table 写成 `###` 大纲标题
-5. **系统结构**: `系统架构与执行流` 优先使用 Obsidian Mermaid（默认 `flowchart LR`），随后用自然段解释边界、输入输出、离线/在线分工和支撑的设计或结论
-6. **组件与实现**: `系统组成与职责` 必须包含 `#### 模块关系图`，其下方放 Mermaid 模块关系图并用自然段解释模块依赖；不能只用 `系统架构与执行流`、论文原图或组件表替代；`实现改动清单` 按硬件 / software runtime / characterization 条件生成，不要对纯软件论文强行写硬件表
+5. **系统架构**: `### 系统架构` 一图一段一表：论文有总体架构图时直接嵌入论文原图并挂 `^figN`；没有或看不出模块边界与数据流时才按 `skills/_shared/references/diagram-rules.md` 自画（Mermaid 或 draw.io 嵌图，锚点 `^diag-arch`），二选一；随后自然段解释所在层次、边界、输入输出、离线/在线分工，再给组件表（表后 `^tab-components`）
+6. **执行流与改动清单**: `### 执行流` 用编号步骤走读一次请求 / 一个周期，每步引用架构图模块名并用 `[[#机制N：…|机制N]]` 指向机制，不画第二张框图；`### 实现改动清单` 放在 `## Overhead 与兼容性` 开头，按硬件 / software runtime / characterization 条件生成，不要对纯软件论文强行写硬件表
 7. **关键机制**: 在 `## 关键机制拆解` 到下一个 `##` 之间，所有 `###` 标题必须是 `### 机制N：...`；`####` 只能用于按论文结构或 Agent 理解提炼出的机制内部语义子小节，例如设计动机、机制流程、算法流程、pipeline stage、实现要点、参数权衡；普通单张 Figure / Table / 单个公式不要单独写成 `####` 小节，必须嵌入机制说明或参数与权衡的自然段；不要单独拆出公式或图示小节；Figure、公式、Mermaid 必须嵌入机制说明或参数与权衡的叙事位置
-8. **实验平台**: `实验设置` 的 `模拟器与微架构参数` 小节必须根据论文 evaluation platform 画一张 Mermaid 测试系统连接关系图，展示 client / benchmark driver / scheduler or runtime / worker / accelerator / memory / network / storage / simulator 的连接关系和硬件资源需求；可以删减和图重复的参数表细节，不要硬塞 CPU pipeline、BTB、ROB 等微架构参数，除非它们就是评测对象
+8. **实验平台**: `实验设置` 的 `模拟器与微架构参数` 小节必须根据论文 evaluation platform 画一张测试系统连接关系图（Mermaid，或按 diagram-rules.md 的 draw.io 嵌图），展示 client / benchmark driver / scheduler or runtime / worker / accelerator / memory / network / storage / simulator 的连接关系和硬件资源需求；可以删减和图重复的参数表细节，不要硬塞 CPU pipeline、BTB、ROB 等微架构参数，除非它们就是评测对象
 9. **批判性思考**: 优点、局限与隐含假设、可能失效场景、潜在改进方向
 10. **经验与复现**: 单独写 `经验与可迁移启示` 和 `复现`；复现包含环境依赖、关键配置 / workload / data、`复现核查表`、风险与缺口；核查表使用普通 Markdown table 或普通 bullet，禁止使用 `- [ ]` / `- [x]` task list
 11. **关联笔记分类**: 分为 "方法相关"、"理论 / 指标相关"、"系统 / 硬件相关"
 12. **速查卡片**: Obsidian `[!summary]` 格式的快速参考
-13. **结构约束**: 不要单独写 `## 关键公式` 或 `## 关键图表`；公式和图片必须嵌入“问题定义与瓶颈 / 系统设计总览 / 关键机制拆解 / 实验设置 / 核心结果 / Overhead 与兼容性”这些章节里；生成后做 template check，确认大纲层级遵循 `assets/paper-note-template.md`
+13. **结构约束**: 不要单独写 `## 关键公式` 或 `## 关键图表`；公式和图片必须嵌入“动机实验与核心 Insights / 系统设计总览 / 关键机制拆解 / 实验设置 / 核心结果 / Overhead 与兼容性”这些章节里；章节顺序为 `问题定义` → `动机实验与核心 Insights` → `系统设计总览`，`这篇论文为什么重要` 与 `问题定义` 不放图表和数字；生成后做 template check，确认大纲层级遵循 `assets/paper-note-template.md`
 14. **相关工作定位**: 表头使用“论文 / 外部链接 / 关系 / 差异”；`论文` 列优先写 `[[笔记名]]`，没有内部笔记时写纯标题；`外部链接` 列写 `[arXiv](...)` / `[DOI](...)` / `[Paper](...)`，没有就留空
+15. **锚点与跳转**: Figure 行尾 ` ^figN`（子图 `^fig8a`），表格结束后独立一行 `^tab-…`（前后空行），公式锚点挂在解释段末尾，核心贡献条目末尾 ` ^contrib-N`；正文引用 Figure / Table / 公式 / Insight / 机制 / 贡献一律写 `[[#^id|…]]` 或 `[[#标题|…]]` 跳转链接，标题链接文字与目标标题逐字一致
 
 ## 处理规则
 
