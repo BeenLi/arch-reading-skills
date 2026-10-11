@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = REPO_ROOT / "skills" / "paper-reader" / "paper_daemon.py"
+MODULE_PATH = REPO_ROOT / "skills" / "paper-reader" / "scripts" / "paper_daemon.py"
 
 
 def load_module():

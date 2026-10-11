@@ -28,7 +28,7 @@
 | 三步流水线 | `daily-papers-fetch` → `daily-papers-review` → `daily-papers-notes` | 抓取、点评、可选精读 |
 | `paper-reader` | `skills/paper-reader/SKILL.md` | 单篇 / 批量论文阅读和笔记生成 |
 | `_shared` 配置 | `skills/_shared/scripts/user_config.py` | 统一读取 Obsidian、Zotero、关键词和自动化配置 |
-| Zotero helper | `skills/paper-reader/assets/zotero_helper.py` | 解析 item、collection、PDF、保存路径和已有笔记 |
+| Zotero helper | `skills/paper-reader/scripts/zotero_helper.py` | 解析 item、collection、PDF、保存路径和已有笔记 |
 | MOC | `skills/_shared/generate_*_mocs.py` | 递归生成 `_index_*.md` 目录页 |
 
 ## 总体流程
@@ -63,8 +63,8 @@ flowchart LR
 | `daily-papers-review` | `skills/daily-papers-review/SKILL.md` | 生成主推 / 备选 / 可跳过推荐文件 |
 | `daily-papers-notes` | `skills/daily-papers-notes/SKILL.md` | 可选批量精读，调用 `paper-reader` 并回填笔记链接 |
 | `paper-reader` | `skills/paper-reader/SKILL.md` | 单篇论文阅读、概念补全、Obsidian 保存 |
-| `paper_daemon.py` | `skills/paper-reader/paper_daemon.py` | Zotero collection 批量处理和断点续跑 |
-| `zotero_helper.py` | `skills/paper-reader/assets/zotero_helper.py` | 只读解析 Zotero、规划 note path、索引已有笔记 |
+| `paper_daemon.py` | `skills/paper-reader/scripts/paper_daemon.py` | Zotero collection 批量处理和断点续跑 |
+| `zotero_helper.py` | `skills/paper-reader/scripts/zotero_helper.py` | 只读解析 Zotero、规划 note path、索引已有笔记 |
 | `generate-mocs` | `skills/generate-mocs/SKILL.md` | 手动刷新论文和概念 MOC |
 | `_shared` | `skills/_shared/` | 配置、MOC builder、missing concept scanner |
 
@@ -198,9 +198,9 @@ skills/paper-reader/assets/paper-note-template.md
 `resolve` 是新入口：
 
 ```bash
-python3 skills/paper-reader/assets/zotero_helper.py resolve --item-id 2487
-python3 skills/paper-reader/assets/zotero_helper.py resolve --query "vLLM"
-python3 skills/paper-reader/assets/zotero_helper.py resolve --collection "Research Topics/..." --recursive
+python3 skills/paper-reader/scripts/zotero_helper.py resolve --item-id 2487
+python3 skills/paper-reader/scripts/zotero_helper.py resolve --query "vLLM"
+python3 skills/paper-reader/scripts/zotero_helper.py resolve --collection "Research Topics/..." --recursive
 ```
 
 兼容期旧命令 `papers`、`search`、`info`、`find-collection` 仍可用，但会打印 deprecation warning；新文档和脚本应使用 `resolve` / `note-path`。
@@ -287,8 +287,8 @@ MOC 文件名前缀来自 `mocs.filename_prefix`，当前推荐 `_index_`。内�
 | 元数据富化 | `skills/daily-papers/enrich_papers.py`、`parse_arxiv.py`、`extract_affiliations.py` |
 | 推荐生成 | `skills/daily-papers-review/SKILL.md` |
 | 批量笔记 | `skills/daily-papers-notes/SKILL.md` |
-| Zotero 解析 | `skills/paper-reader/assets/zotero_helper.py` |
-| Zotero 批量 | `skills/paper-reader/paper_daemon.py` |
+| Zotero 解析 | `skills/paper-reader/scripts/zotero_helper.py` |
+| Zotero 批量 | `skills/paper-reader/scripts/paper_daemon.py` |
 | 论文模板 | `skills/paper-reader/assets/paper-note-template.md` |
 | 概念分类 | `skills/paper-reader/references/concept-categories.md` |
 | 配置加载 | `skills/_shared/scripts/user_config.py` |

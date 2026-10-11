@@ -9,7 +9,7 @@ LEGACY_OBSIDIAN_TEMPLATE = REPO_ROOT / "obsidian-templates" / "论文笔记模�
 PAPER_READER_SKILL = REPO_ROOT / "skills" / "paper-reader" / "SKILL.md"
 DAILY_PAPERS_NOTES_SKILL = REPO_ROOT / "skills" / "daily-papers-notes" / "SKILL.md"
 README = REPO_ROOT / "README.md"
-PAPER_DAEMON = REPO_ROOT / "skills" / "paper-reader" / "paper_daemon.py"
+PAPER_DAEMON = REPO_ROOT / "skills" / "paper-reader" / "scripts" / "paper_daemon.py"
 QUALITY_STANDARDS = REPO_ROOT / "skills" / "paper-reader" / "references" / "quality-standards.md"
 CONCEPT_CATEGORIES = REPO_ROOT / "skills" / "paper-reader" / "references" / "concept-categories.md"
 

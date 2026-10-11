@@ -4,13 +4,13 @@
 
 ```bash
 # 使用辅助脚本
-python3 assets/zotero_helper.py collections         # 列出所有分类
-python3 assets/zotero_helper.py resolve --collection-id 1
-python3 assets/zotero_helper.py resolve --collection-id 1 --recursive
-python3 assets/zotero_helper.py resolve --query "EBPC" --limit 10
-python3 assets/zotero_helper.py resolve --item-id 2487
-python3 assets/zotero_helper.py resolve --collection "Link & Fabric Integration" --recursive
-python3 assets/zotero_helper.py pdf 12345           # 获取论文PDF路径
+python3 scripts/zotero_helper.py collections         # 列出所有分类
+python3 scripts/zotero_helper.py resolve --collection-id 1
+python3 scripts/zotero_helper.py resolve --collection-id 1 --recursive
+python3 scripts/zotero_helper.py resolve --query "EBPC" --limit 10
+python3 scripts/zotero_helper.py resolve --item-id 2487
+python3 scripts/zotero_helper.py resolve --collection "Link & Fabric Integration" --recursive
+python3 scripts/zotero_helper.py pdf 12345           # 获取论文PDF路径
 ```
 
 **递归查询原理**：
@@ -58,7 +58,7 @@ def get_collection_path(collection_id):
 Obsidian 保存路径使用 `{NOTES_PATH}/{selected_collection_path}/{MethodName}.md`。没有 collection 的 item 保存到 `{NOTES_PATH}/_inbox/{MethodName}.md`。
 
 ```bash
-python3 assets/zotero_helper.py note-path EBPC \
+python3 scripts/zotero_helper.py note-path EBPC \
   --collection-path "Research Topics/Lossless Communication Compression/Link & Fabric Integration" \
   --zotero-item-id 2487
 ```
@@ -73,13 +73,13 @@ Zotero 默认只读。阅读时不要按关键词自动改 Zotero 分类；如�
 
 ```bash
 # 查看论文当前分类
-python3 assets/zotero_helper.py resolve --item-id {item_id}
+python3 scripts/zotero_helper.py resolve --item-id {item_id}
 # 查找目标分类 ID
-python3 assets/zotero_helper.py resolve --collection "Distributed Systems"
+python3 scripts/zotero_helper.py resolve --collection "Distributed Systems"
 # 移动论文
-python3 assets/zotero_helper.py move {item_id} {new_collection_id} --from {old_collection_id}
+python3 scripts/zotero_helper.py move {item_id} {new_collection_id} --from {old_collection_id}
 # 添加到多个分类
-python3 assets/zotero_helper.py add-to-collection {item_id} {collection_id}
+python3 scripts/zotero_helper.py add-to-collection {item_id} {collection_id}
 # 从分类移除
-python3 assets/zotero_helper.py remove-from-collection {item_id} {collection_id}
+python3 scripts/zotero_helper.py remove-from-collection {item_id} {collection_id}
 ```

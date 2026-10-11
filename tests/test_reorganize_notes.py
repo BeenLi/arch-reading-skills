@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = REPO_ROOT / "skills" / "paper-reader" / "assets" / "reorganize_notes.py"
+MODULE_PATH = REPO_ROOT / "skills" / "paper-reader" / "scripts" / "reorganize_notes.py"
 
 
 def load_module():

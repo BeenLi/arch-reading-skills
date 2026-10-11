@@ -39,9 +39,9 @@ description: |
 |----------|------|----------|
 | PDF 路径 | `/path/to/paper.pdf` | 直接 Read |
 | arXiv 链接 | `https://arxiv.org/abs/xxxx` | WebFetch |
-| Zotero item | "读一下 Zotero item 2487" | `assets/zotero_helper.py resolve --item-id 2487` |
-| Zotero 搜索 | "读一下 Zotero 里的 EBPC" | `assets/zotero_helper.py resolve --query "EBPC"` → 多候选时让用户选 item |
-| Zotero collection | "批量读 Zotero collection \"Link & Fabric Integration\"" | `assets/zotero_helper.py resolve --collection "Link & Fabric Integration" --recursive` |
+| Zotero item | "读一下 Zotero item 2487" | `scripts/zotero_helper.py resolve --item-id 2487` |
+| Zotero 搜索 | "读一下 Zotero 里的 EBPC" | `scripts/zotero_helper.py resolve --query "EBPC"` → 多候选时让用户选 item |
+| Zotero collection | "批量读 Zotero collection \"Link & Fabric Integration\"" | `scripts/zotero_helper.py resolve --collection "Link & Fabric Integration" --recursive` |
 | 无 PDF | Zotero 条目无附件 | 从网上获取（见下方） |
 
 无 PDF 时优先：`arXiv HTML > arXiv PDF > DOI > WebSearch 标题`。

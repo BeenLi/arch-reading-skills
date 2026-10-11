@@ -34,12 +34,12 @@ from datetime import datetime, timedelta
 from typing import Optional
 from zoneinfo import ZoneInfo
 
-_SHARED_DIR = Path(__file__).resolve().parents[1] / "_shared" / "scripts"
+_SHARED_DIR = Path(__file__).resolve().parents[2] / "_shared" / "scripts"
 if str(_SHARED_DIR) not in sys.path:
     sys.path.insert(0, str(_SHARED_DIR))
-_ASSETS_DIR = Path(__file__).resolve().parent / "assets"
-if str(_ASSETS_DIR) not in sys.path:
-    sys.path.insert(0, str(_ASSETS_DIR))
+_SCRIPTS_DIR = Path(__file__).resolve().parent  # 同目录的 zotero_helper；importlib 按路径加载时脚本目录不在 sys.path 上
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
 
 from user_config import concepts_dir, obsidian_vault_path, paper_notes_dir, zotero_db_path, zotero_storage_dir
 from zotero_helper import build_note_index, find_matching_notes, infer_method_name, plan_note_save
