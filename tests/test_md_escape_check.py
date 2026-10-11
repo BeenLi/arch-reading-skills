@@ -59,6 +59,16 @@ class MdEscapeCheckTest(unittest.TestCase):
         hits = check("ok\nE[est] ≈ T\n")
         self.assertEqual([line for line, _ in hits], [2])
 
+    def test_keeps_obsidian_block_ids_and_in_note_links(self):
+        source = (
+            "![Figure 3: delta CDF](https://arxiv.org/html/x/x3.png) ^fig3\n\n"
+            "| a | b |\n|---|---|\n| 1 | 2 |\n\n^tab1\n\n"
+            "见 [[#^fig3|Figure 3]]、[[#^tab1|Table 1]] 与 [[#机制1：Change-based encoding|机制1]]。 ^eq-ttft\n"
+            "1. **KV codec**: 三个观察 ^contrib-1\n"
+        )
+        self.assertEqual(fix(source), source)
+        self.assertEqual(check(source), [])
+
 
 if __name__ == "__main__":
     unittest.main()
