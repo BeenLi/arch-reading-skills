@@ -330,23 +330,23 @@ git diff --check
 
 ## Obsidian Hard Link
 
-目标 Obsidian 路径：
+目标 Obsidian 路径（`<vault>` 为 Obsidian vault 根目录，`<repo>` 为本仓库根目录，按本机实际路径代入）：
 
 ```text
-/Users/bytedance/Library/Mobile Documents/iCloud~md~obsidian/Documents/ob-career/002-notes/001 使用指南/dailypaper-skills-架构和使用文档.md
+<vault>/002-notes/001 使用指南/dailypaper-skills-架构和使用文档.md
 ```
 
 该路径应当 hard link 到本文件：
 
 ```text
-/Users/bytedance/Tools/dailypaper-skills/ARCHITECTURE.md
+<repo>/ARCHITECTURE.md
 ```
 
 检查命令：
 
 ```bash
-stat -f "%d %i %l %N" /Users/bytedance/Tools/dailypaper-skills/ARCHITECTURE.md \
-  "/Users/bytedance/Library/Mobile Documents/iCloud~md~obsidian/Documents/ob-career/002-notes/001 使用指南/dailypaper-skills-架构和使用文档.md"
+stat -f "%d %i %l %N" <repo>/ARCHITECTURE.md \
+  "<vault>/002-notes/001 使用指南/dailypaper-skills-架构和使用文档.md"
 ```
 
 两行的 device 和 inode 必须一致，link count 应至少为 2。

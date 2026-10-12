@@ -177,7 +177,7 @@
 
 **§1 draw.io 路线**
 
-1. 前置检查：`drawio --version`（需 ≥ 30）；`DRAWIO_SKILL_DIR`（默认 `~/.claude/skills/drawio-skill`）和 `VERILOG_DIAGRAM_DIR`（默认 `~/.claude/skills/verilog-diagram`）两个目录存在。任一缺失 → 退回 Mermaid，并在汇报中写明"draw.io 不可用，已退回 Mermaid"。
+1. 前置检查：`drawio --version`（需 ≥ 30）；`DRAWIO_SKILL_DIR`（默认 `~/.claude/skills/drawio-skill`）和 `VERILOG_DIAGRAM_DIR`（默认 `~/.claude/skills/verilog-diagram`）。`DRAWIO_SKILL_DIR` 缺失 → 所有 draw.io 路线退回 Mermaid；`VERILOG_DIAGRAM_DIR` 只被流水线分级架构图路线需要，缺失时仅该路线退回。退回时在汇报中写明"draw.io 不可用，已退回 Mermaid"。
 2. 产物：`.drawio` 源文件 + 可编辑 PNG（`drawio -x -f png -e -s 2` 后跑 `repair_png.py`；PNG 内嵌 XML，可用 draw.io 重新打开）。两者都放到笔记同目录 `00_assets/<note-name>_<desc>.drawio` 和 `.drawio.png`，命名沿用现有 note-name 截断 / hash 规则。
 3. 嵌入：`![[00_assets/<note-name>_<desc>.drawio.png|说明]] ^diag-arch`。agent 自画的图用 `diag-` 前缀的语义 id，和论文 Figure 的 `figN` 区分；它不是论文原图，不影响 frontmatter `image_source`。
 4. 校验：`validate.py` 零 error；Read PNG 目视检查，最多两轮修正。

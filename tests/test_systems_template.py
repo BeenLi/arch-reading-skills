@@ -403,6 +403,38 @@ class SystemsTemplateTests(unittest.TestCase):
         self.assertIn("../_shared/references/diagram-rules.md", skill)
         self.assertIn("退回 Mermaid", skill)
 
+    def test_template_fig_placeholders_are_not_valid_block_ids(self):
+        text = ASSET_TEMPLATE.read_text(encoding="utf-8")
+        # 图片行上的锚点要么是具体编号（^fig1），要么是一眼可见的占位符（^fig{X}），不能是像 id 的 ^figX
+        for anchor in re.findall(r"\) \^fig(\S+)", text):
+            self.assertRegex(anchor, r"^(?:\d+|\{X\})$", anchor)
+        self.assertIn(") ^fig{X}", text)
+        self.assertNotIn(" ^figX", text)
+
+    def test_formula_location_rule_names_design_space_section(self):
+        template_lines = ASSET_TEMPLATE.read_text(encoding="utf-8").splitlines()
+        daemon_lines = PAPER_DAEMON.read_text(encoding="utf-8").splitlines()
+        rule_2 = next(line for line in template_lines if line.startswith("2. 公式和图表必须嵌入"))
+        item_13 = next(line for line in daemon_lines if line.startswith("13. **结构约束**"))
+        for line in (rule_2, item_13):
+            self.assertIn("现有方法与设计空间", line)
+
+    def test_diag_anchor_placement_consistent_across_rule_files(self):
+        for path in (QUALITY_STANDARDS, DIAGRAM_RULES):
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("嵌入行在行尾", text, path.name)
+            self.assertIn("代码块之后单独一行", text, path.name)
+
+    def test_skill_requires_reporting_diagram_route(self):
+        self.assertIn("哪条路线", PAPER_READER_SKILL.read_text(encoding="utf-8"))
+
+    def test_diagram_rules_gate_verilog_only_for_pipeline_route(self):
+        text = DIAGRAM_RULES.read_text(encoding="utf-8")
+        self.assertIn("仅该路线退回", text)
+        self.assertNotIn('[ -d "$DRAWIO" ] && [ -d "$VLOG" ]', text)
+        self.assertNotIn("同目录的 `references/", text)
+        self.assertIn("_shared/references/mermaid-rules.md", text)
+
 
 if __name__ == "__main__":
     unittest.main()

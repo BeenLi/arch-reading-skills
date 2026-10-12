@@ -104,6 +104,11 @@ class RepoLayoutTests(unittest.TestCase):
             for cell in ("`scripts/`", "`references/`", "`assets/`"):
                 self.assertIn(cell, text, doc.name)
 
+    def test_architecture_has_no_machine_specific_paths(self):
+        text = (REPO_ROOT / "ARCHITECTURE.md").read_text(encoding="utf-8")
+        self.assertNotIn("/Users/bytedance", text)
+        self.assertNotIn("/Users/beenli", text)
+
 
 if __name__ == "__main__":
     unittest.main()

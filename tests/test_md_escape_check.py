@@ -64,7 +64,9 @@ class MdEscapeCheckTest(unittest.TestCase):
             "![Figure 3: delta CDF](https://arxiv.org/html/x/x3.png) ^fig3\n\n"
             "| a | b |\n|---|---|\n| 1 | 2 |\n\n^tab1\n\n"
             "见 [[#^fig3|Figure 3]]、[[#^tab1|Table 1]] 与 [[#机制1：Change-based encoding|机制1]]。 ^eq-ttft\n"
-            "1. **KV codec**: 三个观察 ^contrib-1\n"
+            "1. **KV codec**: 三个观察 ^contrib-1\n\n"
+            "| 机制 | 说明 |\n|---|---|\n| [[#机制1：X\\|机制1]] | 见 [[#^fig3\\|Figure 3]] |\n\n"
+            "```mermaid\nflowchart TB\n  A --> B\n```\n\n^diag-arch\n"
         )
         self.assertEqual(fix(source), source)
         self.assertEqual(check(source), [])

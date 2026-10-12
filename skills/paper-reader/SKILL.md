@@ -71,7 +71,7 @@ description: |
 
 1. 所有 Figure、公式、Table 都必须出现。
 2. 技术术语首次出现要加 `[[概念]]` 链接；`references/concept-categories.md` 的 seed list 命中词，首次出现必须写成 `[[概念名]]`，即使作者把它当常识。
-3. 不用 ASCII 流程图；改用结构化 Markdown 和必要公式。Mermaid 图遵守 `../_shared/references/mermaid-rules.md`（方向选择、消除回头线、控制流与数据流分离、渲染后看图重排）。图表选型按 `../_shared/references/diagram-rules.md`：时序 / 协议交互、时间线 / 甘特、流水线分级架构图优先 draw.io 路线，画图 skill 不可用时退回 Mermaid 并在汇报中注明。
+3. 不用 ASCII 流程图；改用结构化 Markdown 和必要公式。Mermaid 图遵守 `../_shared/references/mermaid-rules.md`（方向选择、消除回头线、控制流与数据流分离、渲染后看图重排）。图表选型按 `../_shared/references/diagram-rules.md`：时序 / 协议交互、时间线 / 甘特、流水线分级架构图优先 draw.io 路线，画图 skill 不可用时退回 Mermaid；汇报时写明每张自画图用了哪条路线（Mermaid / draw.io）以及是否退回。
 4. 公式必须有名称和 LaTeX，并用自然段解释建模对象、变量角色及其支撑的设计或结论。
 5. 图片优先外链 arXiv HTML / 项目主页；如果图源是本地 PDF，则从 PDF 裁切图片并存放到笔记同目录下的 `00_assets/<note-name>_<原图片名>`，笔记中使用 `![[00_assets/<note-name>_<原图片名>]]`。
 6. Figure / Table / 单个公式必须嵌入对应叙事小节，不要默认用 H3/H4 图表或公式标题把素材提升为 Obsidian 大纲章节；图片标题写进图片引用的题注/alt 文本（如 `![Figure 3: ...](...)`），不要在图片上方单独写 `**Figure ...**` 标题；只有“核心结果”“消融实验”“附录图”等语义小节可以使用 `###`，只有按论文结构或 Agent 理解提炼出的机制子小节才可以使用 `####`。
