@@ -262,11 +262,11 @@ git diff --check
 
 | 配置键 | 默认值（`DEFAULT_CONFIG` → `user-config.json`） | 作用 | 读取方 |
 |---|---|---|---|
-| `paths.obsidian_vault` | 无 → 仓库作者机器的路径，必须在 local 里覆盖 | vault 根目录 | 所有 skill 与脚本 |
+| `paths.obsidian_vault` | `~/ObsidianVault` → 仓库作者机器的路径，必须在 local 里覆盖 | vault 根目录 | 所有 skill 与脚本 |
 | `paths.paper_notes_folder` | `论文笔记` → `PaperNotes` | 论文笔记目录 | `paper_notes_dir()` |
 | `paths.daily_papers_folder` | `DailyPapers` | 每日推荐目录 | `daily_papers_dir()` |
 | `paths.concepts_folder` | `_概念` → `_concepts` | 概念库目录（在笔记目录下） | `concepts_dir()` |
-| `paths.zotero_db` / `zotero_storage` / `zotero_base_attachment_path` | 本机路径 | Zotero 库、附件目录、linked file 基目录 | `zotero_helper.py`、`paper_daemon.py` |
+| `paths.zotero_db` / `zotero_storage` / `zotero_base_attachment_path` | `~/Zotero/zotero.sqlite` / `~/Zotero/storage` / 空 → 本机路径 | Zotero 库、附件目录、linked file 基目录 | `zotero_helper.py`、`paper_daemon.py` |
 | `daily_papers.keywords` | 20 个 LLM systems 关键词 | 标题 +3 / 摘要 +1 | `fetch_and_score.score_paper` |
 | `daily_papers.negative_keywords` | 机器人、医学、纯 NLP 等 | 命中标题直接 -999；只命中摘要不排除 | `score_paper` |
 | `daily_papers.domain_boost_keywords` | `llm`、`gpu`、`rdma` … | 阶梯加分 | `score_paper` |
@@ -374,7 +374,7 @@ flowchart TB
 
 实线是 Python import（各脚本把 `_shared/scripts` 插入 `sys.path` 后导入 `user_config`；`paper_daemon.py` 另外导入同目录的 `zotero_helper.py`），虚线是"文本复述或断言"关系。维护时最容易出问题的耦合点：
 
-- **模板结构有四份拷贝**：`skills/paper-reader/assets/paper-note-template.md` 是本体，`skills/paper-reader/SKILL.md` 的质量规则与自检、`skills/paper-reader/scripts/paper_daemon.py` 第 470 行附近的"质量要求"prompt、`tests/test_systems_template.py` 的 `required_sections` / `forbidden_sections` 各复述一份。只改模板会让批量模式继续产出旧结构，而测试仍是绿的（它断言的是模板文件，不是生成物）。`test_skill_and_daemon_follow_new_structure` 用旧章节名做反向断言，是唯一的防漂移闸门。
+- **模板结构有四份拷贝**：`skills/paper-reader/assets/paper-note-template.md` 是本体，`skills/paper-reader/SKILL.md` 的质量规则与自检、`skills/paper-reader/scripts/paper_daemon.py` 里"质量要求（重要）"那段内嵌 prompt、`tests/test_systems_template.py` 的 `required_sections` / `forbidden_sections` 各复述一份。只改模板会让批量模式继续产出旧结构，而测试仍是绿的（它断言的是模板文件，不是生成物）。`test_skill_and_daemon_follow_new_structure` 用旧章节名做反向断言，是唯一的防漂移闸门。
 - **目录约定由测试守护**：`tests/test_repo_layout.py` 要求 `_shared`、`paper-reader`、`daily-papers` 的 `.py` 只在 `scripts/` 下，并解析所有 Markdown 里的 `python3 …py` 路径。新增脚本按 `README.md` 的"目录约定"归位。
 - **`_shared` 的脚本按相对深度找配置**：`user_config.py` 用 `parent.parent` 找 `user-config.json`，其他脚本用 `parents[2] / "_shared" / "scripts"`；移动任何一个都要同步改路径常量和测试里的 `MODULE_PATH`。
 - **画图规则跨 skill 共享**：`skills/_shared/references/diagram-rules.md` 和 `mermaid-rules.md` 被 `paper-reader`、`book-reader`、`concept-categories.md` 以三种相对路径引用（含硬编码的 `~/.claude/skills/_shared/references/…`），改名前 grep 全仓。
