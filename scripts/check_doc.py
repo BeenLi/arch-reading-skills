@@ -41,6 +41,7 @@ HEADER_PREFIXES = ("源仓库：", "本次分析的本地路径：", "本次分�
 MACHINE_PREFIXES = ("/Users/", "/home/", "C:\\")
 MIN_LINES, MAX_LINES = 250, 800
 MIN_MERMAID, MAX_MERMAID = 2, 5
+MIN_MODEL_ROWS, MAX_MODEL_ROWS = 6, 12
 
 H2 = re.compile(r"^## (?:(\d+)\. (.+)|(附录.*))$")
 BACKTICK = re.compile(r"`([^`\n]+)`")
@@ -140,8 +141,17 @@ def check(text: str, name: str | None = None) -> list[str]:
     for number, columns in TABLE_HEADERS.items():
         if number in bodies and not _table_header_pattern(columns).search(bodies[number]):
             failures.append(f"第 {number} 节：缺少表头 `| {' | '.join(columns)} |`")
+    if 2 in bodies:
+        rows = [l for l in bodies[2].splitlines() if l.startswith("|")]
+        data_rows = max(len(rows) - 2, 0)  # 去掉表头与分隔行
+        if not MIN_MODEL_ROWS <= data_rows <= MAX_MODEL_ROWS:
+            failures.append(f"第 2 节：心智模型表需要 {MIN_MODEL_ROWS}–{MAX_MODEL_ROWS} 行数据行，实际 {data_rows}")
     if 4 in bodies and len(re.findall(r"(?m)^### 4\.", bodies[4])) < 2:
         failures.append("第 4 节：至少两个 `### 4.x` 主链路小节")
+    if 4 in bodies:
+        for step in re.findall(r"(?m)^\s*\d+\. .+$", bodies[4]):
+            if not any(_is_source_token(tok) for tok in BACKTICK.findall(step)):
+                failures.append(f"第 4 节：步骤“{step.strip()[:30]}”未引用文件")
     if 12 in bodies and len(re.findall(r"(?m)^\s*(?:-|\d+\.) ", bodies[12])) < 2:
         failures.append("第 12 节：至少两条列表项")
     for number, body in bodies.items():
@@ -178,7 +188,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"FAIL {f}")
         print(f"{len(failures)} failure(s)")
         return 1
-    print("OK 头部三要素 / 12 节顺序与标题 / 表头 / Mermaid 数量 / 长度 / 来源标注 / 无 task 语法 / 无机器路径")
+    print("OK 头部三要素 / 12 节顺序与标题 / 表头 / 心智模型表行数 / 第 4 节步骤引用 / Mermaid 数量 / 长度 / 来源标注 / 无 task 语法 / 无机器路径")
     return 0
 
 

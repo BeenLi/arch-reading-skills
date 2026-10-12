@@ -12,7 +12,7 @@ python3 scripts/check_doc.py <doc.md> --name <Name>
 2. 紧接三行元信息（行尾两个空格换行）：
    - `源仓库：` remote URL；没有 remote 写"本地仓库"
    - `本次分析的本地路径：` 绝对路径（全文唯一允许出现机器专属路径的地方）
-   - `本次分析的提交：` `<短 hash> <日期> <subject>`
+   - `本次分析的提交：` `<短 hash> <日期> <subject>`；目标不是 git 仓库时写 `无 git 仓库；最新文件 mtime <日期>`。三个标签逐字固定，不要自创标签（如“源位置”“文件版本”）。
 3. 不写 frontmatter；不用 Obsidian task 语法（`- [ ]` / `- [x]`）。
 
 ## 正文 12 节

@@ -18,6 +18,10 @@ demo 是一个示例项目，入口在 `src/main.py`。
 |---|---|---|
 | Runner | `src/runner.py` | 执行主循环 |
 | Config | `config/settings.yaml` 的加载器 `src/config.py` | 读取配置 |
+| Store | `src/store.py` | 持久化 |
+| CLI | `src/main.py` | 参数解析 |
+| Logger | `src/log.py` | 日志 |
+| Plugin | `src/plugins/__init__.py` | 扩展点 |
 
 ## 3. 总体架构
 

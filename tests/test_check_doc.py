@@ -74,3 +74,17 @@ def test_cli_exit_code(tmp_path, valid_doc):
     assert subprocess.run([sys.executable, CHECK_DOC, str(p)], capture_output=True).returncode == 0
     p.write_text(valid_doc.replace("## 3. 总体架构", "## 3. 架构"), encoding="utf-8")
     assert subprocess.run([sys.executable, CHECK_DOC, str(p)], capture_output=True).returncode == 1
+
+
+def test_section_2_table_row_bounds(valid_doc):
+    assert check(valid_doc) == []  # fixture 恰好 6 行数据行
+    too_few = valid_doc.replace("| Plugin | `src/plugins/__init__.py` | 扩展点 |\n", "")
+    assert any("第 2 节" in f and "6–12" in f for f in check(too_few))
+    extra = "".join(f"| X{i} | `src/x{i}.py` | 多余 |\n" for i in range(7))
+    too_many = valid_doc.replace("| Plugin | `src/plugins/__init__.py` | 扩展点 |\n", "| Plugin | `src/plugins/__init__.py` | 扩展点 |\n" + extra)
+    assert any("第 2 节" in f and "6–12" in f for f in check(too_many))
+
+
+def test_section_4_steps_must_cite_files(valid_doc):
+    broken = valid_doc.replace("1. `src/config.py` 读取 YAML。", "1. 读取 YAML。")
+    assert any("第 4 节" in f and "引用文件" in f for f in check(broken))
