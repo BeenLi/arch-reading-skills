@@ -88,3 +88,27 @@ def test_section_2_table_row_bounds(valid_doc):
 def test_section_4_steps_must_cite_files(valid_doc):
     broken = valid_doc.replace("1. `src/config.py` 读取 YAML。", "1. 读取 YAML。")
     assert any("第 4 节" in f and "引用文件" in f for f in check(broken))
+
+
+def test_fenced_code_blocks_are_ignored_by_structural_checks(valid_doc):
+    quoted = valid_doc.replace(
+        "改 `src/config.py` 的字段要同步改 `src/runner.py`。\n",
+        "改 `src/config.py` 的字段要同步改 `src/runner.py`。\n\n```markdown\n## 问题定义\n## 2. 核心心智模型\n| 概念 | 来源 | 含义 |\n```\n",
+    )
+    assert check(quoted) == []
+    steps_in_output = valid_doc.replace(
+        "1. `src/config.py` 读取 YAML。\n",
+        "1. `src/config.py` 读取 YAML。\n\n```text\n1. first line of output\n```\n",
+    )
+    assert check(steps_in_output) == []
+    leak = valid_doc + "\n```bash\ncat /Users/me/secret\n```\n"
+    assert any("机器专属" in f for f in check(leak))  # 代码块里的机器路径仍要抓
+
+
+def test_source_token_accepts_well_known_extensionless_files_and_rejects_urls():
+    from check_doc import _is_source_token
+
+    for ok in ("Makefile", "Dockerfile", "LICENSE", ".gitignore", "src/main.py", "README.md", "python3 src/main.py --once"):
+        assert _is_source_token(ok), ok
+    for bad in ("vLLM", "1.0", "v1.2.3", "https://github.com/x/y", "e.g."):
+        assert not _is_source_token(bad), bad

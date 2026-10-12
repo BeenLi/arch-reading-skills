@@ -54,19 +54,47 @@ def _table_header_pattern(columns: list[str]) -> re.Pattern[str]:
 
 
 PATH_WORD = re.compile(r"(?:/|\.[A-Za-z][A-Za-z0-9]{0,7}$)")
+DOTFILE = re.compile(r"^\.[A-Za-z][A-Za-z0-9_-]*$")
+URL = re.compile(r"^[a-z][a-z0-9+.-]*://", re.I)
+WELL_KNOWN_FILES = {
+    "Makefile", "Dockerfile", "LICENSE", "Justfile", "Rakefile", "Procfile", "Gemfile",
+    "CODEOWNERS", "Vagrantfile", "Containerfile", "Jenkinsfile",
+}
 
 
 def _is_source_token(token: str) -> bool:
     """A backtick token counts as a source when any word in it looks like a repo path.
 
-    `src/main.py`, `README.md`, `python3 src/main.py --init` count; `vLLM`, `1.0`, `e.g.` do not.
+    `src/main.py`, `README.md`, `Makefile`, `.gitignore`, `python3 src/main.py --init` count;
+    `vLLM`, `1.0`, `v1.2.3`, `e.g.`, `https://…` do not.
     """
     for word in token.split():
-        if word.startswith(MACHINE_PREFIXES):
+        if word.startswith(MACHINE_PREFIXES) or URL.match(word):
             continue
-        if PATH_WORD.search(word):
+        if word in WELL_KNOWN_FILES or DOTFILE.match(word) or PATH_WORD.search(word):
             return True
     return False
+
+
+FENCE_LINE = re.compile(r"^\s*(`{3,}|~{3,})")
+
+
+def _blank_fences(lines: list[str]) -> list[str]:
+    """Return a copy with every line inside a ``` / ~~~ fence blanked (line count kept)."""
+    out: list[str] = []
+    marker: str | None = None
+    for line in lines:
+        m = FENCE_LINE.match(line)
+        if m and marker is None:
+            marker = m.group(1)[0] * 3
+            out.append("")
+            continue
+        if m and marker is not None and m.group(1).startswith(marker):
+            marker = None
+            out.append("")
+            continue
+        out.append("" if marker is not None else line)
+    return out
 
 
 def _split_sections(lines: list[str]) -> tuple[list[tuple[int | None, str, int]], list[str]]:
@@ -89,6 +117,7 @@ def _split_sections(lines: list[str]) -> tuple[list[tuple[int | None, str, int]]
 def check(text: str, name: str | None = None) -> list[str]:
     failures: list[str] = []
     lines = text.splitlines()
+    plain = _blank_fences(lines)  # 结构 / 表格 / 步骤 / task 检查看去掉代码块的副本；Mermaid 计数与机器路径看原文
 
     # --- header ---------------------------------------------------------
     non_empty = [(i, l) for i, l in enumerate(lines) if l.strip()]
@@ -109,7 +138,7 @@ def check(text: str, name: str | None = None) -> list[str]:
         failures.append("头部：三行元信息不完整")
 
     # --- sections -------------------------------------------------------
-    found, split_failures = _split_sections(lines)
+    found, split_failures = _split_sections(plain)
     failures += split_failures
     numbered = [(n, t, i) for n, t, i in found if n is not None]
     appendices = [(n, t, i) for n, t, i in found if n is None]
@@ -134,8 +163,8 @@ def check(text: str, name: str | None = None) -> list[str]:
     h2_positions = sorted(i for _, _, i in found)
     def section_text(start: int) -> str:
         later = [i for i in h2_positions if i > start]
-        end = later[0] if later else len(lines)
-        return "\n".join(lines[start:end])
+        end = later[0] if later else len(plain)
+        return "\n".join(plain[start:end])
     bodies = {n: section_text(i) for n, _, i in numbered}
 
     for number, columns in TABLE_HEADERS.items():
@@ -166,7 +195,7 @@ def check(text: str, name: str | None = None) -> list[str]:
         failures.append(f"Mermaid：需要 {MIN_MERMAID}–{MAX_MERMAID} 张，实际 {mermaid}")
     if not MIN_LINES <= len(lines) <= MAX_LINES:
         failures.append(f"长度：需要 {MIN_LINES}–{MAX_LINES} 行，实际 {len(lines)}")
-    if TASK.search(text):
+    if TASK.search("\n".join(plain)):
         failures.append("禁用：正文含 Obsidian task 语法 `- [ ]` / `- [x]`")
     for i, line in enumerate(lines):
         if i in header_line_indexes:
