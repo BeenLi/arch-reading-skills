@@ -45,7 +45,7 @@ description: Use when asked to write, regenerate or update an architecture-and-u
 
 | 情况 | 写哪里 |
 |---|---|
-| 仓库已有 `ARCHITECTURE.md`，或用户要求写进仓库 | 原地覆盖写 `<repo>/ARCHITECTURE.md`，再保证 `guide_dir/<Name>-架构和使用文档.md` 是它的硬链接 |
+| 仓库已有 `ARCHITECTURE.md`，或用户要求写进仓库 | 原地覆盖写 `<repo>/ARCHITECTURE.md`，头部“本地路径”行写 `<repo>` 占位符（仓库里不记录机器路径），再保证 `guide_dir/<Name>-架构和使用文档.md` 是它的硬链接 |
 | 其他（第三方仓库、skill 目录） | 只写 `guide_dir/<Name>-架构和使用文档.md` |
 | 用户指定了输出路径 | 只写该路径 |
 

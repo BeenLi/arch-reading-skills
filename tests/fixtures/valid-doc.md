@@ -1,7 +1,9 @@
 > 一份面向日常研发的 demo 说明书：解释它是什么、各模块如何协作、如何安装启动，以及排查问题时优先看哪些源码和文档。
 
-源仓库：`https://example.com/demo.git`  
-本次分析的本地路径：`/Users/example/repo`  
+源仓库：`https://example.com/demo.git`
+
+本次分析的本地路径：`/Users/example/repo`
+
 本次分析的提交：`abc1234 2026-10-12 init`
 
 ## 1. 一句话理解 demo
