@@ -16,6 +16,8 @@ import re
 import sys
 from pathlib import Path
 
+from md_fences import fence_blocks, info_word
+
 # (number, accepted titles). Section 1 is matched by prefix; 6/8/11 accept either side of the slash.
 SECTION_TITLES: list[tuple[int, tuple[str, ...]]] = [
     (1, ("一句话理解",)),
@@ -46,11 +48,12 @@ MIN_MODEL_ROWS, MAX_MODEL_ROWS = 6, 12
 H2 = re.compile(r"^## (?:(\d+)\. (.+)|(附录.*))$")
 BACKTICK = re.compile(r"`([^`\n]+)`")
 TASK = re.compile(r"(?m)^\s*- \[[ xX]\]")
-MERMAID = re.compile(r"(?m)^```mermaid")
 
 
 def _table_header_pattern(columns: list[str]) -> re.Pattern[str]:
-    return re.compile(r"(?m)^\|\s*" + r"\s*\|\s*".join(re.escape(c) for c in columns) + r"\s*\|$")
+    """The required columns, in order, as the leading cells; extra trailing columns are allowed."""
+    cells = r"\s*\|\s*".join(re.escape(c) for c in columns)
+    return re.compile(r"(?m)^\|\s*" + cells + r"\s*\|(?:[^|\n]*\|)*\s*$")
 
 
 PATH_WORD = re.compile(r"(?:/|\.[A-Za-z][A-Za-z0-9]{0,7}$)")
@@ -76,24 +79,12 @@ def _is_source_token(token: str) -> bool:
     return False
 
 
-FENCE_LINE = re.compile(r"^\s*(`{3,}|~{3,})")
-
-
 def _blank_fences(lines: list[str]) -> list[str]:
-    """Return a copy with every line inside a ``` / ~~~ fence blanked (line count kept)."""
-    out: list[str] = []
-    marker: str | None = None
-    for line in lines:
-        m = FENCE_LINE.match(line)
-        if m and marker is None:
-            marker = m.group(1)[0] * 3
-            out.append("")
-            continue
-        if m and marker is not None and m.group(1).startswith(marker):
-            marker = None
-            out.append("")
-            continue
-        out.append("" if marker is not None else line)
+    """Return a copy with every fenced block (fence lines included) blanked; line count kept."""
+    out = list(lines)
+    for start, end, _ in fence_blocks(lines):
+        for k in range(start, min(end + 1, len(lines))):
+            out[k] = ""
     return out
 
 
@@ -116,6 +107,7 @@ def _split_sections(lines: list[str]) -> tuple[list[tuple[int | None, str, int]]
 
 def check(text: str, name: str | None = None) -> list[str]:
     failures: list[str] = []
+    text = text.lstrip("\ufeff")  # 带 BOM 的 UTF-8 文件
     lines = text.splitlines()
     plain = _blank_fences(lines)  # 结构 / 表格 / 步骤 / task 检查看去掉代码块的副本；Mermaid 计数与机器路径看原文
 
@@ -132,6 +124,8 @@ def check(text: str, name: str | None = None) -> list[str]:
     for prefix, (idx, line) in zip(HEADER_PREFIXES, following):
         if line.strip().startswith(prefix):
             header_line_indexes.add(idx)
+            if line != line.rstrip():
+                failures.append(f"头部：`{prefix}` 行有行尾空白（元信息行各自成段，不要用行尾双空格换行）")
         else:
             failures.append(f"头部：缺少以 `{prefix}` 开头的元信息行（实际：`{line.strip()[:30]}`）")
     if len(following) < 3:
@@ -155,7 +149,8 @@ def check(text: str, name: str | None = None) -> list[str]:
             elif name and name not in title:
                 failures.append(f"名字：第 1 节标题未包含 `{name}`")
         elif title not in accepted:
-            failures.append(f"第 {number} 节：标题应为 {' / '.join(accepted)} 之一，实际 `{title}`")
+            options = "、".join(f"`{a}`" for a in accepted)
+            failures.append(f"第 {number} 节：标题应为 {options} 之一，实际 `{title}`")
     if appendices and numbered and appendices[0][2] < numbered[-1][2]:
         failures.append("附录：必须出现在第 12 节之后")
 
@@ -170,6 +165,8 @@ def check(text: str, name: str | None = None) -> list[str]:
     for number, columns in TABLE_HEADERS.items():
         if number in bodies and not _table_header_pattern(columns).search(bodies[number]):
             failures.append(f"第 {number} 节：缺少表头 `| {' | '.join(columns)} |`")
+    if 3 in bodies and not re.search(r"(?m)^### 3\.1 组件职责\s*$", bodies[3]):
+        failures.append("第 3 节：缺少 `### 3.1 组件职责` 小节标题")
     if 2 in bodies:
         rows = [l for l in bodies[2].splitlines() if l.startswith("|")]
         data_rows = max(len(rows) - 2, 0)  # 去掉表头与分隔行
@@ -181,8 +178,12 @@ def check(text: str, name: str | None = None) -> list[str]:
         for step in re.findall(r"(?m)^\s*\d+\. .+$", bodies[4]):
             if not any(_is_source_token(tok) for tok in BACKTICK.findall(step)):
                 failures.append(f"第 4 节：步骤“{step.strip()[:30]}”未引用文件")
-    if 12 in bodies and len(re.findall(r"(?m)^\s*(?:-|\d+\.) ", bodies[12])) < 2:
-        failures.append("第 12 节：至少两条列表项")
+    if 12 in bodies:
+        items = re.findall(r"(?m)^\s*(?:-|\d+\.) (.*)$", bodies[12])
+        if len(items) < 2:
+            failures.append("第 12 节：至少两条列表项")
+        if items and not items[0].strip().startswith("本次为静态源码分析"):
+            failures.append("第 12 节：第一条应以“本次为静态源码分析，未执行 …”开头")
     for number, body in bodies.items():
         if number == 12:
             continue
@@ -190,7 +191,7 @@ def check(text: str, name: str | None = None) -> list[str]:
             failures.append(f"第 {number} 节：没有反引号包裹的来源路径")
 
     # --- global ---------------------------------------------------------
-    mermaid = len(MERMAID.findall(text))
+    mermaid = sum(info_word(info) == "mermaid" for _, _, info in fence_blocks(lines))
     if not MIN_MERMAID <= mermaid <= MAX_MERMAID:
         failures.append(f"Mermaid：需要 {MIN_MERMAID}–{MAX_MERMAID} 张，实际 {mermaid}")
     if not MIN_LINES <= len(lines) <= MAX_LINES:
@@ -210,7 +211,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("doc", help="path to the Markdown document")
     parser.add_argument("--name", help="project name that must appear in the lead and section 1")
     args = parser.parse_args(argv)
-    text = Path(args.doc).read_text(encoding="utf-8")
+    try:
+        text = Path(args.doc).read_text(encoding="utf-8-sig")
+    except (OSError, UnicodeDecodeError) as exc:
+        print(f"error: cannot read {args.doc}: {exc}", file=sys.stderr)
+        return 2
     failures = check(text, args.name)
     if failures:
         for f in failures:

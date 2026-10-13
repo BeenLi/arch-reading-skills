@@ -21,6 +21,8 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+from md_fences import fence_blocks, info_word
+
 IGNORED_DIRS = {
     ".git", "node_modules", "__pycache__", ".venv", "venv", "dist", "build",
     ".pytest_cache", ".claude", ".superpowers",
@@ -30,10 +32,12 @@ ENTRY_FILES = (
     "package.json", "Makefile", "Dockerfile",
 )
 ENTRY_DIRS = ("bin", "scripts", "src", "tests")
+NESTED_ENTRY_FILES = {"skill.md", "__main__.py"}  # 一个仓库装多个 skill / 包时，入口在第二层
 COMMAND_PREFIXES = ("python3 ", "python ", "npm ", "pnpm ", "make ", "bash ", "pip ", "cargo ", "go ")
 CONFIG_SUFFIXES = {".json", ".toml", ".yaml", ".yml", ".ini", ".cfg"}
 LOCK_MARKERS = ("lock",)
-FENCE = re.compile(r"^\s*```")
+SHELL_INFOS = {"", "bash", "sh", "shell", "zsh", "fish", "console", "shell-session", "powershell", "ps1", "bat", "cmd"}
+ASSIGNMENT = re.compile(r"^\S+\s*=")  # `python = "^3.10"` 是配置，不是命令
 
 
 def _git(repo: Path, *args: str) -> str | None:
@@ -75,39 +79,52 @@ def _ext_counts(repo: Path) -> list[tuple[str, int]]:
 
 
 def _entry_points(repo: Path) -> list[str]:
+    entry_files = tuple(name.lower() for name in ENTRY_FILES)
     found: list[str] = []
     for path in sorted(repo.iterdir()):
-        if path.is_dir() and path.name in ENTRY_DIRS:
+        lower = path.name.lower()
+        if path.is_dir() and lower in ENTRY_DIRS:
             found.append(path.name + "/")
-        elif path.is_file() and (path.name.startswith(ENTRY_FILES) or path.suffix == ".sh"):
+        elif path.is_file() and (lower.startswith(entry_files) or path.suffix == ".sh"):
             found.append(path.name)
-    return found
+    nested: list[str] = []
+    for dirpath, dirnames, filenames in os.walk(repo):
+        rel = Path(dirpath).relative_to(repo)
+        dirnames[:] = sorted(d for d in dirnames if d not in IGNORED_DIRS)
+        if len(rel.parts) >= 2:
+            dirnames[:] = []
+        if rel.parts:
+            nested += [(rel / f).as_posix() for f in filenames if f.lower() in NESTED_ENTRY_FILES]
+    return found + sorted(nested)
 
 
 def _readme_commands(repo: Path) -> list[str]:
     readmes = sorted(p for p in repo.iterdir() if p.is_file() and p.name.lower().startswith("readme"))
     commands: list[str] = []
+
+    def keep(line: str) -> None:
+        if line.startswith(COMMAND_PREFIXES) and not ASSIGNMENT.match(line):
+            commands.append(line)
+
     for readme in readmes:
-        in_fence = False
-        pending = ""
-        for raw in readme.read_text(encoding="utf-8", errors="replace").splitlines():
-            if FENCE.match(raw):
-                in_fence = not in_fence
-                pending = ""
-                continue
-            if not in_fence:
-                continue
-            line = raw.strip()
-            if line.startswith("$ "):
-                line = line[2:]
+        lines = readme.read_text(encoding="utf-8", errors="replace").splitlines()
+        for start, end, info in fence_blocks(lines):
+            if info_word(info) not in SHELL_INFOS:
+                continue  # toml / yaml / python / 被引用的 markdown 示例都不是命令
+            pending = ""
+            for raw in lines[start + 1:end]:
+                line = raw.strip()
+                if line.startswith("$ "):
+                    line = line[2:]
+                if pending:
+                    line = f"{pending} {line}".strip()  # 续行后遇空行：续行到此结束
+                    pending = ""
+                if line.endswith("\\"):
+                    pending = line[:-1].rstrip()
+                    continue
+                keep(line)
             if pending:
-                line = f"{pending} {line}"
-                pending = ""
-            if line.endswith("\\"):
-                pending = line[:-1].rstrip()
-                continue
-            if line.startswith(COMMAND_PREFIXES):
-                commands.append(line)
+                keep(pending)
     return commands
 
 
@@ -116,7 +133,7 @@ def _config_files(repo: Path) -> list[str]:
     for dirpath, dirnames, filenames in os.walk(repo):
         rel = Path(dirpath).relative_to(repo)
         dirnames[:] = sorted(d for d in dirnames if d not in IGNORED_DIRS)
-        if len(rel.parts) >= 2:
+        if len(rel.parts) >= 2:  # 顶三层：根目录 + 两层子目录（skills/_shared/user-config.json 这类）
             dirnames[:] = []
         for name in sorted(filenames):
             p = Path(name)
@@ -137,12 +154,19 @@ def _docs(repo: Path) -> list[str]:
 
 def collect_facts(repo: Path, depth: int = 2, max_entries: int = 200) -> dict:
     repo = Path(repo).resolve()
+    top = _git(repo, "rev-parse", "--show-toplevel")
+    git_root = Path(top).resolve() if top else None
+    subdir = repo.relative_to(git_root).as_posix() if git_root and git_root != repo else None
+    # 子目录：remote 属于所属仓库；HEAD 取最后一次改动本目录的提交
+    head_args = ("log", "-1", "--format=%h %ad %s", "--date=short") + (("--", ".") if subdir else ())
     return {
         "name": repo.name,
         "path": str(repo),
+        "git_root": str(git_root) if git_root else None,
+        "subdir": subdir,
         "remote": _git(repo, "remote", "get-url", "origin") or "本地仓库",
         "branch": _git(repo, "branch", "--show-current") or "(detached)",
-        "head": _git(repo, "log", "-1", "--format=%h %ad %s", "--date=short") or "(no git)",
+        "head": _git(repo, *head_args) or "(no git)",
         "tree": _walk(repo, depth, max_entries),
         "ext_counts": _ext_counts(repo),
         "entry_points": _entry_points(repo),
@@ -160,6 +184,8 @@ def render_markdown(facts: dict) -> str:
     out = [f"## 仓库事实：{facts['name']}", ""]
     out += [
         f"- 本地路径：`{facts['path']}`",
+        *([f"- 子目录：`{facts['subdir']}`，所属 git 仓库 `{facts['git_root']}`；"
+           "下面的源仓库 / 分支属于该仓库，HEAD 是最后一次改动本子目录的提交"] if facts.get("subdir") else []),
         f"- 源仓库：`{facts['remote']}`",
         f"- 分支：`{facts['branch']}`",
         f"- HEAD：`{facts['head']}`",

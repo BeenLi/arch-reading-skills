@@ -112,3 +112,68 @@ def test_source_token_accepts_well_known_extensionless_files_and_rejects_urls():
         assert _is_source_token(ok), ok
     for bad in ("vLLM", "1.0", "v1.2.3", "https://github.com/x/y", "e.g."):
         assert not _is_source_token(bad), bad
+
+
+# --- deferred minors (2026-10-13) -------------------------------------------
+
+
+def test_section_12_first_bullet_states_static_analysis(valid_doc):
+    swapped = valid_doc.replace(
+        "- 本次为静态源码分析，未执行 `python3 src/main.py`。\n- `src/store.py` 的并发语义未核实。\n",
+        "- `src/store.py` 的并发语义未核实。\n- 本次为静态源码分析，未执行 `python3 src/main.py`。\n",
+    )
+    assert any("第 12 节" in f and "静态源码分析" in f for f in check(swapped))
+
+
+def test_section_3_requires_the_3_1_heading(valid_doc):
+    broken = valid_doc.replace("### 3.1 组件职责", "### 组件")
+    assert any("第 3 节" in f and "3.1 组件职责" in f for f in check(broken))
+
+
+def test_required_table_header_allows_extra_trailing_columns(valid_doc):
+    wider = valid_doc.replace(
+        "| 现象 | 优先检查 | 依据 |\n|---|---|---|\n| 找不到配置 | 工作目录 | `src/config.py` |",
+        "| 现象 | 优先检查 | 依据 | 备注 |\n|---|---|---|---|\n| 找不到配置 | 工作目录 | `src/config.py` | 无 |",
+    )
+    assert check(wider) == []
+
+
+def test_slash_section_error_lists_each_alternative_once(valid_doc):
+    msgs = [f for f in check(valid_doc.replace("## 8. 常见使用场景 / 推荐工作流", "## 8. 场景")) if "第 8 节" in f]
+    assert msgs
+    assert "推荐工作流 / 常见使用场景" not in msgs[0]  # 不再把整句和两侧拼在一起
+    assert "`常见使用场景 / 推荐工作流`" in msgs[0] and "`常见使用场景`" in msgs[0] and "`推荐工作流`" in msgs[0]
+
+
+def test_cli_missing_file_exits_2_without_traceback(tmp_path):
+    r = subprocess.run([sys.executable, CHECK_DOC, str(tmp_path / "nope.md")], capture_output=True, text=True)
+    assert r.returncode == 2
+    assert "Traceback" not in r.stderr and "nope.md" in r.stderr
+
+
+def test_utf8_bom_does_not_break_the_header(tmp_path, valid_doc):
+    assert check("﻿" + valid_doc) == []
+    p = tmp_path / "bom.md"
+    p.write_bytes(b"\xef\xbb\xbf" + valid_doc.encode("utf-8"))
+    assert subprocess.run([sys.executable, CHECK_DOC, str(p)], capture_output=True).returncode == 0
+
+
+SECOND_DIAGRAM = '```mermaid\nflowchart LR\n  A["src/config.py"] --> B["src/runner.py"]\n```\n'
+
+
+def test_indented_and_tilde_mermaid_blocks_are_counted(valid_doc):
+    indented = valid_doc.replace(SECOND_DIAGRAM, "".join("   " + l + "\n" for l in SECOND_DIAGRAM.splitlines()))
+    assert indented != valid_doc and check(indented) == []
+    tilde = valid_doc.replace(SECOND_DIAGRAM, SECOND_DIAGRAM.replace("```", "~~~"))
+    assert tilde != valid_doc and check(tilde) == []
+
+
+def test_mermaid_quoted_inside_a_longer_fence_is_not_counted(valid_doc):
+    quoted = "````markdown\n```mermaid\nflowchart TB\n  X --> Y\n```\n````\n"
+    doc = valid_doc.replace("附录内容不计入编号章节。\n", "附录内容不计入编号章节。\n\n" + quoted * 4)
+    assert check(doc) == []  # 4 张被引用的骨架图不算，实际仍是 2 张
+
+
+def test_header_meta_lines_must_not_end_with_whitespace(valid_doc):
+    trailing = valid_doc.replace("源仓库：`https://example.com/demo.git`\n", "源仓库：`https://example.com/demo.git`  \n")
+    assert any("头部" in f and "行尾空白" in f for f in check(trailing))

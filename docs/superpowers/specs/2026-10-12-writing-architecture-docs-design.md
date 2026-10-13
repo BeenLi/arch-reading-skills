@@ -98,7 +98,7 @@ Mermaid 规则复用 `~/.claude/skills/_shared/references/mermaid-rules.md`（da
 - 按扩展名的文件计数（前 10）。
 - 入口候选：`README*`、`SKILL.md`、`ARCHITECTURE.md`、`pyproject.toml`、`setup.py`、`package.json`、`Makefile`、`Dockerfile`、`*.sh`、`bin/`、`scripts/`、`src/`、`tests/`。
 - README 代码块中的命令行（以 `python3 ` `python ` `npm ` `pnpm ` `make ` `bash ` `pip ` `cargo ` `go ` 开头）。
-- 顶两层的配置文件（`*.json *.toml *.yaml *.yml *.ini *.cfg`，排除 lock 文件）。
+- 顶三层（根目录加两层子目录，覆盖 `skills/_shared/user-config.json` 这类位置）的配置文件（`*.json *.toml *.yaml *.yml *.ini *.cfg`，排除 lock 文件）。
 - 已有文档：`ARCHITECTURE.md`、`docs/` 下的 `*.md` 列表。
 
 `scripts/check_doc.py <doc.md> [--name NAME]` → 逐条 `OK/FAIL` 报告，任一 FAIL 退出码 1：
