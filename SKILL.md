@@ -21,14 +21,14 @@ description: Use when asked to write, regenerate or update an architecture-and-u
    ```
 
    输出里的 remote / HEAD / 目录树 / 入口候选 / README 命令 / 配置文件 / 已有文档，就是头部三行和第 5、7、9 节的原始材料。
-2. **读源码，不执行**：按 入口（README、SKILL.md、`__main__` / `main()`）→ 主链路（入口调用的模块，顺着 import 走）→ 配置（config 文件、argparse、环境变量）→ 测试（`tests/` 说明了哪些行为被保证）的顺序读。每读一个文件记一行 `文件 → 回答契约第几节`。大仓库不逐文件通读：README 和入口读全，主链路按调用展开，其余只看文件头和函数签名。**只读取，不运行目标仓库的脚本、测试或构建**；文档里出现的每条命令都来自 README、脚本或配置文件，并注明出处。
+2. **读源码，不执行**：按 入口（README、SKILL.md、`__main__` / `main()`）→ 主链路（入口调用的模块，顺着 import 走）→ 配置（config 文件、argparse、环境变量）→ 测试（`tests/` 说明了哪些行为被保证）的顺序读。每读一个文件记一行 `文件 → 回答契约第几节`。大仓库不逐文件通读：README 和入口读全，主链路按调用展开，其余只看文件头和函数签名。**分析阶段只读取，不运行目标仓库的脚本、测试或构建**；文档里出现的每条命令都来自 README、脚本或配置文件，并注明出处。
 3. **按契约写草稿**：到 scratchpad 写 `<Name>-架构和使用文档.md`，逐节对照 `references/doc-format.md`：
    - 头部三行标签逐字固定（`源仓库：` / `本次分析的本地路径：` / `本次分析的提交：`）；不是 git 仓库时提交行写 `无 git 仓库；最新文件 mtime <日期>`。
    - 12 个 H2 标题逐字照抄契约（第 6、8、11 节可取斜杠任一侧），不要按仓库"更贴切"地改词。
    - 第 3 节必须有 `### 3.1 组件职责` 表；第 2、9、10 节表头照抄。
    - 正文里的仓库路径写成相对路径或 `<repo>` / `<skill>` / `<vault>` 占位符，绝对路径只允许出现在头部"本地路径"一行。
    - Mermaid 2–5 张，按 `~/.claude/skills/_shared/references/mermaid-rules.md` 渲染 → 看图 → 重排；该文件不存在时至少渲染一次并目视检查。
-4. **并回旧文档**：目标位置已有同名文档时，逐节对照。旧文档里经源码核实仍成立、新稿没有的条目（排错表行、历史教训、设计原因、附录）并回；不再成立的删除并在汇报里列出。不要为了保留旧内容改动章节结构。
+4. **并回旧文档**：目标位置已有同名文档时，先把它复制到 scratchpad 留底，再逐节对照。旧文档里经源码核实仍成立、新稿没有的条目（排错表行、历史教训、设计原因、附录）并回；不再成立的删除并在汇报里列出。不要为了保留旧内容改动章节结构。
 5. **校验**：
 
    ```bash
@@ -37,7 +37,7 @@ description: Use when asked to write, regenerate or update an architecture-and-u
    ```
 
    任一 FAIL 回到第 3 步修稿，不要放宽校验。
-6. **落盘**（见下）→ 目标仓库若有引用该文档的测试（例如 `tests/` 里 grep 文档内容的用例），跑一遍。
+6. **落盘**（见下）→ 目标仓库若有引用该文档的测试（例如 `tests/` 里 grep 文档内容的用例），跑一遍。这是检查文档有没有破坏仓库的回归测试，不属于第 2 步的分析，结果也不写进文档。
 
 ## 落盘规则
 
@@ -49,7 +49,7 @@ description: Use when asked to write, regenerate or update an architecture-and-u
 | 其他（第三方仓库、skill 目录） | 只写 `guide_dir/<Name>-架构和使用文档.md` |
 | 用户指定了输出路径 | 只写该路径 |
 
-原地覆盖用 Python `open(path, "w")`，不要用"写临时文件再 rename"的方式，否则硬链接会断。硬链接核对与重建：
+覆盖任何已有文件之前（仓库里的 `ARCHITECTURE.md` 或 vault 里只有一份的旧文档），确认第 4 步的 scratchpad 备份已经存在。原地覆盖用 Python `open(path, "w")`，不要用"写临时文件再 rename"的方式，否则硬链接会断。硬链接核对与重建：
 
 ```bash
 stat -f "%i %l" <repo>/ARCHITECTURE.md "<guide_dir>/<Name>-架构和使用文档.md"   # inode 相同、link count ≥ 2
