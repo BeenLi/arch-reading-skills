@@ -65,7 +65,8 @@ def test_readme_commands_follow_commonmark_fences(tmp_path):
         "```toml\npython = \"^3.10\"\n```\n\n"
         "```\npython = 1\nmake test\n```\n\n"
         "````markdown\n```bash\npip install quoted\n```\n````\n\n"
-        "```bash\nmake all \\\n\n```\n"
+        "```bash\nmake all \\\n\n```\n\n"
+        "```text\nmake docs\n```\n"
     ))
     cmds = collect_facts(repo)["readme_commands"]
     assert "npm run dev" in cmds  # ~~~ 围栏
@@ -73,6 +74,7 @@ def test_readme_commands_follow_commonmark_fences(tmp_path):
     assert not any(c.startswith("python =") for c in cmds)  # TOML 赋值不是命令
     assert "pip install quoted" not in cmds  # 嵌在 markdown 示例里的不是命令
     assert "make all" in cmds  # 续行后遇空行：结束且无尾随空格
+    assert "make docs" in cmds  # README 常用 ```text 包命令
 
 
 def test_subdirectory_of_a_git_repo_is_reported_as_such(fixture_repo):

@@ -36,7 +36,8 @@ NESTED_ENTRY_FILES = {"skill.md", "__main__.py"}  # 一个仓库装多个 skill 
 COMMAND_PREFIXES = ("python3 ", "python ", "npm ", "pnpm ", "make ", "bash ", "pip ", "cargo ", "go ")
 CONFIG_SUFFIXES = {".json", ".toml", ".yaml", ".yml", ".ini", ".cfg"}
 LOCK_MARKERS = ("lock",)
-SHELL_INFOS = {"", "bash", "sh", "shell", "zsh", "fish", "console", "shell-session", "powershell", "ps1", "bat", "cmd"}
+SHELL_INFOS = {"", "bash", "sh", "shell", "zsh", "fish", "console", "shell-session", "powershell", "ps1", "bat", "cmd",
+               "text", "plaintext", "txt"}
 ASSIGNMENT = re.compile(r"^\S+\s*=")  # `python = "^3.10"` 是配置，不是命令
 
 
