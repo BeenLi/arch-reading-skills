@@ -433,7 +433,7 @@ class SystemsTemplateTests(unittest.TestCase):
         flow = text[heading_index(text, "### 执行流"):heading_index(text, "### 优化目标与度量口径")]
         # 条件写在占位说明里，模板不放默认图块，避免每篇都照抄一张
         self.assertNotIn("```mermaid", flow)
-        for trigger in ("5 步", "反馈", "并行", "执行顺序"):
+        for trigger in ("5 步", "反馈", "并行", "先后顺序"):
             self.assertIn(trigger, flow, trigger)
         for phrase in ("^diag-flow", "diagram-rules.md", "编号", "不要重画"):
             self.assertIn(phrase, flow, phrase)
@@ -442,6 +442,10 @@ class SystemsTemplateTests(unittest.TestCase):
         for name, blob in (("template", text), ("SKILL.md", skill), ("paper_daemon.py", daemon)):
             self.assertNotIn("不画第二张框图", blob, name)
             self.assertIn("^diag-flow", blob, name)
+            # 触发条件要能直接观察：步数按列表条数，普通请求-响应不算闭环，第 4 条看架构图有没有顺序箭头
+            for phrase in ("按编号列表条数计", "单纯的请求-响应返回不算", "没有表示先后顺序的箭头或编号"):
+                self.assertIn(phrase, blob, (name, phrase))
+            self.assertNotIn("架构图看不出执行顺序", blob, name)
         self.assertIn("^diag-flow", QUALITY_STANDARDS.read_text(encoding="utf-8"))
 
     def test_critical_thinking_merges_limits_with_failure_scenarios(self):
@@ -462,6 +466,10 @@ class SystemsTemplateTests(unittest.TestCase):
         daemon = PAPER_DAEMON.read_text(encoding="utf-8")
         self.assertIn("python3 scripts/check_note_links.py", skill)
         self.assertIn("check_note_links.py", daemon)
+        # 复查范围包括本次新建的概念笔记，根目录说清是 VAULT_PATH
+        for phrase in ("新建的概念笔记", "VAULT_PATH"):
+            self.assertIn(phrase, skill, phrase)
+        self.assertIn("新建的概念笔记", daemon)
         # 复查放在概念库维护之后：概念笔记建好后，[[概念]] 链接才可能全部解析
         self.assertLess(skill.index("## 5. 概念库维护"), skill.index("python3 scripts/check_note_links.py"))
 
