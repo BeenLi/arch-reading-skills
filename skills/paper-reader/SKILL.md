@@ -76,7 +76,7 @@ description: |
 5. 图片优先外链 arXiv HTML / 项目主页；如果图源是本地 PDF，则从 PDF 裁切图片并存放到笔记同目录下的 `00_assets/<note-name>_<原图片名>`，笔记中使用 `![[00_assets/<note-name>_<原图片名>]]`。
 6. Figure / Table / 单个公式必须嵌入对应叙事小节，不要默认用 H3/H4 图表或公式标题把素材提升为 Obsidian 大纲章节；图片标题写进图片引用的题注/alt 文本（如 `![Figure 3: ...](...)`），不要在图片上方单独写 `**Figure ...**` 标题；只有“核心结果”“消融实验”“附录图”等语义小节可以使用 `###`，只有按论文结构或 Agent 理解提炼出的机制子小节才可以使用 `####`。
 7. 论文笔记正文禁止使用 Obsidian task 语法（`- [ ]` / `- [x]`）；核查项、复现步骤、风险项一律写成普通 bullet 或 Markdown table，避免污染 Obsidian Tasks。
-8. `### 系统架构` 优先直接嵌入论文的总体架构原图并挂 `^figN`；没有原图或看不出模块边界与数据流时才自画一张，二选一。`### 执行流` 用编号步骤走读，不画第二张框图。
+8. `### 系统架构` 优先直接嵌入论文的总体架构原图并挂 `^figN`；没有原图或看不出模块边界与数据流时才自画一张，二选一。`### 执行流` 用编号步骤走读；满足任一条件时在编号步骤前加一张执行流全局图（锚点 `^diag-flow`）：执行流 ≥ 5 步；≥ 3 个角色或组件且有往返或反馈闭环；有分支、并行或异步路径；架构图看不出执行顺序。这张图讲“怎么动”，步骤编号与列表一致，不要重画架构图的模块结构；形式按 `../_shared/references/diagram-rules.md` 选；四个条件都不满足就不画。
 9. 正文引用 Figure / Table / 公式 / Insight / 机制 / 贡献一律用 `[[#^id|…]]` 或 `[[#标题|…]]` 跳转链接；锚点约定见 `references/quality-standards.md` 的“笔记内跳转”。
 
 本地图片命名规则：`note-name ≤ 48 字符` 时直接使用 `<note-name>_` 前缀；note-name 太长时使用 `截断前 40 字符 + 8 位 hash` 作为前缀，形如 `VeryLongNoteNamePrefix_xxxxxxxx_figure.png`，避免文件名过长和重名。
@@ -153,17 +153,28 @@ created: YYYY-MM-DD
 - 数据集 / 仿真器不作为 concept；不要为数据集、benchmark suite、仿真器、纯实验环境名称创建 concept。
 - paper-method 按三档处理：论文首创且仅本论文实验 → `status/paper-specific`；论文具名实现且前人工作 / 被多篇当 baseline → 通用 concept；完全是前人工作且该论文只是引用 → 不独立建 concept。
 
-## 6. 完成后自检
+## 6. 生成后复查链接
+
+笔记写完、概念库补齐之后，运行：
+
+```bash
+python3 scripts/check_note_links.py "<笔记路径>"
+```
+
+它检查标题链接与标题逐字一致、块链接的 `^id` 存在且不重复、`[[概念]]` / `[[笔记]]` 能找到对应 `.md`、`![[…]]` 嵌入的文件存在、表格行内 wikilink 别名写成 `\|`，以及正文里漏写链接的裸 “Figure N / Table N / 机制N / Insight N / 贡献N”。逐条修正后重跑，直到每个文件都输出 `OK`；汇报时写明复查结果。wikilink 默认在配置的 `obsidian_vault` 下查找，目标在别处时用 `--root` 指定。
+
+## 7. 完成后自检
 
 - 所有 Figure 都在笔记中？
 - 所有公式都在笔记中？
 - 所有 Table 完整保留？
 - Template 检查：是否对照 `assets/paper-note-template.md` 验证必备章节与层级？尤其 `## 关键机制拆解` 到下一个 `##` 之间，所有 `###` 是否都匹配 `### 机制N：...`，且 Algorithm / pipeline / 公式解释 / 图表解读 / 实现细节没有与机制并列？章节顺序是否为 `问题定义` → `动机实验与核心 Insights` → `系统设计总览`，`实现改动清单` 是否在 `Overhead 与兼容性` 下？
 - Obsidian 大纲是否干净：没有把普通 `Figure X` / `Table X` / 单个公式提升成 `###` 或 `####` 章节？`####` 是否只用于机制内部的语义子小节？
-- `### 系统架构` 是否有且只有一张结构图（优先论文原图，否则按 `../_shared/references/diagram-rules.md` 自画并走完渲染 / 校验闭环），配组件表与 `### 执行流` 编号走读？所有 Mermaid 图都必须按 `../_shared/references/mermaid-rules.md` 走完“渲染 → 看图 → 重排”闭环：先用 `mmdc` 或 `npx -y @mermaid-js/mermaid-cli` 实际渲染成 PNG 并打开查看，确认没有回头线、交叉线和语义错误的边之后才能交付。
+- `### 系统架构` 是否有且只有一张结构图（优先论文原图，否则按 `../_shared/references/diagram-rules.md` 自画并走完渲染 / 校验闭环），配组件表与 `### 执行流` 编号走读？执行流满足四个触发条件之一时，是否有且只有一张 `^diag-flow` 全局图，且编号与列表一致、没有重画模块结构？所有 Mermaid 图都必须按 `../_shared/references/mermaid-rules.md` 走完“渲染 → 看图 → 重排”闭环：先用 `mmdc` 或 `npx -y @mermaid-js/mermaid-cli` 实际渲染成 PNG 并打开查看，确认没有回头线、交叉线和语义错误的边之后才能交付。
 - `实验设置` 的 `模拟器与微架构参数` 小节是否包含 evaluation platform 连接关系图（Mermaid 或 draw.io 嵌图），并说明测试系统形态与硬件资源需求？是否删除了和图重复、且对读者理解测试系统无帮助的参数细节？
 - 正文是否没有 `- [ ]` / `- [x]` 这类 Obsidian task 语法？
-- 每个 Figure / Table / 公式 / 贡献是否挂了唯一锚点，正文引用是否都是 `[[#^…]]` / `[[#标题|…]]` 跳转链接，标题链接文字与目标标题是否逐字一致？
+- 每个 Figure / Table / 公式 / 贡献是否挂了唯一锚点，正文引用是否都是 `[[#^…]]` / `[[#标题|…]]` 跳转链接？`scripts/check_note_links.py` 是否输出 `OK`？
+- `批判性思考` 是否只有 `优点 / 局限、假设与失效场景 / 潜在改进方向` 三个子节，且每条局限都写了 **失效场景**？
 - 关键术语有 `[[概念]]` 内联链接？
 - 概念库已更新？
 - 图片可用？本地 PDF 裁图是否写入 `00_assets/`，并按 `<note-name>_<原图片名>` 或长 note-name hash 规则命名？
@@ -174,7 +185,7 @@ created: YYYY-MM-DD
 - baseline 是否公平、实验设置是否足够复现？
 - `速查卡片` 是否严格保留 `assets/paper-note-template.md` 的 `[!summary]` callout 结构，并包含 `核心 / 方法 / 结果 / 适用场景 / 未来工作 / 引用建议` 六项；不要改成表格或自由问答格式。
 
-## 7. 批量处理
+## 8. 批量处理
 
 支持 Zotero collection 批量处理（默认递归子 collection）。流程：递归获取论文 → 去重 → 用 `source_collection_path` 规划保存路径 → 跳过已有笔记 → 逐篇处理 → 汇总。
 

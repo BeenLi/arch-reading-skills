@@ -91,13 +91,14 @@
 | 公式 | 公式下方解释段末尾 ` ^eq-ttft`（语义名） | `[[#^eq-ttft\|TTFT 分解式]]` |
 | Insight / 机制 / 任何章节 | 标题本身，不加标记 | `[[#Insight 2：…\|Insight 2]]`、`[[#机制1：…\|机制1]]` |
 | 核心贡献条目 | 列表项末尾 ` ^contrib-1` | `[[#^contrib-1\|贡献1]]` |
-| agent 自画的图（Mermaid / draw.io） | draw.io 嵌入行在行尾加 ` ^diag-arch`；Mermaid 代码块之后单独一行 `^diag-arch`，前后空行 | `[[#^diag-arch\|架构图]]` |
+| agent 自画的图（Mermaid / draw.io） | draw.io 嵌入行在行尾加 ` ^diag-arch`；Mermaid 代码块之后单独一行 `^diag-arch`，前后空行；执行流全局图用 `^diag-flow`、评测平台图用 `^diag-platform` | `[[#^diag-arch\|架构图]]`、`[[#^diag-flow\|执行流图]]` |
 
 规则：
 
 1. 每个对象只在首次出现处挂一个 id，id 全文唯一，全小写。
 2. 标题链接的别名用短名（`Insight 2`、`机制1`），标题部分必须与目标标题逐字一致，否则 Obsidian 无法跳转。
 3. 表格单元格里的 wikilink 别名分隔符写成 `\|`（如 `[[#机制1：X\|机制1]]`），否则会切坏 Markdown 表格；正文段落里照常写 `|`。
+4. 笔记和概念笔记都写完后，运行 `scripts/check_note_links.py <笔记>` 复查：它报告断开的标题 / 块链接、重复锚点、找不到的 `[[概念]]` 或嵌入、表格行内未转义的 `|`，以及漏写链接的裸引用。修到输出 `OK` 为止。
 
 ## 提取完整性自检清单
 

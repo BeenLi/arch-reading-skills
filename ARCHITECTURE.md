@@ -77,6 +77,7 @@ flowchart TB
 | MOC 生成 | `skills/_shared/scripts/moc_builder.py`、`generate_paper_mocs.py`、`generate_concept_mocs.py`、`clean_old_mocs.py` | 递归生成 / 清理目录页；排除 `_inbox`、`00_assets` 和 `.` 开头目录按脚本各自设定。 |
 | 概念维护 | `skills/_shared/scripts/scan_missing_concepts.py`、`regenerate_concepts.py` | 扫描"有 wikilink 但没有概念笔记"的盲点；批量按增强模板重写历史概念。 |
 | 文本检查 | `skills/_shared/scripts/md_escape_check.py` | 找出 / 修复会被 Obsidian 误渲染的 `[i][j]`、`$`、误触发 `#tag`。 |
+| 链接复查 | `skills/paper-reader/scripts/check_note_links.py` | 检查笔记里的标题 / 块链接、重复锚点、`[[概念]]` 与嵌入能否解析、表格行内未转义的 `\|`、漏写链接的裸 Figure / Table / 机制引用。 |
 | `book-reader` | `skills/book-reader/SKILL.md`、`skills/book-reader/scripts/extract_book.py` | 整本书逐页提取、分批提炼、输出带树状思维导图的读书笔记。 |
 | 测试 | `tests/*.py` | 13 个测试文件：脚本行为、模板章节与锚点约束、SKILL / daemon 一致性、仓库布局与文档路径。 |
 
@@ -128,7 +129,7 @@ sequenceDiagram
 2. 多候选 item 或 item 属于多个 collection 时，SKILL 要求把 `item_id / title / collection_paths` 列给用户选择；选定后 `zotero_helper.py note-path` 规划 `{NOTES_PATH}/{collection_path}/{MethodName}.md`，无 collection 落到 `_inbox/`。
 3. agent 严格按 `skills/paper-reader/assets/paper-note-template.md` 写笔记：问题定义（范围、问题、设计空间）→ 动机实验与核心 Insights（证据只出现一次，每个 Insight 以设计启发收尾）→ 系统设计总览（优先论文原图，一图一表一段走读）→ 关键机制拆解 → 实验设置 → 核心结果 → Overhead 与兼容性 → 批判性思考 → 复现 → 关联笔记 → 速查卡片；Figure / Table / 公式 / 贡献挂 `^id` 锚点，正文引用写 `[[#^id|…]]`。自画图按 `skills/_shared/references/diagram-rules.md` 选 Mermaid 或 draw.io。
 4. 图片优先外链 arXiv HTML；本地 PDF 裁图写到笔记同目录 `00_assets/<note-name>_<原图片名>`（规则在 `skills/paper-reader/references/image-troubleshooting.md`）；保存后 `python3 skills/daily-papers/scripts/download_note_images.py <笔记>` 把不可达外链本地化并把 frontmatter `image_source` 改为 `mixed`。
-5. 扫描笔记里的 `[[概念]]`，在 `CONCEPTS_PATH` 递归查找，缺失的按 `skills/paper-reader/references/concept-categories.md` 的 8 类和增强模板创建；写完跑 `python3 skills/_shared/scripts/md_escape_check.py <笔记>`。
+5. 扫描笔记里的 `[[概念]]`，在 `CONCEPTS_PATH` 递归查找，缺失的按 `skills/paper-reader/references/concept-categories.md` 的 8 类和增强模板创建；写完跑 `python3 skills/_shared/scripts/md_escape_check.py <笔记>` 和 `python3 skills/paper-reader/scripts/check_note_links.py <笔记>`，后者修到输出 `OK` 为止。
 6. `AUTO_REFRESH_INDEXES=true`（默认）时运行 `python3 skills/_shared/scripts/generate_concept_mocs.py` 和 `generate_paper_mocs.py` 刷新目录页；`GIT_COMMIT_ENABLED` 默认 false，不提交 vault。
 
 ### 4.3 批量模式：Zotero collection 到一组笔记

@@ -428,6 +428,43 @@ class SystemsTemplateTests(unittest.TestCase):
     def test_skill_requires_reporting_diagram_route(self):
         self.assertIn("哪条路线", PAPER_READER_SKILL.read_text(encoding="utf-8"))
 
+    def test_execution_flow_diagram_is_conditional_and_not_a_second_architecture_view(self):
+        text = ASSET_TEMPLATE.read_text(encoding="utf-8")
+        flow = text[heading_index(text, "### 执行流"):heading_index(text, "### 优化目标与度量口径")]
+        # 条件写在占位说明里，模板不放默认图块，避免每篇都照抄一张
+        self.assertNotIn("```mermaid", flow)
+        for trigger in ("5 步", "反馈", "并行", "执行顺序"):
+            self.assertIn(trigger, flow, trigger)
+        for phrase in ("^diag-flow", "diagram-rules.md", "编号", "不要重画"):
+            self.assertIn(phrase, flow, phrase)
+        skill = PAPER_READER_SKILL.read_text(encoding="utf-8")
+        daemon = PAPER_DAEMON.read_text(encoding="utf-8")
+        for name, blob in (("template", text), ("SKILL.md", skill), ("paper_daemon.py", daemon)):
+            self.assertNotIn("不画第二张框图", blob, name)
+            self.assertIn("^diag-flow", blob, name)
+        self.assertIn("^diag-flow", QUALITY_STANDARDS.read_text(encoding="utf-8"))
+
+    def test_critical_thinking_merges_limits_with_failure_scenarios(self):
+        text = ASSET_TEMPLATE.read_text(encoding="utf-8")
+        critical = text[heading_index(text, "## 批判性思考"):heading_index(text, "## 经验与可迁移启示")]
+        self.assertEqual(
+            re.findall(r"(?m)^### (.+)$", critical),
+            ["优点", "局限、假设与失效场景", "潜在改进方向"],
+        )
+        self.assertIn("**失效场景**", critical)
+        daemon = PAPER_DAEMON.read_text(encoding="utf-8")
+        item_9 = next(line for line in daemon.splitlines() if line.startswith("9. **批判性思考**"))
+        self.assertIn("局限、假设与失效场景", item_9)
+        self.assertNotIn("可能失效场景", item_9)
+
+    def test_skill_and_daemon_require_post_write_link_check(self):
+        skill = PAPER_READER_SKILL.read_text(encoding="utf-8")
+        daemon = PAPER_DAEMON.read_text(encoding="utf-8")
+        self.assertIn("python3 scripts/check_note_links.py", skill)
+        self.assertIn("check_note_links.py", daemon)
+        # 复查放在概念库维护之后：概念笔记建好后，[[概念]] 链接才可能全部解析
+        self.assertLess(skill.index("## 5. 概念库维护"), skill.index("python3 scripts/check_note_links.py"))
+
     def test_diagram_rules_gate_verilog_only_for_pipeline_route(self):
         text = DIAGRAM_RULES.read_text(encoding="utf-8")
         self.assertIn("仅该路线退回", text)
