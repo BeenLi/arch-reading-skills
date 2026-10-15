@@ -1,7 +1,11 @@
 import importlib.util
+import io
+import sqlite3
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from contextlib import redirect_stdout
 from unittest.mock import patch
 
 
@@ -35,6 +39,75 @@ class PaperDaemonTests(unittest.TestCase):
                 with self.assertRaises(RuntimeError):
                     self.module.process_collection("Research Topics")
 
+            self.assertFalse(temp_db.exists())
+
+    def test_copy_zotero_db_sees_rows_still_in_uncheckpointed_wal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "zotero.sqlite"
+            writer = sqlite3.connect(db_path)
+            try:
+                writer.execute("PRAGMA journal_mode=WAL")
+                writer.execute("CREATE TABLE items (itemID INTEGER PRIMARY KEY)")
+                writer.commit()
+                writer.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+                writer.execute("PRAGMA wal_autocheckpoint=0")
+                writer.execute("INSERT INTO items VALUES (4056)")
+                writer.commit()
+                self.assertTrue(Path(f"{db_path}-wal").exists())
+
+                with patch.object(self.module, "ZOTERO_DB", str(db_path)):
+                    snapshot = self.module.copy_zotero_db()
+                try:
+                    conn = sqlite3.connect(snapshot)
+                    rows = conn.execute("SELECT itemID FROM items").fetchall()
+                    conn.close()
+                finally:
+                    self.module.remove_snapshot(snapshot)
+            finally:
+                writer.close()
+
+        self.assertEqual(rows, [(4056,)])
+
+    def test_process_collection_cleans_snapshot_sidecars_on_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            temp_db = Path(tmp) / "zotero_readonly_test.sqlite"
+            copies = [temp_db, Path(f"{temp_db}-wal"), Path(f"{temp_db}-shm")]
+            for path in copies:
+                path.write_text("temporary db", encoding="utf-8")
+
+            with (
+                patch.object(self.module, "copy_zotero_db", return_value=str(temp_db)),
+                patch.object(self.module, "get_collection_id_and_path", side_effect=RuntimeError("boom")),
+            ):
+                with self.assertRaises(RuntimeError):
+                    self.module.process_collection("Research Topics")
+
+            for path in copies:
+                self.assertFalse(path.exists(), path)
+
+    def test_list_command_removes_its_snapshot(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            temp_db = Path(tmp) / "zotero_readonly_test.sqlite"
+            conn = sqlite3.connect(temp_db)
+            conn.executescript(
+                """
+                CREATE TABLE collections (collectionID INTEGER PRIMARY KEY, collectionName TEXT);
+                CREATE TABLE collectionItems (collectionID INTEGER, itemID INTEGER);
+                INSERT INTO collections VALUES (1, 'Systems');
+                INSERT INTO collectionItems VALUES (1, 100);
+                """
+            )
+            conn.close()
+
+            stdout = io.StringIO()
+            with (
+                patch.object(sys, "argv", ["paper_daemon.py", "--list"]),
+                patch.object(self.module, "copy_zotero_db", return_value=str(temp_db)),
+                redirect_stdout(stdout),
+            ):
+                self.module.main()
+
+            self.assertIn("Systems: 1", stdout.getvalue())
             self.assertFalse(temp_db.exists())
 
     def test_process_collection_passes_planned_target_path_to_codex(self):

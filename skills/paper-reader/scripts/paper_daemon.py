@@ -27,8 +27,6 @@ import time
 import argparse
 import logging
 import re
-import shutil
-import tempfile
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Optional
@@ -42,7 +40,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
 from user_config import concepts_dir, obsidian_vault_path, paper_notes_dir, zotero_db_path, zotero_storage_dir
-from zotero_helper import build_note_index, find_matching_notes, infer_method_name, plan_note_save
+from zotero_helper import build_note_index, find_matching_notes, infer_method_name, plan_note_save, remove_snapshot, snapshot_db
 
 # 配置
 ZOTERO_DB = str(zotero_db_path())
@@ -158,11 +156,8 @@ def parse_reset_wait_seconds(message: str) -> Optional[int]:
 
 
 def copy_zotero_db() -> str:
-    """复制 Zotero 数据库以避免锁定"""
-    fd, tmp_db = tempfile.mkstemp(prefix="zotero_readonly_", suffix=".sqlite")
-    os.close(fd)
-    shutil.copy2(ZOTERO_DB, tmp_db)
-    return tmp_db
+    """复制 Zotero 数据库（含 -wal/-shm）以避免锁定；用 remove_snapshot 清理"""
+    return str(snapshot_db(Path(ZOTERO_DB)))
 
 
 def get_collection_id_and_path(db_path: str, collection_name: str) -> tuple[Optional[int], Optional[str]]:
@@ -809,7 +804,7 @@ def process_collection(collection_name: str, resume: bool = True):
         logger.info(f"成功: {len(progress['completed'])} 篇")
         logger.info(f"失败: {len(progress['failed'])} 篇")
     finally:
-        Path(db_path).unlink(missing_ok=True)
+        remove_snapshot(db_path)
 
 
 def show_status():
@@ -846,20 +841,23 @@ def main():
 
     if args.list:
         db_path = copy_zotero_db()
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT c.collectionName, COUNT(ci.itemID) as count
-            FROM collections c
-            LEFT JOIN collectionItems ci ON c.collectionID = ci.collectionID
-            GROUP BY c.collectionID
-            HAVING count > 0
-            ORDER BY c.collectionName
-        """)
-        print("\n=== Zotero 分类 ===")
-        for name, count in cursor.fetchall():
-            print(f"  {name}: {count} 篇")
-        conn.close()
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT c.collectionName, COUNT(ci.itemID) as count
+                FROM collections c
+                LEFT JOIN collectionItems ci ON c.collectionID = ci.collectionID
+                GROUP BY c.collectionID
+                HAVING count > 0
+                ORDER BY c.collectionName
+            """)
+            print("\n=== Zotero 分类 ===")
+            for name, count in cursor.fetchall():
+                print(f"  {name}: {count} 篇")
+            conn.close()
+        finally:
+            remove_snapshot(db_path)
         return
 
     if not args.collection:

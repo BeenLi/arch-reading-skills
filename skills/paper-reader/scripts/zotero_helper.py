@@ -41,12 +41,35 @@ class CopiedZoteroConnection(sqlite3.Connection):
     temp_copy_path: Path
 
 
-def copy_db(db_path: Path = ZOTERO_DB) -> CopiedZoteroConnection:
-    """复制数据库以避免锁定"""
+# Zotero 运行时最近的写入还在 WAL 里、未 checkpoint 回主文件，必须连同 sidecar 一起复制
+SQLITE_SIDECAR_SUFFIXES = ("-wal", "-shm")
+
+
+def snapshot_db(db_path: Path = ZOTERO_DB) -> Path:
+    """把 Zotero 数据库（含 -wal/-shm）复制成独立临时快照，返回快照主文件路径。
+
+    只读源目录，所有写入都落在临时目录；打开快照时 SQLite 会回放复制来的 WAL。
+    """
     fd, temp_name = tempfile.mkstemp(prefix="zotero_readonly_", suffix=".sqlite")
     os.close(fd)
     temp_path = Path(temp_name)
     shutil.copy2(Path(db_path), temp_path)
+    for suffix in SQLITE_SIDECAR_SUFFIXES:
+        source = Path(f"{db_path}{suffix}")
+        if source.exists():
+            shutil.copy2(source, Path(f"{temp_path}{suffix}"))
+    return temp_path
+
+
+def remove_snapshot(temp_path) -> None:
+    """删除 snapshot_db 生成的快照及其 sidecar。"""
+    for path in (Path(temp_path), *(Path(f"{temp_path}{s}") for s in SQLITE_SIDECAR_SUFFIXES)):
+        path.unlink(missing_ok=True)
+
+
+def copy_db(db_path: Path = ZOTERO_DB) -> CopiedZoteroConnection:
+    """复制数据库以避免锁定"""
+    temp_path = snapshot_db(db_path)
     conn = sqlite3.connect(temp_path, factory=CopiedZoteroConnection)
     conn.temp_copy_path = temp_path
     conn.execute("PRAGMA query_only = ON")
@@ -58,7 +81,7 @@ def close_copied_db(conn: sqlite3.Connection):
     temp_path = getattr(conn, "temp_copy_path", None)
     conn.close()
     if temp_path:
-        Path(temp_path).unlink(missing_ok=True)
+        remove_snapshot(temp_path)
 
 
 def get_all_child_collections(conn, collection_id: int) -> list[int]:

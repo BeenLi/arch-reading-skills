@@ -482,6 +482,54 @@ class ZoteroHelperTests(unittest.TestCase):
             )
             self.assertNotIn("--json", result.stdout)
 
+    def test_copy_db_sees_rows_still_in_uncheckpointed_wal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "zotero.sqlite"
+            writer = sqlite3.connect(db_path)
+            try:
+                writer.execute("PRAGMA journal_mode=WAL")
+                writer.execute("CREATE TABLE items (itemID INTEGER PRIMARY KEY, key TEXT)")
+                writer.commit()
+                # 表结构落到主文件，未修复的 copy_db 才是"缺行"而不是"缺表"
+                writer.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+                writer.execute("PRAGMA wal_autocheckpoint=0")
+                writer.execute("INSERT INTO items VALUES (4056, 'SILICON')")
+                writer.commit()
+                # writer 保持打开：最后一个连接关闭时会 checkpoint 并删掉 WAL
+                self.assertTrue(Path(f"{db_path}-wal").exists())
+                self.assertGreater(Path(f"{db_path}-wal").stat().st_size, 0)
+
+                conn = self.module.copy_db(db_path)
+                try:
+                    rows = conn.execute("SELECT itemID, key FROM items").fetchall()
+                finally:
+                    self.module.close_copied_db(conn)
+            finally:
+                writer.close()
+
+        self.assertEqual(rows, [(4056, "SILICON")])
+
+    def test_remove_snapshot_deletes_sidecars_of_unopened_snapshot(self):
+        # 快照从未被 SQLite 打开过（例如复制后、connect 前就抛错）时，没有人替我们清理 sidecar
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "zotero.sqlite"
+            for suffix in ("", "-wal", "-shm"):
+                Path(f"{db_path}{suffix}").write_bytes(b"x")
+
+            snapshot = self.module.snapshot_db(db_path)
+            copies = [snapshot, Path(f"{snapshot}-wal"), Path(f"{snapshot}-shm")]
+            self.assertTrue(all(p.exists() for p in copies))
+            self.assertEqual(snapshot.parent, Path(tempfile.gettempdir()))
+
+            self.module.remove_snapshot(snapshot)
+
+            for path in copies:
+                self.assertFalse(path.exists(), path)
+            self.assertEqual(
+                sorted(p.name for p in Path(tmp).iterdir()),
+                ["zotero.sqlite", "zotero.sqlite-shm", "zotero.sqlite-wal"],
+            )
+
     def test_legacy_commands_emit_deprecation_warning_and_continue(self):
         cases = [
             (["papers", "2"], "list_papers_in_collection"),
