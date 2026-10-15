@@ -16,7 +16,7 @@ import re
 import sys
 from pathlib import Path
 
-EXAMPLE_LIMIT = 70
+EXAMPLE_LIMIT = 100
 OTHER_LIMIT = 90
 EXAMPLE_HEADING = "## 直观例子"
 H2 = re.compile(r"^##\s")

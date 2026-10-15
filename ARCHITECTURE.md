@@ -78,7 +78,7 @@ flowchart TB
 | 概念维护 | `skills/_shared/scripts/scan_missing_concepts.py`、`regenerate_concepts.py` | 扫描"有 wikilink 但没有概念笔记"的盲点；批量按增强模板重写历史概念。 |
 | 文本检查 | `skills/_shared/scripts/md_escape_check.py` | 找出 / 修复会被 Obsidian 误渲染的 `[i][j]`、`$`、误触发 `#tag`。 |
 | 链接复查 | `skills/paper-reader/scripts/check_note_links.py` | 检查笔记里的标题 / 块链接、重复锚点、`[[概念]]` 与嵌入能否解析、表格行内未转义的 `\|`、wikilink / 嵌入别名里会截断链接的方括号、漏写链接的裸 Figure / Table / 机制引用。 |
-| 概念长度自检 | `skills/_shared/scripts/check_concept_length.py` | 按“直观例子 ≤ 70 行、其他段 ≤ 90 行”分别计数概念笔记，不计 frontmatter 和 Mermaid 源码。 |
+| 概念长度自检 | `skills/_shared/scripts/check_concept_length.py` | 按“直观例子 ≤ 100 行、其他段 ≤ 90 行”分别计数概念笔记，不计 frontmatter 和 Mermaid 源码。 |
 | `book-reader` | `skills/book-reader/SKILL.md`、`skills/book-reader/scripts/extract_book.py` | 整本书逐页提取、分批提炼、输出带树状思维导图的读书笔记。 |
 | 测试 | `tests/*.py` | 13 个测试文件：脚本行为、模板章节与锚点约束、SKILL / daemon 一致性、仓库布局与文档路径。 |
 

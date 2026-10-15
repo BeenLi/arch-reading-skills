@@ -55,7 +55,7 @@ class MeasureTest(unittest.TestCase):
 
 class CheckTest(unittest.TestCase):
     def test_limits(self):
-        self.assertEqual((EXAMPLE_LIMIT, OTHER_LIMIT), (70, 90))
+        self.assertEqual((EXAMPLE_LIMIT, OTHER_LIMIT), (100, 90))
 
     def test_sections_at_their_limits_pass(self):
         self.assertEqual(check(concept(EXAMPLE_LIMIT - 1, OTHER_LIMIT - 1)), [])

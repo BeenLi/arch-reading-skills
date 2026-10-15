@@ -509,7 +509,7 @@ Zotero ItemID: {item_id}
 
 ### 概念笔记格式（增强版）
 
-长度：直观例子 ≤ 70 行、其他段 ≤ 90 行（不计 frontmatter 和图的源码），计数口径见 concept-categories.md。
+长度：直观例子 ≤ 100 行、其他段 ≤ 90 行（不计 frontmatter 和图的源码），计数口径见 concept-categories.md。
 
 每篇 concept 笔记 8 个统一段 + 1 个按 concept_type 加的差异化段。**禁止凭空编造**：动机 / 直观例子只能从论文证据推断，找不到证据就写 TODO；学习索引允许整段写 `TODO: 待人工补充学习材料`。
 

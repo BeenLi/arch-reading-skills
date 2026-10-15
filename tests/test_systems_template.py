@@ -14,7 +14,7 @@ QUALITY_STANDARDS = REPO_ROOT / "skills" / "paper-reader" / "references" / "qual
 CONCEPT_CATEGORIES = REPO_ROOT / "skills" / "paper-reader" / "references" / "concept-categories.md"
 DIAGRAM_RULES = REPO_ROOT / "skills" / "_shared" / "references" / "diagram-rules.md"
 REGENERATE_CONCEPTS = REPO_ROOT / "skills" / "_shared" / "scripts" / "regenerate_concepts.py"
-CONCEPT_LENGTH_RULE = "直观例子 ≤ 70 行、其他段 ≤ 90 行（不计 frontmatter 和图的源码）"
+CONCEPT_LENGTH_RULE = "直观例子 ≤ 100 行、其他段 ≤ 90 行（不计 frontmatter 和图的源码）"
 
 
 def assert_table_header(testcase, text, columns):
