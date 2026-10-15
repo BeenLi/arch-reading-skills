@@ -13,6 +13,8 @@ PAPER_DAEMON = REPO_ROOT / "skills" / "paper-reader" / "scripts" / "paper_daemon
 QUALITY_STANDARDS = REPO_ROOT / "skills" / "paper-reader" / "references" / "quality-standards.md"
 CONCEPT_CATEGORIES = REPO_ROOT / "skills" / "paper-reader" / "references" / "concept-categories.md"
 DIAGRAM_RULES = REPO_ROOT / "skills" / "_shared" / "references" / "diagram-rules.md"
+REGENERATE_CONCEPTS = REPO_ROOT / "skills" / "_shared" / "scripts" / "regenerate_concepts.py"
+CONCEPT_LENGTH_RULE = "直观例子 ≤ 70 行、其他段 ≤ 90 行（不计 frontmatter 和图的源码）"
 
 
 def assert_table_header(testcase, text, columns):
@@ -181,8 +183,10 @@ class SystemsTemplateTests(unittest.TestCase):
         for section in ["## 动机与痛点", "## 直观例子", "## 边界与对比", "## 学习索引"]:
             self.assertIn(section, text)
 
-        # 长度目标
-        self.assertIn("60-100 行", text)
+        # 长度按直观例子和其他段分别计，并给出自检脚本
+        self.assertIn(CONCEPT_LENGTH_RULE, text)
+        self.assertIn("check_concept_length.py", text)
+        self.assertNotIn("60-100 行", text)
 
         # 学习索引允许整段写 TODO 的硬规则
         self.assertIn("TODO: 待人工补充学习材料", text)
@@ -224,10 +228,20 @@ class SystemsTemplateTests(unittest.TestCase):
             for keyword in ["动机与痛点", "直观例子", "边界与对比", "学习索引"]:
                 self.assertIn(keyword, blob, f"{name} 缺少关键词 {keyword}")
 
-        # 三处都要明确长度目标
-        self.assertIn("60-100 行", paper_reader)
-        self.assertIn("60-100 行", daily_notes)
-        self.assertIn("60-100 行", daemon)
+        # 生成概念的四处入口写同一条长度规则，旧的全文目标不能残留
+        regenerate = REGENERATE_CONCEPTS.read_text(encoding="utf-8")
+        for blob, name in [
+            (paper_reader, "paper-reader SKILL.md"),
+            (daily_notes, "daily-papers-notes SKILL.md"),
+            (daemon, "paper_daemon.py"),
+            (regenerate, "regenerate_concepts.py"),
+        ]:
+            self.assertIn(CONCEPT_LENGTH_RULE, blob, f"{name} 缺少长度规则")
+            self.assertNotIn("60-100 行", blob, f"{name} 残留旧长度目标")
+
+        # 建完概念后要跑长度自检
+        for blob, name in [(paper_reader, "paper-reader SKILL.md"), (daily_notes, "daily-papers-notes SKILL.md"), (daemon, "paper_daemon.py")]:
+            self.assertIn("check_concept_length.py", blob, f"{name} 没有要求跑长度自检")
 
     def test_paper_reader_zotero_workflow_is_readonly_and_collection_path_based(self):
         text = PAPER_READER_SKILL.read_text(encoding="utf-8")

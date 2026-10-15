@@ -142,7 +142,7 @@ created: YYYY-MM-DD
 2. 在 `{CONCEPTS_PATH}` 下**递归**查找是否已存在（不要只看顶层）
 3. 不存在的按 `references/concept-categories.md` 的 8 类 `concept_type` 归类后创建
 
-新建 concept 必须按 `references/concept-categories.md` 的**增强模板**生成：含「动机与痛点 / 直观例子 / 边界与对比 / 学习索引」4 个新必选段，加上按 `concept_type` 加的差异化段（如 architecture 必须含 Mermaid 组件图、algorithm 必须含步骤+复杂度等）。长度目标 60-100 行。`学习索引` 找不到证据时允许整段写 `TODO`，不要硬凑。
+新建 concept 必须按 `references/concept-categories.md` 的**增强模板**生成：含「动机与痛点 / 直观例子 / 边界与对比 / 学习索引」4 个新必选段，加上按 `concept_type` 加的差异化段（如 architecture 必须含 Mermaid 组件图、algorithm 必须含步骤+复杂度等）。长度：直观例子 ≤ 70 行、其他段 ≤ 90 行（不计 frontmatter 和图的源码），计数口径见 `references/concept-categories.md`。`学习索引` 找不到证据时允许整段写 `TODO`，不要硬凑。
 
 概念按性质分类（`data-structure / algorithm / mechanism / architecture / hardware / software-abstraction / metric / theory-model`），**不**按论文研究领域分类。仅被本论文使用的方法名优先折回论文笔记，不独立成 concept（详见 `references/concept-categories.md`）。
 
@@ -162,6 +162,12 @@ python3 scripts/check_note_links.py "<笔记路径>" "<新建的概念笔记路�
 ```
 
 它检查标题链接与标题逐字一致、块链接的 `^id` 存在且不重复、`[[概念]]` / `[[笔记]]` 能找到对应 `.md`、`![[…]]` 嵌入的文件存在、表格行内 wikilink 别名写成 `\|`，以及正文里漏写链接的裸 “Figure N / Table N / 机制N / Insight N / 贡献N”（含 “机制 N”、“Figure 3–5” / “Table IV/VI” 这类范围，以及 `[[#^fig3|Figure 3]]–5` 链接后剩下的裸尾巴）。逐条修正后重跑，直到每个文件都输出 `OK`；汇报时写明复查结果。wikilink 默认在 `VAULT_PATH`（配置项 `obsidian_vault`）下递归查找；目标笔记在这个目录之外时，用 `--root <目录>` 改为在更上层的目录下查找。
+
+新建的概念笔记还要跑长度自检，超限的按提示收敛后重跑，直到输出 `OK`：
+
+```bash
+python3 ../_shared/scripts/check_concept_length.py "<新建的概念笔记路径>" ...
+```
 
 ## 7. 完成后自检
 

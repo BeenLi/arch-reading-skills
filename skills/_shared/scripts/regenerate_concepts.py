@@ -155,7 +155,7 @@ def build_prompt(concept: ConceptInfo, refs: list[tuple[Path, str]]) -> str:
     return f"""你是 systems 论文笔记系统的 concept 编辑助手。
 
 # 任务
-用增强模板**重写**下面这篇 concept 笔记。保留现有内容、扩充至 60-100 行。
+用增强模板**重写**下面这篇 concept 笔记。保留现有内容，按增强模板补齐缺失段落；长度：直观例子 ≤ 70 行、其他段 ≤ 90 行（不计 frontmatter 和图的源码）。
 
 # 概念基本信息
 - 名称: {concept.name}

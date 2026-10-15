@@ -507,7 +507,9 @@ Zotero ItemID: {item_id}
 - `Admission Control`、`Kernel Fusion`、`RDMA`、`NVLink`、`PCIe`、`NUMA`、`HBM`、`CXL`、`AllReduce`、`NCCL`、`CUDA` 等 seed list 或 systems 基石术语必须保留为候选。
 - 数据集 / 仿真器不作为 concept；不要为数据集、benchmark suite、仿真器、纯实验环境名称创建 concept。
 
-### 概念笔记格式（增强版，长度目标 60-100 行）
+### 概念笔记格式（增强版）
+
+长度：直观例子 ≤ 70 行、其他段 ≤ 90 行（不计 frontmatter 和图的源码），计数口径见 concept-categories.md。
 
 每篇 concept 笔记 8 个统一段 + 1 个按 concept_type 加的差异化段。**禁止凭空编造**：动机 / 直观例子只能从论文证据推断，找不到证据就写 TODO；学习索引允许整段写 `TODO: 待人工补充学习材料`。
 
@@ -597,6 +599,12 @@ python3 "{_SCRIPTS_DIR / 'check_note_links.py'}" "<笔记路径>" "<新建的概
 ```
 
 逐条修正它报告的断链、重复锚点、缺失的概念或嵌入、表格行内未转义的 `|`、漏写链接的裸 Figure / Table / 机制 / Insight / 贡献引用，重跑直到输出 OK，并在执行总结里写明结果。
+
+再对本次新建的概念笔记跑长度自检，超限的段按提示收敛，直到输出 OK：
+
+```bash
+python3 "{_SHARED_DIR / 'check_concept_length.py'}" "<新建的概念笔记路径>"
+```
 
 ## Zotero 与保存规则（重要）
 
