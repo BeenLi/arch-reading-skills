@@ -43,22 +43,62 @@ class CopiedZoteroConnection(sqlite3.Connection):
 
 # Zotero 运行时最近的写入还在 WAL 里、未 checkpoint 回主文件，必须连同 sidecar 一起复制
 SQLITE_SIDECAR_SUFFIXES = ("-wal", "-shm")
+# 复制期间源文件变化时的最多尝试次数，用尽后退回不含 WAL 的快照
+SNAPSHOT_ATTEMPTS = 3
+
+
+def _source_signature(db_path: Path) -> tuple:
+    """主文件和 WAL 的 (size, mtime_ns)，用来判断复制期间 Zotero 有没有写过。
+
+    不含 -shm：Zotero 每个读事务都会写它，而且打开快照时它会被丢弃重建。
+    """
+    signature = []
+    for path in (Path(db_path), Path(f"{db_path}-wal")):
+        try:
+            stat = path.stat()
+        except FileNotFoundError:
+            signature.append(None)
+            continue
+        signature.append((stat.st_size, stat.st_mtime_ns))
+    return tuple(signature)
+
+
+def _copy_snapshot(db_path: Path, include_sidecars: bool = True) -> Path:
+    """复制一次：主文件 → -wal → -shm，全部写到新的临时文件旁边。"""
+    fd, temp_name = tempfile.mkstemp(prefix="zotero_readonly_", suffix=".sqlite")
+    os.close(fd)
+    temp_path = Path(temp_name)
+    shutil.copy2(Path(db_path), temp_path)
+    if include_sidecars:
+        for suffix in SQLITE_SIDECAR_SUFFIXES:
+            source = Path(f"{db_path}{suffix}")
+            if source.exists():
+                shutil.copy2(source, Path(f"{temp_path}{suffix}"))
+    return temp_path
 
 
 def snapshot_db(db_path: Path = ZOTERO_DB) -> Path:
     """把 Zotero 数据库（含 -wal/-shm）复制成独立临时快照，返回快照主文件路径。
 
     只读源目录，所有写入都落在临时目录；打开快照时 SQLite 会回放复制来的 WAL。
+    三个文件不是原子复制的：若复制期间 Zotero checkpoint 并重启了 WAL，会得到
+    "旧主文件 + 新一代 WAL" 的撕裂快照——每页都合法、quick_check 也查不出，
+    只会悄悄返回错的数据，所以要靠复制前后的 _source_signature 来发现。
     """
-    fd, temp_name = tempfile.mkstemp(prefix="zotero_readonly_", suffix=".sqlite")
-    os.close(fd)
-    temp_path = Path(temp_name)
-    shutil.copy2(Path(db_path), temp_path)
-    for suffix in SQLITE_SIDECAR_SUFFIXES:
-        source = Path(f"{db_path}{suffix}")
-        if source.exists():
-            shutil.copy2(source, Path(f"{temp_path}{suffix}"))
-    return temp_path
+    for _ in range(SNAPSHOT_ATTEMPTS):
+        before = _source_signature(db_path)
+        temp_path = _copy_snapshot(db_path)
+        if _source_signature(db_path) == before:
+            return temp_path
+        remove_snapshot(temp_path)
+
+    # Zotero 一直在写：退回只复制主文件（修复前的行为），旧但自洽，不返回撕裂的快照
+    print(
+        f"警告: 复制 {db_path} 期间 Zotero 持续写入（{SNAPSHOT_ATTEMPTS} 次），"
+        "改用不含 WAL 的快照，最近的改动可能看不到",
+        file=sys.stderr,
+    )
+    return _copy_snapshot(db_path, include_sidecars=False)
 
 
 def remove_snapshot(temp_path) -> None:

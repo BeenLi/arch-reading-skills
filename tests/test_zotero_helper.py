@@ -1,6 +1,7 @@
 import importlib.util
 import io
 import re
+import shutil
 import sqlite3
 import subprocess
 import sys
@@ -508,6 +509,77 @@ class ZoteroHelperTests(unittest.TestCase):
                 writer.close()
 
         self.assertEqual(rows, [(4056, "SILICON")])
+
+    def test_copy_db_retries_when_zotero_checkpoints_during_the_copy(self):
+        # 复制完主文件、还没复制 WAL 时 Zotero 恰好 checkpoint 并重启 WAL：旧主文件 + 新一代 WAL。
+        # 这种组合每一页单独看都合法（quick_check 也是 ok），查询只会悄悄返回撕裂的数据，
+        # 所以只能检测"复制期间源文件变了"这件事本身。
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as scratch:
+            db_path = Path(tmp) / "zotero.sqlite"
+            writer = sqlite3.connect(db_path)  # 扮演一直开着库的 Zotero
+            writer.execute("PRAGMA journal_mode=WAL")
+            writer.execute("CREATE TABLE items (itemID INTEGER PRIMARY KEY, key TEXT)")
+            writer.executemany("INSERT INTO items VALUES (?, ?)", [(i, "a" * 100) for i in range(3000)])
+            writer.commit()
+            writer.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            writer.execute("PRAGMA wal_autocheckpoint=0")
+
+            real_copy2 = shutil.copy2
+            fired = []
+
+            def copy2_with_checkpoint_in_between(src, dst, *args, **kwargs):
+                result = real_copy2(src, dst, *args, **kwargs)
+                if not fired and Path(src) == db_path:
+                    fired.append(True)  # 只在第一次复制主文件后触发一次
+                    writer.execute("DELETE FROM items WHERE itemID % 3 = 0")
+                    writer.executemany("INSERT INTO items VALUES (?, ?)", [(i, "b" * 300) for i in range(3000, 6000)])
+                    writer.commit()
+                    writer.execute("PRAGMA wal_checkpoint(PASSIVE)")
+                    writer.execute("UPDATE items SET key = 'c' WHERE itemID IN (1, 5000)")
+                    writer.commit()
+                return result
+
+            try:
+                with (
+                    patch.object(self.module.shutil, "copy2", copy2_with_checkpoint_in_between),
+                    patch.object(self.module.tempfile, "tempdir", scratch),
+                    redirect_stderr(io.StringIO()),
+                ):
+                    conn = self.module.copy_db(db_path)
+                try:
+                    count = conn.execute("SELECT count(*) FROM items").fetchone()[0]
+                    key_5000 = conn.execute("SELECT key FROM items WHERE itemID = 5000").fetchone()
+                    check = conn.execute("PRAGMA quick_check").fetchone()[0]
+                finally:
+                    self.module.close_copied_db(conn)
+            finally:
+                writer.close()
+            leftovers = sorted(p.name for p in Path(scratch).iterdir())
+
+        self.assertTrue(fired)
+        self.assertEqual(check, "ok")
+        self.assertEqual((count, key_5000), (5000, ("c",)))  # 重试后拿到一致的最新状态
+        self.assertEqual(leftovers, [])  # 撕裂的那次快照也要清掉
+
+    def test_snapshot_falls_back_to_main_only_when_source_never_settles(self):
+        with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as scratch:
+            db_path = Path(tmp) / "zotero.sqlite"
+            for suffix in ("", "-wal", "-shm"):
+                Path(f"{db_path}{suffix}").write_bytes(b"x")
+            ticks = iter(range(1000))
+            stderr = io.StringIO()
+
+            with (
+                patch.object(self.module, "_source_signature", side_effect=lambda _: next(ticks)),
+                patch.object(self.module.tempfile, "tempdir", scratch),
+                redirect_stderr(stderr),
+            ):
+                snapshot = self.module.snapshot_db(db_path)
+            leftovers = sorted(p.name for p in Path(scratch).iterdir())
+            self.module.remove_snapshot(snapshot)
+
+        self.assertEqual(leftovers, [snapshot.name])  # 只剩主文件，没有 WAL，也没有失败尝试的残留
+        self.assertIn("WAL", stderr.getvalue())
 
     def test_remove_snapshot_deletes_sidecars_of_unopened_snapshot(self):
         # 快照从未被 SQLite 打开过（例如复制后、connect 前就抛错）时，没有人替我们清理 sidecar
