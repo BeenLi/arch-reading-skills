@@ -23,7 +23,7 @@
 | Skill | `skills/*/SKILL.md` | 用户意图到具体流程的入口说明；frontmatter 的 `description` 决定触发词，正文是 agent 要执行的步骤。 |
 | 三步流水线 | `skills/daily-papers/SKILL.md`、`skills/daily-papers-fetch/SKILL.md`、`skills/daily-papers-review/SKILL.md`、`skills/daily-papers-notes/SKILL.md` | 抓取 → 点评 → 可选精读。`daily-papers` 默认只串前两步，精读由用户决定。 |
 | 共享配置 | `skills/_shared/scripts/user_config.py`、`skills/_shared/user-config.json` | 三层合并：内置 `DEFAULT_CONFIG` → `user-config.json` → `user-config.local.json`；所有脚本和 SKILL 都从这里取 vault、Zotero、关键词和自动化开关。 |
-| 论文笔记模板 | `skills/paper-reader/assets/paper-note-template.md` | 唯一的笔记模板，固定章节顺序 问题定义 → 动机实验与核心 Insights → 系统设计总览 → 关键机制拆解 → …，并规定锚点与跳转写法。 |
+| 论文笔记模板 | `skills/paper-reader/assets/paper-note-template.md` | 唯一的笔记模板，固定章节顺序 问题定义 → 动机实验与核心 Insights → 核心贡献 → 系统设计总览 → 关键机制拆解 → …，并规定锚点与跳转写法。 |
 | 模板的四份拷贝 | `skills/paper-reader/SKILL.md`、`skills/paper-reader/scripts/paper_daemon.py`、`tests/test_systems_template.py` | 模板结构同时写在 SKILL 自检、daemon 内嵌 prompt 和测试断言里，改模板必须四处同步。 |
 | Zotero helper | `skills/paper-reader/scripts/zotero_helper.py` | 只读解析 item / collection / PDF，规划笔记保存路径，用 `NoteIndex` 匹配已有笔记。 |
 | concept_type | `skills/paper-reader/references/concept-categories.md` | 概念库按概念本身性质分 8 类（data-structure … theory-model），不按论文领域分；seed vocabulary 列出必须成为 `[[概念]]` 的术语。 |
@@ -127,7 +127,7 @@ sequenceDiagram
 
 1. `skills/paper-reader/SKILL.md` 先读共享配置得到 `NOTES_PATH` / `CONCEPTS_PATH` / `ZOTERO_DB` 等变量，再按输入类型分流：PDF 直接读，arXiv 优先 HTML，Zotero 通过 `python3 skills/paper-reader/scripts/zotero_helper.py resolve --item-id | --query | --collection`。
 2. 多候选 item 或 item 属于多个 collection 时，SKILL 要求把 `item_id / title / collection_paths` 列给用户选择；选定后 `zotero_helper.py note-path` 规划 `{NOTES_PATH}/{collection_path}/{MethodName}.md`，无 collection 落到 `_inbox/`。
-3. agent 严格按 `skills/paper-reader/assets/paper-note-template.md` 写笔记：问题定义（范围、问题、设计空间）→ 动机实验与核心 Insights（证据只出现一次，每个 Insight 以设计启发收尾）→ 系统设计总览（优先论文原图，一图一表一段走读）→ 关键机制拆解 → 实验设置 → 核心结果 → Overhead 与兼容性 → 批判性思考 → 复现 → 关联笔记 → 速查卡片；Figure / Table / 公式 / 贡献挂 `^id` 锚点，正文引用写 `[[#^id|…]]`。自画图按 `skills/_shared/references/diagram-rules.md` 选 Mermaid 或 draw.io。
+3. agent 严格按 `skills/paper-reader/assets/paper-note-template.md` 写笔记：问题定义（范围、问题、设计空间）→ 动机实验与核心 Insights（证据只出现一次，每个 Insight 以设计启发收尾）→ 核心贡献（回应 Insight，只引用已给出的数字）→ 系统设计总览（优先论文原图，一图一表一段走读）→ 关键机制拆解 → 实验设置 → 核心结果 → Overhead 与兼容性 → 批判性思考 → 复现 → 关联笔记 → 速查卡片；Figure / Table / 公式 / 贡献挂 `^id` 锚点，正文引用写 `[[#^id|…]]`。自画图按 `skills/_shared/references/diagram-rules.md` 选 Mermaid 或 draw.io。
 4. 图片优先外链 arXiv HTML；本地 PDF 裁图写到笔记同目录 `00_assets/<note-name>_<原图片名>`（规则在 `skills/paper-reader/references/image-troubleshooting.md`）；保存后 `python3 skills/daily-papers/scripts/download_note_images.py <笔记>` 把不可达外链本地化并把 frontmatter `image_source` 改为 `mixed`。
 5. 扫描笔记里的 `[[概念]]`，在 `CONCEPTS_PATH` 递归查找，缺失的按 `skills/paper-reader/references/concept-categories.md` 的 8 类和增强模板创建；写完跑 `python3 skills/_shared/scripts/md_escape_check.py <笔记>` 和 `python3 skills/paper-reader/scripts/check_note_links.py <笔记>`，后者修到输出 `OK` 为止。
 6. `AUTO_REFRESH_INDEXES=true`（默认）时运行 `python3 skills/_shared/scripts/generate_concept_mocs.py` 和 `generate_paper_mocs.py` 刷新目录页；`GIT_COMMIT_ENABLED` 默认 false，不提交 vault。

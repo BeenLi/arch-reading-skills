@@ -348,8 +348,11 @@ class SystemsTemplateTests(unittest.TestCase):
     def test_template_section_order_follows_problem_evidence_design_chain(self):
         text = ASSET_TEMPLATE.read_text(encoding="utf-8")
         idx = lambda heading: heading_index(text, heading)
+        self.assertLess(idx("## 这篇论文为什么重要"), idx("## 问题定义"))
         self.assertLess(idx("## 问题定义"), idx("## 动机实验与核心 Insights"))
-        self.assertLess(idx("## 动机实验与核心 Insights"), idx("## 系统设计总览"))
+        # 核心贡献回应 Insight 指出的问题，再引出设计：问题 → 证据 → 贡献 → 设计
+        self.assertLess(idx("## 动机实验与核心 Insights"), idx("## 核心贡献"))
+        self.assertLess(idx("## 核心贡献"), idx("## 系统设计总览"))
         self.assertLess(idx("## 系统设计总览"), idx("## 关键机制拆解"))
         self.assertLess(idx("## Overhead 与兼容性"), idx("### 实现改动清单"))
         self.assertLess(idx("### 实现改动清单"), idx("### Overhead"))
@@ -358,7 +361,7 @@ class SystemsTemplateTests(unittest.TestCase):
 
     def test_template_summary_and_problem_sections_carry_no_evidence(self):
         text = ASSET_TEMPLATE.read_text(encoding="utf-8")
-        summary = text[heading_index(text, "## 这篇论文为什么重要"):heading_index(text, "## 核心贡献")]
+        summary = text[heading_index(text, "## 这篇论文为什么重要"):heading_index(text, "## 问题定义")]
         problem = text[heading_index(text, "## 问题定义"):heading_index(text, "## 动机实验与核心 Insights")]
         for marker in ("![", "$$", "|---"):
             self.assertNotIn(marker, summary, marker)
@@ -427,6 +430,16 @@ class SystemsTemplateTests(unittest.TestCase):
 
     def test_skill_requires_reporting_diagram_route(self):
         self.assertIn("哪条路线", PAPER_READER_SKILL.read_text(encoding="utf-8"))
+
+    def test_section_order_statements_place_contributions_after_insights(self):
+        order = "`问题定义` → `动机实验与核心 Insights` → `核心贡献` → `系统设计总览`"
+        self.assertEqual(PAPER_READER_SKILL.read_text(encoding="utf-8").count(order), 2)
+        item_13 = next(line for line in PAPER_DAEMON.read_text(encoding="utf-8").splitlines()
+                       if line.startswith("13. **结构约束**"))
+        self.assertIn(order, item_13)
+        rule_9 = next(line for line in ASSET_TEMPLATE.read_text(encoding="utf-8").splitlines()
+                      if line.startswith("9. "))
+        self.assertIn("核心贡献", rule_9)
 
     def test_execution_flow_diagram_is_conditional_and_not_a_second_architecture_view(self):
         text = ASSET_TEMPLATE.read_text(encoding="utf-8")

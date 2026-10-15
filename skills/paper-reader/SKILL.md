@@ -87,7 +87,7 @@ description: |
 - 对 runtime / compiler / networking / memory / scheduling 这类关键机制，优先按数据流或执行流程解释。
 - 读 LLM systems 论文时，不要把重点写成模型能力；重点是计算、存储、通信和调度机制。
 - 笔记必须包含 `实验设置`、`核心结果`、`Overhead 与兼容性`、`经验与可迁移启示`、`复现`。
-- 章节顺序：`问题定义` → `动机实验与核心 Insights` → `系统设计总览`；`实现改动清单` 放在 `Overhead 与兼容性` 开头。
+- 章节顺序：`问题定义` → `动机实验与核心 Insights` → `核心贡献` → `系统设计总览`；`实现改动清单` 放在 `Overhead 与兼容性` 开头。
 - `实验设置` 的 `模拟器与微架构参数` 小节必须根据论文 evaluation platform 画一张测试系统连接关系图（Mermaid，或按 `diagram-rules.md` 产出的 draw.io 嵌图），展示 client / driver / runtime / worker / accelerator / memory / network / storage / simulator 等组件如何连接、需要哪些硬件资源；可以删减和图重复的参数表细节，不要为了完整性硬塞 CPU pipeline、BTB、ROB 等微架构参数，除非它们就是评测对象。
 - `复现` 小节里的核查内容使用 `### 复现核查表`，优先写成 `项目 / 结论 / 证据或缺口` 三列表格；不要使用英文 checklist 标题，也不要用 `- [ ]` task list。
 - 必须明确写出 baseline 是否公平、实验设置是否足够复现、部署假设是否现实。
@@ -168,7 +168,7 @@ python3 scripts/check_note_links.py "<笔记路径>" "<新建的概念笔记路�
 - 所有 Figure 都在笔记中？
 - 所有公式都在笔记中？
 - 所有 Table 完整保留？
-- Template 检查：是否对照 `assets/paper-note-template.md` 验证必备章节与层级？尤其 `## 关键机制拆解` 到下一个 `##` 之间，所有 `###` 是否都匹配 `### 机制N：...`，且 Algorithm / pipeline / 公式解释 / 图表解读 / 实现细节没有与机制并列？章节顺序是否为 `问题定义` → `动机实验与核心 Insights` → `系统设计总览`，`实现改动清单` 是否在 `Overhead 与兼容性` 下？
+- Template 检查：是否对照 `assets/paper-note-template.md` 验证必备章节与层级？尤其 `## 关键机制拆解` 到下一个 `##` 之间，所有 `###` 是否都匹配 `### 机制N：...`，且 Algorithm / pipeline / 公式解释 / 图表解读 / 实现细节没有与机制并列？章节顺序是否为 `问题定义` → `动机实验与核心 Insights` → `核心贡献` → `系统设计总览`，`实现改动清单` 是否在 `Overhead 与兼容性` 下？
 - Obsidian 大纲是否干净：没有把普通 `Figure X` / `Table X` / 单个公式提升成 `###` 或 `####` 章节？`####` 是否只用于机制内部的语义子小节？
 - `### 系统架构` 是否有且只有一张结构图（优先论文原图，否则按 `../_shared/references/diagram-rules.md` 自画并走完渲染 / 校验闭环），配组件表与 `### 执行流` 编号走读？执行流满足四个触发条件之一时，是否有且只有一张 `^diag-flow` 全局图，且编号与列表一致、没有重画模块结构？所有 Mermaid 图都必须按 `../_shared/references/mermaid-rules.md` 走完“渲染 → 看图 → 重排”闭环：先用 `mmdc` 或 `npx -y @mermaid-js/mermaid-cli` 实际渲染成 PNG 并打开查看，确认没有回头线、交叉线和语义错误的边之后才能交付。
 - `实验设置` 的 `模拟器与微架构参数` 小节是否包含 evaluation platform 连接关系图（Mermaid 或 draw.io 嵌图），并说明测试系统形态与硬件资源需求？是否删除了和图重复、且对读者理解测试系统无帮助的参数细节？
