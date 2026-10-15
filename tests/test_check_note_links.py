@@ -157,6 +157,22 @@ class CheckNoteLinksTest(unittest.TestCase):
         text = CLEAN_NOTE + "\n`Figure 3–5`、$Table IV/VI$ 与 ![Figure 3-5](x.png) 都不是正文。\n"
         self.assertEqual(self.problems(text), [])
 
+    def test_citation_brackets_in_markdown_image_alt_are_not_a_bare_reference(self):
+        text = CLEAN_NOTE + "\n![Figure 2: 转引自 [174]](https://arxiv.org/x.png) ^fig2\n"
+        self.assertEqual(self.problems(text), [])
+
+    def test_brackets_in_an_embed_alias_are_reported(self):
+        line = "![[00_assets/X_fig1.png|Figure 3: 转引自 [4]]] ^fig3"
+        text = CLEAN_NOTE + "\n" + line + "\n"
+        (problem,) = self.problems(text)
+        self.assertEqual(problem[0], text.splitlines().index(line) + 1)
+        self.assertIn("方括号", problem[1])
+        self.assertIn("[4]", problem[1])
+
+    def test_brackets_in_a_wikilink_alias_are_reported(self):
+        (message,) = self.messages(CLEAN_NOTE + "\n见 [[IPC|IPC [2]]] 的定义。\n")
+        self.assertIn("[2]", message)
+
     def test_bare_reference_in_a_table_cell_is_reported(self):
         (message,) = self.messages(CLEAN_NOTE + "\n| 配置 | 见 Table IV |\n")
         self.assertIn("Table IV", message)

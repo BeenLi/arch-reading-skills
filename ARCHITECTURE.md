@@ -77,7 +77,7 @@ flowchart TB
 | MOC 生成 | `skills/_shared/scripts/moc_builder.py`、`generate_paper_mocs.py`、`generate_concept_mocs.py`、`clean_old_mocs.py` | 递归生成 / 清理目录页；排除 `_inbox`、`00_assets` 和 `.` 开头目录按脚本各自设定。 |
 | 概念维护 | `skills/_shared/scripts/scan_missing_concepts.py`、`regenerate_concepts.py` | 扫描"有 wikilink 但没有概念笔记"的盲点；批量按增强模板重写历史概念。 |
 | 文本检查 | `skills/_shared/scripts/md_escape_check.py` | 找出 / 修复会被 Obsidian 误渲染的 `[i][j]`、`$`、误触发 `#tag`。 |
-| 链接复查 | `skills/paper-reader/scripts/check_note_links.py` | 检查笔记里的标题 / 块链接、重复锚点、`[[概念]]` 与嵌入能否解析、表格行内未转义的 `\|`、漏写链接的裸 Figure / Table / 机制引用。 |
+| 链接复查 | `skills/paper-reader/scripts/check_note_links.py` | 检查笔记里的标题 / 块链接、重复锚点、`[[概念]]` 与嵌入能否解析、表格行内未转义的 `\|`、wikilink / 嵌入别名里会截断链接的方括号、漏写链接的裸 Figure / Table / 机制引用。 |
 | `book-reader` | `skills/book-reader/SKILL.md`、`skills/book-reader/scripts/extract_book.py` | 整本书逐页提取、分批提炼、输出带树状思维导图的读书笔记。 |
 | 测试 | `tests/*.py` | 13 个测试文件：脚本行为、模板章节与锚点约束、SKILL / daemon 一致性、仓库布局与文档路径。 |
 

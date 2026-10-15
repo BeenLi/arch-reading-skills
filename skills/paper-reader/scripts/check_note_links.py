@@ -6,7 +6,10 @@ duplicate ``^id`` anchors, wikilinks to other notes / concepts, ``![[…]]``
 embeds, unescaped alias pipes inside table rows, and bare "Figure N /
 Table N / 机制N / Insight N / 贡献N" mentions that should have been links —
 including "机制 N", ranges / lists such as "Figure 3–5" or "Table IV/VI", and a
-bare tail left after a linked head, as in "[[#^fig3|Figure 3]]–5".
+bare tail left after a linked head, as in "[[#^fig3|Figure 3]]–5". Square
+brackets inside a wikilink or embed alias (``![[a.png|转引自 [4]]]``) are
+reported because Obsidian ends the link at the first ``]]``; balanced brackets
+in Markdown image alt text (``![转引自 [4]](url)``) are valid CommonMark and pass.
 Code fences, ``$$`` math blocks and inline code are not prose and are skipped.
 """
 
@@ -25,7 +28,8 @@ FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
 HEADING = re.compile(r"^(#{1,6})\s+(.+?)\s*#*\s*$")
 ANCHOR = re.compile(r"(?:^|\s)\^([A-Za-z0-9-]+)\s*$")
 WIKILINK = re.compile(r"(!?)\[\[([^\]]+)\]\]")
-MD_IMAGE_OR_LINK = re.compile(r"!?\[[^\]]*\]\([^)]*\)")
+# Link text may hold one level of balanced brackets, e.g. a "[174]" citation.
+MD_IMAGE_OR_LINK = re.compile(r"!?\[(?:[^\[\]]|\[[^\[\]]*\])*\]\([^)]*\)")
 INLINE_CODE = re.compile(r"`[^`]*`")
 INLINE_MATH = re.compile(r"\$[^$\n]+\$")
 # Range / list separators between reference numbers ("3–5", "IV/VI"); "、" and
@@ -140,6 +144,9 @@ def check(text: str, note_path: Path, root: Path) -> list[tuple[int, str]]:
         is_table_row = line.lstrip().startswith("|")
         for match in WIKILINK.finditer(line):
             embed, inner = match.group(1), match.group(2)
+            if "[" in inner:
+                fragment = inner[inner.rindex("[") :] + "]"
+                problems.append((lineno, f"wikilink 别名里含方括号，Obsidian 会在第一个 ]] 处截断：{fragment}，改写成“文献 N”"))
             if is_table_row and re.search(r"(?<!\\)\|", inner):
                 problems.append((lineno, f"表格行内 wikilink 别名要写成 `\\|`：[[{inner}]]"))
             target = re.split(r"\\?\|", inner, maxsplit=1)[0]
