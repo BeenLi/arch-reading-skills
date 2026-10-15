@@ -111,6 +111,48 @@ class CheckNoteLinksTest(unittest.TestCase):
         for ref in ("Figure 1", "Table I", "机制1", "Insight 1", "贡献1"):
             self.assertTrue(any(ref in m for m in messages), (ref, messages))
 
+    def test_bare_mechanism_and_contribution_with_a_space_are_reported(self):
+        messages = self.messages(CLEAN_NOTE + "\n见 机制 1 和 贡献 2。\n")
+        self.assertEqual(len(messages), 2, messages)
+        self.assertIn("机制 1", messages[0])
+        self.assertIn("贡献 2", messages[1])
+
+    def test_bare_reference_directly_followed_by_chinese_is_reported(self):
+        messages = self.messages(CLEAN_NOTE + "\n见 机制1和 贡献2–3的设计，以及 [[#^fig1|Figure 1]]–5的结果。\n")
+        self.assertEqual(len(messages), 3, messages)
+        for ref in ("机制1", "贡献2–3", "–5"):
+            self.assertTrue(any(ref in m for m in messages), (ref, messages))
+
+    def test_percentage_after_contribution_verb_is_not_reported(self):
+        self.assertEqual(self.problems(CLEAN_NOTE + "\n分别贡献 39%/46%/58%，平均贡献61%。\n"), [])
+
+    def test_bare_abbreviated_figure_is_reported(self):
+        (message,) = self.messages(CLEAN_NOTE + "\n如 Fig. 3 所示。\n")
+        self.assertIn("Fig. 3", message)
+
+    def test_bare_range_or_list_is_reported_once_as_a_whole(self):
+        for ref in ("Figure 3–5", "Figure 3-5", "Figure 3/5", "Figure 3~5", "Table IV/VI", "机制2–3"):
+            with self.subTest(ref=ref):
+                (message,) = self.messages(CLEAN_NOTE + f"\n见 {ref} 的结果。\n")
+                self.assertIn(ref, message)
+
+    def test_bare_continuation_after_a_linked_reference_is_reported(self):
+        for line, tail in (("[[#^fig1|Figure 1]]–5", "–5"), ("[[#^tab1|Table I]]/II", "/II")):
+            with self.subTest(line=line):
+                (message,) = self.messages(CLEAN_NOTE + f"\n见 {line} 的结果。\n")
+                self.assertIn(tail, message)
+
+    def test_fully_linked_range_is_not_reported(self):
+        text = CLEAN_NOTE + "\n见 [[#^fig1|Figure 1]]–[[#^fig1|5]] 与 [[#^tab1|Table I]]/[[#^tab1|II]]。\n"
+        self.assertEqual(self.problems(text), [])
+
+    def test_continuation_after_an_ordinary_link_is_not_reported(self):
+        self.assertEqual(self.problems(CLEAN_NOTE + "\n[[IPC]]-4 与 [[IPC]]/2 都不是引用。\n"), [])
+
+    def test_range_inside_code_math_or_image_alt_is_not_reported(self):
+        text = CLEAN_NOTE + "\n`Figure 3–5`、$Table IV/VI$ 与 ![Figure 3-5](x.png) 都不是正文。\n"
+        self.assertEqual(self.problems(text), [])
+
     def test_bare_reference_in_a_table_cell_is_reported(self):
         (message,) = self.messages(CLEAN_NOTE + "\n| 配置 | 见 Table IV |\n")
         self.assertIn("Table IV", message)

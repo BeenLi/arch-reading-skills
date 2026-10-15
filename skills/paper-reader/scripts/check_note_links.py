@@ -26,12 +26,25 @@ WIKILINK = re.compile(r"(!?)\[\[([^\]]+)\]\]")
 MD_IMAGE_OR_LINK = re.compile(r"!?\[[^\]]*\]\([^)]*\)")
 INLINE_CODE = re.compile(r"`[^`]*`")
 INLINE_MATH = re.compile(r"\$[^$\n]+\$")
+# Range / list separators between reference numbers ("3–5", "IV/VI"); "、" and
+# "," are left out because "Table V、32 KB" is far more common than a list.
+_SEP = r"\s?[–—\-/~]\s?"
+# ASCII-only word end: ``\b`` would treat a following CJK character as a word
+# character and miss "机制1和"; "%" keeps "贡献 39%" (contributes 39%) out.
+_END = r"(?![A-Za-z0-9_%])"
+_FIG_NUM = rf"\d+[a-z]?{_END}"
+_ROMAN = rf"[IVXLC]+{_END}"
+_ARABIC = rf"\d+{_END}"
 BARE_REF = re.compile(
-    r"(?<![\w#^])(?:Figure|Fig\.)\s?\d+[a-z]?\b"
-    r"|(?<![\w#^])Table\s(?:[IVXLC]+|\d+)\b"
-    r"|(?<![\w#^])Insight\s\d+"
-    r"|(?:机制|贡献)\d+"
+    rf"(?<![\w#^])(?:Figure|Fig\.)\s?{_FIG_NUM}(?:{_SEP}{_FIG_NUM})*"
+    rf"|(?<![\w#^])Table\s(?:{_ROMAN}(?:{_SEP}{_ROMAN})*|{_ARABIC}(?:{_SEP}{_ARABIC})*)"
+    rf"|(?<![\w#^])Insight\s{_ARABIC}(?:{_SEP}{_ARABIC})*"
+    rf"|(?:机制|贡献)\s?{_ARABIC}(?:{_SEP}{_ARABIC})*"
 )
+# A linked reference such as [[#^fig3|Figure 3]] is stripped to this sentinel so
+# that a bare continuation after it ("–5", "/VI") can still be reported.
+LINKED_REF = "\x00"
+BARE_CONTINUATION = re.compile(rf"{LINKED_REF}(?:{_SEP}(?:{_FIG_NUM}|{_ROMAN}))+")
 TABLE_TITLE = re.compile(r"^\*\*Table\b")
 
 
@@ -66,6 +79,13 @@ def _prose_lines(lines: list[str]) -> list[tuple[int, str]]:
             continue
         out.append((idx + 1, line))
     return out
+
+
+def _strip_wikilink(match: re.Match[str]) -> str:
+    """Blank out a wikilink, leaving ``LINKED_REF`` if its alias is itself a reference."""
+    embed, inner = match.group(1), match.group(2)
+    alias = re.split(r"\\?\|", inner, maxsplit=1)[-1].strip()
+    return LINKED_REF if not embed and BARE_REF.fullmatch(alias) else " "
 
 
 def _resolve_note(target: str, note_path: Path, root: Path, names: dict[str, list[Path]]) -> bool:
@@ -135,12 +155,14 @@ def check(text: str, note_path: Path, root: Path) -> list[tuple[int, str]]:
 
         if HEADING.match(line) or TABLE_TITLE.match(line.strip()):
             continue
-        stripped = WIKILINK.sub(" ", line)
+        stripped = WIKILINK.sub(_strip_wikilink, line)
         stripped = MD_IMAGE_OR_LINK.sub(" ", stripped)
         stripped = INLINE_CODE.sub(" ", stripped)
         stripped = INLINE_MATH.sub(" ", stripped)
         for ref in BARE_REF.finditer(stripped):
             problems.append((lineno, f"裸引用未写成跳转链接：{ref.group(0)}"))
+        for ref in BARE_CONTINUATION.finditer(stripped):
+            problems.append((lineno, f"裸引用未写成跳转链接：[[…]]{ref.group(0)[1:]}"))
 
     problems.sort(key=lambda item: item[0])
     return problems
