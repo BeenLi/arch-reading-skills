@@ -161,7 +161,7 @@ created: YYYY-MM-DD
 python3 scripts/check_note_links.py "<笔记路径>" "<新建的概念笔记路径>" ...
 ```
 
-它检查标题链接与标题逐字一致、块链接的 `^id` 存在且不重复、`[[概念]]` / `[[笔记]]` 能找到对应 `.md`、`![[…]]` 嵌入的文件存在、表格行内 wikilink 别名写成 `\|`，以及正文里漏写链接的裸 “Figure N / Table N / 机制N / Insight N / 贡献N”。逐条修正后重跑，直到每个文件都输出 `OK`；汇报时写明复查结果。wikilink 默认在 `VAULT_PATH`（配置项 `obsidian_vault`）下递归查找；目标笔记在这个目录之外时，用 `--root <目录>` 改为在更上层的目录下查找。
+它检查标题链接与标题逐字一致、块链接的 `^id` 存在且不重复、`[[概念]]` / `[[笔记]]` 能找到对应 `.md`、`![[…]]` 嵌入的文件存在、表格行内 wikilink 别名写成 `\|`，以及正文里漏写链接的裸 “Figure N / Table N / 机制N / Insight N / 贡献N”（含 “机制 N”、“Figure 3–5” / “Table IV/VI” 这类范围，以及 `[[#^fig3|Figure 3]]–5` 链接后剩下的裸尾巴）。逐条修正后重跑，直到每个文件都输出 `OK`；汇报时写明复查结果。wikilink 默认在 `VAULT_PATH`（配置项 `obsidian_vault`）下递归查找；目标笔记在这个目录之外时，用 `--root <目录>` 改为在更上层的目录下查找。
 
 ## 7. 完成后自检
 

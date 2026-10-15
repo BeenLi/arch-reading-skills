@@ -146,6 +146,10 @@ class CheckNoteLinksTest(unittest.TestCase):
         text = CLEAN_NOTE + "\n见 [[#^fig1|Figure 1]]–[[#^fig1|5]] 与 [[#^tab1|Table I]]/[[#^tab1|II]]。\n"
         self.assertEqual(self.problems(text), [])
 
+    def test_continuation_of_the_other_numbering_kind_is_not_reported(self):
+        text = CLEAN_NOTE + "\n见 [[#^fig1|Figure 1]]—CXL 场景与 [[#^tab1|Table I]]/12 组配置。\n"
+        self.assertEqual(self.problems(text), [])
+
     def test_continuation_after_an_ordinary_link_is_not_reported(self):
         self.assertEqual(self.problems(CLEAN_NOTE + "\n[[IPC]]-4 与 [[IPC]]/2 都不是引用。\n"), [])
 

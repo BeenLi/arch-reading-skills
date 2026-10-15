@@ -4,7 +4,9 @@
 Covers in-note heading links ``[[#标题|…]]``, block links ``[[#^id|…]]``,
 duplicate ``^id`` anchors, wikilinks to other notes / concepts, ``![[…]]``
 embeds, unescaped alias pipes inside table rows, and bare "Figure N /
-Table N / 机制N / Insight N / 贡献N" mentions that should have been links.
+Table N / 机制N / Insight N / 贡献N" mentions that should have been links —
+including "机制 N", ranges / lists such as "Figure 3–5" or "Table IV/VI", and a
+bare tail left after a linked head, as in "[[#^fig3|Figure 3]]–5".
 Code fences, ``$$`` math blocks and inline code are not prose and are skipped.
 """
 
@@ -41,10 +43,13 @@ BARE_REF = re.compile(
     rf"|(?<![\w#^])Insight\s{_ARABIC}(?:{_SEP}{_ARABIC})*"
     rf"|(?:机制|贡献)\s?{_ARABIC}(?:{_SEP}{_ARABIC})*"
 )
-# A linked reference such as [[#^fig3|Figure 3]] is stripped to this sentinel so
-# that a bare continuation after it ("–5", "/VI") can still be reported.
-LINKED_REF = "\x00"
-BARE_CONTINUATION = re.compile(rf"{LINKED_REF}(?:{_SEP}(?:{_FIG_NUM}|{_ROMAN}))+")
+# A linked reference such as [[#^fig3|Figure 3]] is stripped to a sentinel so a
+# bare continuation after it ("–5", "/VI") can still be reported; the sentinel
+# records whether the head is Roman-numbered so "Figure 1—CXL" is not a range.
+LINKED_ARABIC, LINKED_ROMAN = "\x00", "\x01"
+BARE_CONTINUATION = re.compile(
+    rf"{LINKED_ARABIC}(?:{_SEP}{_FIG_NUM})+|{LINKED_ROMAN}(?:{_SEP}{_ROMAN})+"
+)
 TABLE_TITLE = re.compile(r"^\*\*Table\b")
 
 
@@ -82,10 +87,12 @@ def _prose_lines(lines: list[str]) -> list[tuple[int, str]]:
 
 
 def _strip_wikilink(match: re.Match[str]) -> str:
-    """Blank out a wikilink, leaving ``LINKED_REF`` if its alias is itself a reference."""
+    """Blank out a wikilink, leaving a ``LINKED_*`` sentinel if its alias is itself a reference."""
     embed, inner = match.group(1), match.group(2)
     alias = re.split(r"\\?\|", inner, maxsplit=1)[-1].strip()
-    return LINKED_REF if not embed and BARE_REF.fullmatch(alias) else " "
+    if embed or not BARE_REF.fullmatch(alias):
+        return " "
+    return LINKED_ROMAN if alias[-1] in "IVXLC" else LINKED_ARABIC
 
 
 def _resolve_note(target: str, note_path: Path, root: Path, names: dict[str, list[Path]]) -> bool:
