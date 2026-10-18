@@ -22,6 +22,12 @@ if str(_SHARED_DIR) not in sys.path:
 from user_config import paper_notes_dir, zotero_base_attachment_dir, zotero_db_path, zotero_storage_dir
 from venue_label import pick_venue, short_venue, venue_label
 
+_SCRIPTS_DIR = Path(__file__).resolve().parent
+if str(_SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPTS_DIR))
+
+from zotero_local_api import LocalApiError, ZoteroLocalApi  # noqa: E402
+
 # 默认配置
 ZOTERO_DB = zotero_db_path()
 STORAGE_DIR = zotero_storage_dir()
@@ -1183,69 +1189,102 @@ def get_item_collections(conn, item_id):
     return cursor.fetchall()
 
 
-def add_to_collection_db(item_id, collection_id):
-    """将论文添加到分类（需要直接操作原数据库）"""
-    # 注意：这会直接修改 Zotero 数据库，需谨慎
-    conn = sqlite3.connect(ZOTERO_DB)
-    cursor = conn.cursor()
-    try:
-        # 检查是否已存在
-        cursor.execute("""
-            SELECT 1 FROM collectionItems
-            WHERE collectionID = ? AND itemID = ?
-        """, (collection_id, item_id))
-        if cursor.fetchone():
-            print(f"论文 {item_id} 已在分类 {collection_id} 中")
-            return False
+# ---------- 写入：经 Zotero 10 本地 API，不直接改 zotero.sqlite ----------
+# 直接写数据库不会更新修改时间和同步标记，Zotero 开着时还会被它覆盖；
+# 本地 API 的写入会弹窗让用户确认，改动立刻出现在界面里并照常同步。
 
-        # 添加到分类
-        cursor.execute("""
-            INSERT INTO collectionItems (collectionID, itemID, orderIndex)
-            VALUES (?, ?, 0)
-        """, (collection_id, item_id))
-        conn.commit()
-        print(f"已将论文 {item_id} 添加到分类 {collection_id}")
-        return True
-    except Exception as e:
-        print(f"添加失败: {e}")
-        conn.rollback()
-        return False
+
+def parse_field_assignments(assignments: list[str]) -> dict[str, str]:
+    """``["date=2012", "title=A"]`` → ``{"date": "2012", "title": "A"}``；值里可以再有 ``=``。"""
+    fields: dict[str, str] = {}
+    for assignment in assignments or []:
+        name, sep, value = assignment.partition("=")
+        if not sep or not name.strip():
+            raise ValueError(f"字段赋值要写成 field=value：{assignment}")
+        fields[name.strip()] = value
+    return fields
+
+
+def parse_creators(text: str) -> list[dict[str, str]]:
+    """``"Gabriel H. Loh; Mike O'Connor"`` → Zotero creators，分号分隔，最后一个词是姓。"""
+    creators = []
+    for name in (part.strip() for part in text.split(";")):
+        if not name:
+            continue
+        first, _, last = name.rpartition(" ")
+        creators.append({"creatorType": "author", "firstName": first.strip(), "lastName": last})
+    return creators
+
+
+def new_collections(current: list[str], add=(), remove=()) -> list[str]:
+    result = [key for key in current if key not in set(remove)]
+    for key in add:
+        if key not in result:
+            result.append(key)
+    return result
+
+
+def edit_item(api, key: str, changes: dict[str, Any], *, apply: bool) -> dict[str, Any]:
+    """对比 ``changes`` 和条目现值；``apply`` 时只写有变化的字段，并带上读到的版本号防覆盖。"""
+    item = api.get_item(key)
+    data = item["data"]
+    diff = {field: (data.get(field, ""), value) for field, value in changes.items() if data.get(field, "") != value}
+    result = {"key": key, "title": data.get("title", ""), "changes": diff, "applied": False}
+    if apply and diff:
+        api.update_item(key, {field: new for field, (_, new) in diff.items()}, version=item["version"])
+        result["applied"] = True
+    return result
+
+
+def trash_item(api, key: str, *, apply: bool) -> dict[str, Any]:
+    """移进 Zotero 回收站（可在 Zotero 里恢复），不是永久删除。"""
+    return edit_item(api, key, {"deleted": 1}, apply=apply)
+
+
+def change_collections(api, key: str, *, add=(), remove=(), apply: bool) -> dict[str, Any]:
+    current = api.get_item(key)["data"].get("collections", [])
+    return edit_item(api, key, {"collections": new_collections(current, add, remove)}, apply=apply)
+
+
+def print_edit_result(result: dict[str, Any]) -> None:
+    print(f"[{result['key']}] {result['title'][:80]}")
+    if not result["changes"]:
+        print("  （没有变化）")
+    for field, (old, new) in result["changes"].items():
+        print(f"  {field}: {old!r} → {new!r}")
+    if result["changes"] and not result["applied"]:
+        print("  预览：加 --apply 才会写入")
+
+
+def get_collection_key(conn, collection_id: int) -> Optional[str]:
+    row = conn.execute("SELECT key FROM collections WHERE collectionID = ?", (collection_id,)).fetchone()
+    return row[0] if row else None
+
+
+def resolve_item_key(token: str) -> str:
+    """数字当 ItemID 从数据库快照里查 key，否则原样当作 item key。"""
+    if not token.isdigit():
+        return token
+    conn = copy_db()
+    try:
+        key = get_item_key(conn, int(token))
     finally:
         conn.close()
+    if not key:
+        raise ValueError(f"找不到 ItemID {token}")
+    return key
 
 
-def remove_from_collection_db(item_id, collection_id):
-    """从分类中移除论文"""
-    conn = sqlite3.connect(ZOTERO_DB)
-    cursor = conn.cursor()
+def _collection_keys(collection_ids: list[int]) -> list[str]:
+    conn = copy_db()
     try:
-        cursor.execute("""
-            DELETE FROM collectionItems
-            WHERE collectionID = ? AND itemID = ?
-        """, (collection_id, item_id))
-        if cursor.rowcount > 0:
-            conn.commit()
-            print(f"已从分类 {collection_id} 移除论文 {item_id}")
-            return True
-        else:
-            print(f"论文 {item_id} 不在分类 {collection_id} 中")
-            return False
-    except Exception as e:
-        print(f"移除失败: {e}")
-        conn.rollback()
-        return False
+        keys = [get_collection_key(conn, cid) for cid in collection_ids]
     finally:
         conn.close()
-
-
-def move_to_collection(item_id, new_collection_id, old_collection_id=None):
-    """移动论文到新分类（先添加到新分类，再从旧分类移除）"""
-    # 先添加到新分类
-    add_to_collection_db(item_id, new_collection_id)
-
-    # 如果指定了旧分类，从旧分类移除
-    if old_collection_id:
-        remove_from_collection_db(item_id, old_collection_id)
+    missing = [cid for cid, key in zip(collection_ids, keys) if not key]
+    if missing:
+        raise ValueError(f"找不到分类 ID：{missing}")
+    return keys
 
 
 def find_collection_by_name(conn, name):
@@ -1356,6 +1395,18 @@ def main():
     note_path_parser.add_argument('--arxiv-id', help='写入 frontmatter 并用于查重的 arXiv ID')
     note_path_parser.add_argument('--title', help='写入 frontmatter 并用于查重的论文标题')
 
+    # 修改字段（经 Zotero 本地 API，默认只预览）
+    set_field_parser = subparsers.add_parser('set-field', help='修改条目字段（经 Zotero 10 本地 API；默认只预览）')
+    set_field_parser.add_argument('item', help='ItemID（数字）或 item key')
+    set_field_parser.add_argument('--set', dest='assignments', action='append', default=[], metavar='FIELD=VALUE', help='要改的字段，可重复')
+    set_field_parser.add_argument('--creators', help='整体替换作者，分号分隔，如 "Gabriel H. Loh; Nuwan Jayasena"')
+    set_field_parser.add_argument('--apply', action='store_true', help='真正写入；会在 Zotero 里弹窗请求授权')
+
+    # 移进回收站
+    trash_parser = subparsers.add_parser('trash', help='把条目移进 Zotero 回收站（可恢复；默认只预览）')
+    trash_parser.add_argument('items', nargs='+', help='ItemID（数字）或 item key')
+    trash_parser.add_argument('--apply', action='store_true', help='真正移进回收站；会在 Zotero 里弹窗请求授权')
+
     # 添加到分类
     add_parser = subparsers.add_parser('add-to-collection', help='将论文添加到分类')
     add_parser.add_argument('item_id', type=int, help='论文 ItemID')
@@ -1379,14 +1430,33 @@ def main():
         print(f"Zotero 数据库不存在: {ZOTERO_DB}")
         return
 
-    if args.command == 'add-to-collection':
-        add_to_collection_db(args.item_id, args.collection_id)
-        return
-    if args.command == 'remove-from-collection':
-        remove_from_collection_db(args.item_id, args.collection_id)
-        return
-    if args.command == 'move':
-        move_to_collection(args.item_id, args.new_collection_id, args.old_collection_id)
+    if args.command in {'set-field', 'trash', 'add-to-collection', 'remove-from-collection', 'move'}:
+        api = ZoteroLocalApi()
+        try:
+            if args.command == 'set-field':
+                changes = parse_field_assignments(args.assignments)
+                if args.creators:
+                    changes['creators'] = parse_creators(args.creators)
+                if not changes:
+                    parser.error('set-field 至少需要一个 --set 或 --creators')
+                print_edit_result(edit_item(api, resolve_item_key(args.item), changes, apply=args.apply))
+            elif args.command == 'trash':
+                for token in args.items:
+                    print_edit_result(trash_item(api, resolve_item_key(token), apply=args.apply))
+            else:
+                key = resolve_item_key(str(args.item_id))
+                if args.command == 'add-to-collection':
+                    add, remove = _collection_keys([args.collection_id]), []
+                elif args.command == 'remove-from-collection':
+                    add, remove = [], _collection_keys([args.collection_id])
+                else:
+                    add = _collection_keys([args.new_collection_id])
+                    remove = _collection_keys([args.old_collection_id]) if args.old_collection_id else []
+                # 分类调整前已经和用户确认过，直接写入；Zotero 还会弹窗再确认一次
+                print_edit_result(change_collections(api, key, add=add, remove=remove, apply=True))
+        except (LocalApiError, ValueError) as error:
+            print(f"错误：{error}", file=sys.stderr)
+            raise SystemExit(1)
         return
     if args.command == 'note-path':
         print_json(

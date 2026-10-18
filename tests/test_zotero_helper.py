@@ -34,7 +34,8 @@ def create_fixture_db(db_path: Path):
         CREATE TABLE collections (
             collectionID INTEGER PRIMARY KEY,
             collectionName TEXT NOT NULL,
-            parentCollectionID INTEGER
+            parentCollectionID INTEGER,
+            key TEXT
         );
         CREATE TABLE collectionItems (
             collectionID INTEGER NOT NULL,
@@ -86,13 +87,13 @@ def create_fixture_db(db_path: Path):
     )
 
     cursor.executemany(
-        "INSERT INTO collections VALUES (?, ?, ?)",
+        "INSERT INTO collections VALUES (?, ?, ?, ?)",
         [
-            (1, "Research Topics", None),
-            (2, "Lossless Communication Compression", 1),
-            (3, "Link & Fabric Integration", 2),
-            (4, "Protocol Design", 2),
-            (5, "Reading Queue", None),
+            (1, "Research Topics", None, "COLKEY01"),
+            (2, "Lossless Communication Compression", 1, "COLKEY02"),
+            (3, "Link & Fabric Integration", 2, "COLKEY03"),
+            (4, "Protocol Design", 2, "COLKEY04"),
+            (5, "Reading Queue", None, "COLKEY05"),
         ],
     )
 
@@ -191,6 +192,16 @@ class ZoteroHelperTests(unittest.TestCase):
         else:
             path.write_text(body, encoding="utf-8")
         return path
+
+    def test_collection_and_item_ids_map_to_keys(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            conn = create_fixture_db(Path(tmp) / "zotero.sqlite")
+            try:
+                self.assertEqual(self.module.get_collection_key(conn, 3), "COLKEY03")
+                self.assertIsNone(self.module.get_collection_key(conn, 99))
+                self.assertEqual(self.module.get_item_key(conn, 100), "EBPCITEM")
+            finally:
+                conn.close()
 
     def test_venue_skips_a_truncated_conference_name(self):
         with tempfile.TemporaryDirectory() as tmp:
