@@ -92,6 +92,8 @@ KNOWN = {
     "Micro": "IEEE Micro",
     '"IEEE Micro 2024"': "IEEE Micro",
     "IEEE Access": "IEEE Access",
+    "IRE Transactions on Electronic Computers": "IRE TEC",
+    "Electronics": "Electronics",
     "arXiv": "arXiv",
     '"arXiv preprint"': "arXiv",
 }

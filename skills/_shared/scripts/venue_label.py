@@ -76,6 +76,8 @@ _RULES: list[tuple[str, str, int]] = [
     ("SPM", r"Signal Processing Magazine", _I),
     ("Proc. IEEE", r"^Proceedings of the IEEE$", _I),
     ("IEEE Access", r"IEEE Access", _I),
+    ("IRE TEC", r"IRE Transactions on Electronic Computers", _I),
+    ("Electronics", r"^Electronics$", _I),
     ("IEEE Computer", r"^(IEEE )?Computer$", 0),
     ("ACM Queue", r"^(ACM )?Queue$", 0),
     # Title case "Micro" is the IEEE Micro magazine; upper case MICRO is the conference.
