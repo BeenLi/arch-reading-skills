@@ -103,6 +103,7 @@ def create_fixture_db(db_path: Path):
         "DOI": 4,
         "publicationTitle": 5,
         "extra": 6,
+        "repository": 7,
     }
     cursor.executemany("INSERT INTO fields VALUES (?, ?)", [(v, k) for k, v in fields.items()])
 
@@ -135,6 +136,7 @@ def create_fixture_db(db_path: Path):
     add_value(100, "extra", "arXiv: 2501.01234")
     add_value(101, "title", "Parent Collection Paper")
     add_value(101, "date", "2024-12")
+    add_value(101, "repository", "arXiv")
     add_value(102, "title", "Protocol Child Paper")
     add_value(103, "title", "Queue Paper")
 
@@ -185,6 +187,18 @@ class ZoteroHelperTests(unittest.TestCase):
             path.write_text(body, encoding="utf-8")
         return path
 
+    def test_preprint_venue_comes_from_repository_and_missing_venue_has_no_label(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            conn = create_fixture_db(Path(tmp) / "zotero.sqlite")
+            try:
+                preprint = self.module.build_item_record(conn, 101, storage_dir=Path(tmp))
+                bare = self.module.build_item_record(conn, 102, storage_dir=Path(tmp))
+            finally:
+                conn.close()
+
+        self.assertEqual((preprint["venue"], preprint["venue_short"], preprint["venue_label"]), ("arXiv", "arXiv", "arXiv'24"))
+        self.assertEqual((bare["venue"], bare["venue_short"], bare["venue_label"]), ("", None, None))
+
     def test_nested_collections_return_full_paths_and_item_lists_all_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
             db_path = Path(tmp) / "zotero.sqlite"
@@ -207,6 +221,8 @@ class ZoteroHelperTests(unittest.TestCase):
         self.assertEqual(item["authors"], ["Ada Lovelace", "Grace Hopper"])
         self.assertEqual(item["year"], "2025")
         self.assertEqual(item["venue"], "SIGCOMM")
+        self.assertEqual(item["venue_short"], "SIGCOMM")
+        self.assertEqual(item["venue_label"], "SIGCOMM'25")
         self.assertEqual(item["doi"], "10.1145/example")
         self.assertEqual(item["arxiv_id"], "2501.01234")
         self.assertEqual(

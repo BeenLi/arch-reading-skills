@@ -20,6 +20,7 @@ if str(_SHARED_DIR) not in sys.path:
     sys.path.insert(0, str(_SHARED_DIR))
 
 from user_config import paper_notes_dir, zotero_base_attachment_dir, zotero_db_path, zotero_storage_dir
+from venue_label import short_venue, venue_label
 
 # 默认配置
 ZOTERO_DB = zotero_db_path()
@@ -417,21 +418,28 @@ def build_item_record(
     if source_collection_id is not None:
         source_collection_path = get_collection_path(conn, source_collection_id)
 
+    # Preprints have no publication title; their repository (e.g. arXiv) is the venue.
+    venue = field_value(
+        fields,
+        "publicationTitle",
+        "conferenceName",
+        "proceedingsTitle",
+        "journalAbbreviation",
+        "meetingName",
+        "repository",
+    )
+    year = extract_year(date)
+
     return {
         "item_id": item_id,
         "item_key": get_item_key(conn, item_id),
         "title": field_value(fields, "title") or "Unknown",
         "authors": get_item_authors(conn, item_id),
         "date": date,
-        "year": extract_year(date),
-        "venue": field_value(
-            fields,
-            "publicationTitle",
-            "conferenceName",
-            "proceedingsTitle",
-            "journalAbbreviation",
-            "meetingName",
-        ),
+        "year": year,
+        "venue": venue,
+        "venue_short": short_venue(venue),
+        "venue_label": venue_label(venue, year),
         "url": field_value(fields, "url"),
         "doi": field_value(fields, "DOI", "doi"),
         "arxiv_id": extract_arxiv_id(fields),
