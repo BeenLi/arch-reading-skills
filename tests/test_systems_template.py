@@ -191,6 +191,17 @@ class SystemsTemplateTests(unittest.TestCase):
         # 学习索引允许整段写 TODO 的硬规则
         self.assertIn("TODO: 待人工补充学习材料", text)
 
+    def test_note_title_carries_the_venue_label(self):
+        template = ASSET_TEMPLATE.read_text(encoding="utf-8")
+        skill = PAPER_READER_SKILL.read_text(encoding="utf-8")
+        daemon = PAPER_DAEMON.read_text(encoding="utf-8")
+
+        self.assertIn("# 论文笔记：{Title} ({VenueLabel})", template)
+        self.assertIn("venue: {VenueShort}", template)
+        for blob, name in [(skill, "paper-reader SKILL.md"), (daemon, "paper_daemon.py")]:
+            self.assertIn("venue_label", blob, f"{name} 没有说明标题标签")
+        self.assertIn("venue_label.py", skill)
+
     def test_concept_reference_lists_per_type_differentiation_sections(self):
         text = CONCEPT_CATEGORIES.read_text(encoding="utf-8")
 

@@ -3,7 +3,7 @@ title: "{Title}"
 method_name: "{MethodName}"
 authors: [{Authors}]
 year: {Year}
-venue: {Venue}
+venue: {VenueShort}  # 不带年份的缩写，如 MICRO；取 zotero_helper.py resolve 的 venue_short
 tags: [{tags}]
 zotero_item_id: {zotero_item_id}
 zotero_collection: {zotero_path}
@@ -31,9 +31,10 @@ created: {date}
 11. `### 系统架构` 的结构图：论文有总体架构图时直接嵌入原图并挂 `^figN`；没有、或原图看不出模块边界与数据流时，才按 `../../_shared/references/diagram-rules.md` 自画一张（锚点 `^diag-arch`）。二选一，不并存。`### 执行流` 用编号步骤走读；满足任一条件时在编号步骤前加一张执行流全局图（锚点 `^diag-flow`）：执行流 ≥ 5 步（按编号列表条数计，一步对应一次模块间交接）；≥ 3 个角色或组件且有反馈闭环或回到上游模块或自身的重试 / 迭代循环（单纯的请求-响应返回不算）；有分支、并行或异步路径；系统架构图里模块之间没有带方向的箭头或步骤编号。这张图讲“怎么动”，步骤编号与列表一致，不要重画系统架构图的模块结构；四个条件都不满足就不画。
 12. 锚点与跳转：Figure 行尾 ` ^figN`（子图 `^fig8a`）；表格结束后空一行、单独一行 `^tab-…`、再空一行；公式锚点挂在公式下方解释段末尾；Insight / 机制 / 章节用标题链接 `[[#标题|短名]]`，标题部分必须与目标标题逐字一致；核心贡献条目末尾 ` ^contrib-N`。id 只用小写字母、数字、连字符，全文唯一。正文提到 Figure / Table / 公式 / Insight / 机制 / 贡献时一律写跳转链接，不写裸文字。表格单元格里的 wikilink 别名分隔符写成 `\|`，否则会切坏表格。
 13. 笔记写完、概念库补齐之后，在 paper-reader skill 目录下对论文笔记和本次新建的概念笔记一起运行 `scripts/check_note_links.py <笔记> <新建的概念笔记> ...`，复查所有跳转链接、wikilink 和嵌入，逐条修到每个文件都输出 OK 为止。
+14. 第一行标题末尾的 `({VenueLabel})` 形如 `MICRO'25`、`TVLSI'24`、`arXiv'26`：取 `zotero_helper.py resolve` 输出的 `venue_label`，或在 paper-reader skill 目录下运行 `python3 ../_shared/scripts/venue_label.py --venue "<venue 原文>" --year <年份>`。给不出时连括号一起省略，不要自己编缩写；文件名不带标签。
 -->
 
-# 论文笔记：{Title}
+# 论文笔记：{Title} ({VenueLabel})
 
 ## 元信息
 

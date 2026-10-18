@@ -26,6 +26,52 @@ class PaperDaemonTests(unittest.TestCase):
     def setUpClass(cls):
         cls.module = load_module()
 
+    def _venue_db(self, tmp):
+        db_path = Path(tmp) / "zotero.sqlite"
+        conn = sqlite3.connect(db_path)
+        conn.executescript(
+            """
+            CREATE TABLE fields (fieldID INTEGER PRIMARY KEY, fieldName TEXT);
+            CREATE TABLE itemDataValues (valueID INTEGER PRIMARY KEY, value TEXT);
+            CREATE TABLE itemData (itemID INTEGER, fieldID INTEGER, valueID INTEGER);
+            INSERT INTO fields VALUES (1, 'conferenceName'), (2, 'date'), (3, 'repository');
+            INSERT INTO itemDataValues VALUES
+                (1, '2022 55th IEEE/ACM International Symposium on Microarchitecture (MICRO)'),
+                (2, '2025-10-18'), (3, 'arXiv'), (4, '2024');
+            INSERT INTO itemData VALUES (10, 1, 1), (10, 2, 2), (11, 3, 3), (11, 2, 4), (12, 2, 4);
+            """
+        )
+        conn.commit()
+        conn.close()
+        return str(db_path)
+
+    def test_get_venue_info_returns_short_name_and_label(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db = self._venue_db(tmp)
+            self.assertEqual(self.module.get_venue_info(db, 10), {"venue_short": "MICRO", "venue_label": "MICRO'25"})
+            self.assertEqual(self.module.get_venue_info(db, 11), {"venue_short": "arXiv", "venue_label": "arXiv'24"})
+            self.assertEqual(self.module.get_venue_info(db, 12), {})
+
+    def _prompt_for(self, paper_source):
+        captured = {}
+
+        def fake_run(cmd, *args, **kwargs):
+            captured["prompt"] = cmd[-1]
+            raise self.module.subprocess.TimeoutExpired(cmd, 1)
+
+        with patch.object(self.module.subprocess, "run", side_effect=fake_run):
+            self.module.call_codex(paper_source, "Topic", 10)
+        return captured["prompt"]
+
+    def test_prompt_asks_for_the_venue_label_in_the_title(self):
+        prompt = self._prompt_for({"title": "X", "pdf_path": "/x.pdf", "venue_short": "MICRO", "venue_label": "MICRO'25"})
+        self.assertIn("(MICRO'25)", prompt)
+        self.assertIn("venue: MICRO", prompt)
+
+    def test_prompt_without_a_label_leaves_the_title_alone(self):
+        prompt = self._prompt_for({"title": "X", "pdf_path": "/x.pdf"})
+        self.assertNotIn("标题标签", prompt)
+
     def test_process_collection_cleans_temporary_zotero_db_on_error(self):
         with tempfile.TemporaryDirectory() as tmp:
             temp_db = Path(tmp) / "zotero_readonly_test.sqlite"
@@ -141,6 +187,7 @@ class PaperDaemonTests(unittest.TestCase):
                 patch.object(self.module, "load_progress", return_value={"completed": [], "failed": [], "current": None, "started_at": None}),
                 patch.object(self.module, "save_progress"),
                 patch.object(self.module, "get_paper_online_source", return_value={}),
+                patch.object(self.module, "get_venue_info", return_value={}),
                 patch.object(self.module, "get_pdf_path", return_value=str(pdf_path)),
                 patch.object(self.module, "call_codex", side_effect=fake_call_codex),
             ):
@@ -185,6 +232,7 @@ class PaperDaemonTests(unittest.TestCase):
                 patch.object(self.module, "load_progress", return_value=progress),
                 patch.object(self.module, "save_progress"),
                 patch.object(self.module, "get_paper_online_source", return_value={}),
+                patch.object(self.module, "get_venue_info", return_value={}),
                 patch.object(self.module, "get_pdf_path", return_value=None),
                 patch.object(self.module, "call_codex") as call_codex,
             ):
@@ -224,6 +272,7 @@ class PaperDaemonTests(unittest.TestCase):
                 patch.object(self.module, "load_progress", return_value={"completed": [], "failed": [], "current": None, "started_at": None}),
                 patch.object(self.module, "save_progress"),
                 patch.object(self.module, "get_paper_online_source", return_value={"arxiv_id": "2501.01234", "doi": "10.1145/example"}),
+                patch.object(self.module, "get_venue_info", return_value={}),
                 patch.object(self.module, "get_pdf_path", return_value=str(pdf_path)),
                 patch.object(self.module, "call_codex", side_effect=fake_call_codex),
             ):

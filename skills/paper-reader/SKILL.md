@@ -134,6 +134,10 @@ created: YYYY-MM-DD
 
 第一个 tag 应是最核心主题。
 
+### 标题标签
+
+笔记第一行标题写成 `# 论文笔记：{论文标题} ({venue_label})`，例如 `(MICRO'25)`、`(TVLSI'24)`、`(arXiv'26)`。`venue_label` 和 frontmatter 的 `venue` 分别取 `zotero_helper.py resolve` 输出里的 `venue_label` / `venue_short`；不经过 Zotero 时在 skill 目录下运行 `python3 ../_shared/scripts/venue_label.py --venue "<venue 原文>" --year <年份>`（加 `--short` 只输出缩写）。脚本识别不出 venue 或缺年份时，标题不加括号、`venue` 保留原文，不要自己编缩写。文件名不带标签，已有的 wikilink 不受影响。
+
 ## 5. 概念库维护
 
 每篇论文读完后必须：
@@ -178,6 +182,7 @@ python3 ../_shared/scripts/check_concept_length.py "<新建的概念笔记路径
 - Obsidian 大纲是否干净：没有把普通 `Figure X` / `Table X` / 单个公式提升成 `###` 或 `####` 章节？`####` 是否只用于机制内部的语义子小节？
 - `### 系统架构` 是否有且只有一张结构图（优先论文原图，否则按 `../_shared/references/diagram-rules.md` 自画并走完渲染 / 校验闭环），配组件表与 `### 执行流` 编号走读？执行流满足四个触发条件之一时，是否有且只有一张 `^diag-flow` 全局图，且编号与列表一致、没有重画模块结构？所有 Mermaid 图都必须按 `../_shared/references/mermaid-rules.md` 走完“渲染 → 看图 → 重排”闭环：先用 `mmdc` 或 `npx -y @mermaid-js/mermaid-cli` 实际渲染成 PNG 并打开查看，确认没有回头线、交叉线和语义错误的边之后才能交付。
 - `实验设置` 的 `模拟器与微架构参数` 小节是否包含 evaluation platform 连接关系图（Mermaid 或 draw.io 嵌图），并说明测试系统形态与硬件资源需求？是否删除了和图重复、且对读者理解测试系统无帮助的参数细节？
+- 第一行标题是否带 `(venue_label)`（识别不出时省略），frontmatter `venue` 是否是不带年份的缩写？
 - 正文是否没有 `- [ ]` / `- [x]` 这类 Obsidian task 语法？
 - 每个 Figure / Table / 公式 / 贡献是否挂了唯一锚点，正文引用是否都是 `[[#^…]]` / `[[#标题|…]]` 跳转链接？`scripts/check_note_links.py` 是否输出 `OK`？
 - `批判性思考` 是否只有 `优点 / 局限、假设与失效场景 / 潜在改进方向` 三个子节，且每条局限都写了 **失效场景**？

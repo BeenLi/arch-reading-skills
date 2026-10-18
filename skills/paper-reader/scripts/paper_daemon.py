@@ -41,6 +41,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
 
 from user_config import concepts_dir, obsidian_vault_path, paper_notes_dir, zotero_db_path, zotero_storage_dir
 from zotero_helper import build_note_index, find_matching_notes, infer_method_name, plan_note_save, remove_snapshot, snapshot_db
+from venue_label import short_venue, venue_label
 
 # 配置
 ZOTERO_DB = str(zotero_db_path())
@@ -296,6 +297,31 @@ def get_pdf_path(db_path: str, item_id: int) -> Optional[str]:
     return None
 
 
+_VENUE_FIELDS = ("publicationTitle", "conferenceName", "proceedingsTitle", "journalAbbreviation", "meetingName", "repository")
+
+
+def get_venue_info(db_path: str, item_id: int) -> dict:
+    """``{'venue_short': 'MICRO', 'venue_label': "MICRO'25"}``，识别不出 venue 或缺年份时返回空 dict。"""
+    conn = sqlite3.connect(db_path)
+    try:
+        rows = conn.execute(
+            """
+            SELECT f.fieldName, idv.value
+            FROM itemData id
+            JOIN fields f ON id.fieldID = f.fieldID
+            JOIN itemDataValues idv ON id.valueID = idv.valueID
+            WHERE id.itemID = ?
+            """,
+            (item_id,),
+        ).fetchall()
+    finally:
+        conn.close()
+    fields = dict(rows)
+    venue = next((fields[name] for name in _VENUE_FIELDS if fields.get(name)), "")
+    label = venue_label(venue, fields.get("date"))
+    return {"venue_short": short_venue(venue), "venue_label": label} if label else {}
+
+
 def get_paper_online_source(db_path: str, item_id: int) -> Optional[dict]:
     """
     获取论文的在线来源信息（arXiv ID、DOI、URL）
@@ -391,7 +417,17 @@ def call_codex(paper_source: dict, collection_path: str, item_id: int, save_plan
     if paper_source.get('title'):
         source_lines.append(f"论文标题: {paper_source['title']}")
 
+    if paper_source.get('venue_label'):
+        source_lines.append(f"发表: {paper_source['venue_short']}（标题标签 {paper_source['venue_label']}）")
+
     source_info = '\n'.join(source_lines)
+    title_instruction = ""
+    if paper_source.get('venue_label'):
+        title_instruction = f"""
+## 标题标签（venue_label）
+
+笔记第一行标题写成 `# 论文笔记：<论文标题> ({paper_source['venue_label']})`；frontmatter 写 `venue: {paper_source['venue_short']}`。文件名不要带标签。
+"""
     if save_plan:
         save_instruction = f"""Zotero 来源 collection 路径: {collection_path}
 Obsidian 保存计划:
@@ -462,6 +498,7 @@ Zotero ItemID: {item_id}
 {save_instruction}
 {no_pdf_instruction}
 {local_pdf_image_instruction}
+{title_instruction}
 
 ## 质量要求（重要）
 
@@ -733,7 +770,8 @@ def process_collection(collection_name: str, resume: bool = True):
                 continue
 
             pdf_path = get_pdf_path(db_path, item_id)
-            paper_source = {'title': title, **online_source}
+            # venue 信息单独合并：online_source 是否为空决定了有没有在线来源，不能混进去
+            paper_source = {'title': title, **online_source, **get_venue_info(db_path, item_id)}
 
             if pdf_path and os.path.exists(pdf_path):
                 paper_source['pdf_path'] = pdf_path

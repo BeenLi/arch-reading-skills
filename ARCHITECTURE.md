@@ -79,6 +79,8 @@ flowchart TB
 | 文本检查 | `skills/_shared/scripts/md_escape_check.py` | 找出 / 修复会被 Obsidian 误渲染的 `[i][j]`、`$`、误触发 `#tag`。 |
 | 链接复查 | `skills/paper-reader/scripts/check_note_links.py` | 检查笔记里的标题 / 块链接、重复锚点、`[[概念]]` 与嵌入能否解析、表格行内未转义的 `\|`、wikilink / 嵌入别名里会截断链接的方括号、漏写链接的裸 Figure / Table / 机制引用。 |
 | 概念长度自检 | `skills/_shared/scripts/check_concept_length.py` | 按“直观例子 ≤ 100 行、其他段 ≤ 90 行”分别计数概念笔记，不计 frontmatter 和 Mermaid 源码。 |
+| Venue 标签 | `skills/_shared/scripts/venue_label.py` | 把 Zotero / 笔记里的 venue 原文映射成缩写，生成笔记标题和论文目录页用的 `MICRO'25` 式标签；识别不出时不给标签。 |
+| Venue 标签回填 | `skills/_shared/scripts/backfill_venue_labels.py` | 给已有论文笔记规整 `venue` 并在第一行标题追加标签；默认只预览，`--apply` 才写入，不改文件名。 |
 | `book-reader` | `skills/book-reader/SKILL.md`、`skills/book-reader/scripts/extract_book.py` | 整本书逐页提取、分批提炼、输出带树状思维导图的读书笔记。 |
 | 测试 | `tests/*.py` | 13 个测试文件：脚本行为、模板章节与锚点约束、SKILL / daemon 一致性、仓库布局与文档路径。 |
 
