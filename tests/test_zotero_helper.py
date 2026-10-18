@@ -104,6 +104,8 @@ def create_fixture_db(db_path: Path):
         "publicationTitle": 5,
         "extra": 6,
         "repository": 7,
+        "conferenceName": 8,
+        "proceedingsTitle": 9,
     }
     cursor.executemany("INSERT INTO fields VALUES (?, ?)", [(v, k) for k, v in fields.items()])
 
@@ -139,6 +141,9 @@ def create_fixture_db(db_path: Path):
     add_value(101, "repository", "arXiv")
     add_value(102, "title", "Protocol Child Paper")
     add_value(103, "title", "Queue Paper")
+    add_value(103, "date", "2003")
+    add_value(103, "conferenceName", "the 30th annual international symposium")
+    add_value(103, "proceedingsTitle", "Proceedings of the 30th annual international symposium on Computer architecture - ISCA '03")
 
     cursor.executemany(
         "INSERT INTO collectionItems VALUES (?, ?, ?)",
@@ -186,6 +191,16 @@ class ZoteroHelperTests(unittest.TestCase):
         else:
             path.write_text(body, encoding="utf-8")
         return path
+
+    def test_venue_skips_a_truncated_conference_name(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            conn = create_fixture_db(Path(tmp) / "zotero.sqlite")
+            try:
+                item = self.module.build_item_record(conn, 103, storage_dir=Path(tmp))
+            finally:
+                conn.close()
+        self.assertEqual(item["venue_label"], "ISCA'03")
+        self.assertIn("ISCA '03", item["venue"])
 
     def test_preprint_venue_comes_from_repository_and_missing_venue_has_no_label(self):
         with tempfile.TemporaryDirectory() as tmp:

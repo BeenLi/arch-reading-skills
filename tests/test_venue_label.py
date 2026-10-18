@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "skills" / "_shared" / "scripts"))
 
-from venue_label import main, short_venue, venue_label  # noqa: E402
+from venue_label import main, pick_venue, short_venue, venue_label  # noqa: E402
 
 # Real venue strings taken from the Zotero library and existing note frontmatter.
 KNOWN = {
@@ -58,9 +58,18 @@ KNOWN = {
     "Proceedings of the 2018 Conference of the ACM Special Interest Group on Data Communication": "SIGCOMM",
     "ACM SIGCOMM 2024": "SIGCOMM",
     "Proceedings of the ACM SIGCOMM Symposium on SDN Research (SOSR)": "SOSR",
-    "Proceedings of the 9th ACM SIGCOMM Workshop on Hot Topics in Networks": "HotNets",
-    "Proceedings of the 15th ACM Workshop on Hot Topics in Storage and File Systems": "HotStorage",
-    "2022 15th IEEE/ACM International Workshop on Network on Chip Architectures (NoCArc)": "NoCArc",
+    # Workshops are labeled, marked with -W; companion volumes with -C.
+    "Proceedings of the 9th ACM SIGCOMM Workshop on Hot Topics in Networks": "HotNets-W",
+    "Proceedings of the 15th ACM Workshop on Hot Topics in Storage and File Systems": "HotStorage-W",
+    "Proceedings of the Workshop on Hot Topics in Operating Systems": "HotOS-W",
+    "2022 15th IEEE/ACM International Workshop on Network on Chip Architectures (NoCArc)": "NoCArc-W",
+    "3rd Workshop on SoCs, Heterogeneous Architectures and Workloads (SHAW-3)": "SHAW-W",
+    "Proceedings of the 2024 SIGCOMM Workshop on Networks for AI Computing": "SIGCOMM-W",
+    "Proceedings of the SC '23 Workshops of The International Conference on High Performance Computing, Network, Storage, and Analysis": "SC-W",
+    "2012 IEEE 26th International Parallel and Distributed Processing Symposium Workshops & PhD Forum": "IPDPS-W",
+    "Companion Proceedings of The 2019 World Wide Web Conference": "WWW-C",
+    "Companion of the ACM/SPEC International Conference on Performance Engineering": "ICPE-C",
+    "Proceedings of the ACM Web Conference 2023": "WWW",
     "IEEE INFOCOM 2025 - IEEE Conference on Computer Communications": "INFOCOM",
     "Proceedings of the 2014 ACM SIGMOD International Conference on Management of Data": "SIGMOD",
     "2018 IEEE 34th International Conference on Data Engineering (ICDE)": "ICDE",
@@ -87,12 +96,10 @@ KNOWN = {
     '"arXiv preprint"': "arXiv",
 }
 
-# Workshops of a main conference, companions and non-venues must not be labeled.
+# Non-venues, and workshops whose host or name we cannot tell, are not labeled.
 UNKNOWN = [
-    "Proceedings of the 2024 SIGCOMM Workshop on Networks for AI Computing",
-    "Proceedings of the SC '23 Workshops of The International Conference on High Performance Computing, Network, Storage, and Analysis",
-    "2012 IEEE 26th International Parallel and Distributed Processing Symposium Workshops & PhD Forum",
-    "Companion Proceedings of The 2019 World Wide Web Conference",
+    "Proceedings of the 3rd International Workshop on Something Obscure",
+    "the 30th annual international symposium",
     "ResearchGate",
     '"Notes"',
     "",
@@ -112,6 +119,17 @@ class ShortVenueTest(unittest.TestCase):
                 self.assertIsNone(short_venue(raw))
 
 
+class PickVenueTest(unittest.TestCase):
+    def test_first_recognizable_field_wins(self):
+        # conferenceName is truncated junk; proceedingsTitle is complete.
+        candidates = ["", "the 30th annual international symposium", "Proceedings of the 30th annual international symposium on Computer architecture - ISCA '03"]
+        self.assertEqual(pick_venue(candidates), candidates[2])
+
+    def test_falls_back_to_the_first_non_empty_field(self):
+        self.assertEqual(pick_venue(["", "ResearchGate", "Notes"]), "ResearchGate")
+        self.assertEqual(pick_venue(["", None]), "")
+
+
 class VenueLabelTest(unittest.TestCase):
     def test_conference_label_uses_two_digit_year(self):
         self.assertEqual(venue_label("2022 55th IEEE/ACM International Symposium on Microarchitecture (MICRO)", 2025), "MICRO'25")
@@ -119,6 +137,9 @@ class VenueLabelTest(unittest.TestCase):
     def test_year_may_be_a_string_or_a_date(self):
         self.assertEqual(venue_label("ISCA", "2005"), "ISCA'05")
         self.assertEqual(venue_label("ISCA", "2024-06-29"), "ISCA'24")
+
+    def test_workshop_label_keeps_the_marker_before_the_year(self):
+        self.assertEqual(venue_label("Proceedings of the 2024 SIGCOMM Workshop on Networks for AI Computing", 2024), "SIGCOMM-W'24")
 
     def test_journal_and_preprint_labels(self):
         self.assertEqual(venue_label("IEEE Access", 2024), "IEEE Access'24")

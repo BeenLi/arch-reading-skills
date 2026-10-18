@@ -8,9 +8,13 @@ IEEE/ACM International Symposium on Microarchitecture (MICRO)", "MICRO-54: …",
 abbreviation; ``venue_label`` adds a two-digit year. Unknown venues return
 None so callers leave the label out instead of guessing.
 
+Workshops are labeled too, marked with ``-W`` (``SIGCOMM-W'24``,
+``HotNets-W'10``); companion volumes with ``-C`` (``WWW-C'19``). A workshop
+attached to a main conference takes that conference's name.
+
 Rules are tried in order, so specific names come before the ones they contain:
-named workshops before the workshop exclusion, journals such as TCAD before the
-ICCAD conference, ISCAS before ISCA, the IEEE Micro journal before MICRO.
+named workshops before attached ones, journals such as TCAD before the ICCAD
+conference, ISCAS before ISCA, the IEEE Micro journal before MICRO.
 """
 
 from __future__ import annotations
@@ -21,17 +25,21 @@ import sys
 
 _I = re.IGNORECASE
 
-# (abbreviation or None for "not a venue we label", pattern, flags)
-_RULES: list[tuple[str | None, str, int]] = [
-    # Workshops with their own identity.
+# Workshops with their own identity; the -W marker is added here.
+_NAMED_WORKSHOPS: list[tuple[str, str, int]] = [
     ("HotNets", r"Hot Topics in Networks|\bHotNets\b", _I),
     ("HotOS", r"Hot Topics in Operating Systems|\bHotOS\b", _I),
     ("HotStorage", r"Hot Topics in Storage and File Systems|\bHotStorage\b", _I),
     ("HotCloud", r"\bHotCloud\b", _I),
     ("DaMoN", r"Data Management on New Hardware|\bDaMoN\b", _I),
     ("NoCArc", r"Network on Chip Architectures|\bNoCArc\b", _I),
-    # Workshops and companion volumes of a main conference are not that conference.
-    (None, r"\bWorkshops?\b|^Companion\b", _I),
+    ("SHAW", r"SoCs, Heterogeneous Architectures and Workloads|\bSHAW\b", _I),
+]
+_WORKSHOP = re.compile(r"\bWorkshops?\b", _I)
+_COMPANION = re.compile(r"^Companion\b", _I)
+
+# (abbreviation, pattern, flags) for journals, conferences and preprints.
+_RULES: list[tuple[str, str, int]] = [
     # Journals and magazines.
     ("TCAD", r"Computer-Aided Design of Integrated Circuits|\bTCAD\b", _I),
     ("TVLSI", r"Very Large Scale Integration \(VLSI\) Systems|\bTVLSI\b|Trans\. VLSI", _I),
@@ -92,7 +100,7 @@ _RULES: list[tuple[str | None, str, int]] = [
     ("GLSVLSI", r"Great Lakes Symposium on VLSI|\bGLSVLSI\b", _I),
     ("CICC", r"Custom Integrated Circuits Conference|\bCICC\b", _I),
     ("ISSCC", r"Solid-State Circuits Conference|\bISSCC\b", _I),
-    ("SC", r"International Conference for High Performance Computing, Networking|^SC ?'\d\d\b|^SC\d{2}\b", _I),
+    ("SC", r"International Conference for High Performance Computing, Network|\bSC ?'\d\d\b|^SC\d{2}\b", _I),
     ("ICS", r"International Conference on Supercomputing|^ICS\b", _I),
     ("IPDPS", r"Parallel and Distributed Processing Symposium|Symposium on Parallel and Distributed Processing|\bIPDPS\b", _I),
     ("HPDC", r"High-Performance Parallel and Distributed Computing|\bHPDC\b", _I),
@@ -115,6 +123,7 @@ _RULES: list[tuple[str | None, str, int]] = [
     ("INFOCOM", r"\bINFOCOM\b", _I),
     ("ICNP", r"International Conference on Network Protocols|\bICNP\b", _I),
     ("SIGMOD", r"International Conference on Management of Data|\bSIGMOD\b", _I),
+    ("WWW", r"World Wide Web Conference|ACM Web Conference|The Web Conference", _I),
     ("ICDE", r"International Conference on Data Engineering|\bICDE\b", _I),
     ("ICPE", r"International Conference on Performance Engineering|\bICPE\b", _I),
     ("PADS", r"Principles of Advanced Discrete Simulation", _I),
@@ -128,6 +137,7 @@ _RULES: list[tuple[str | None, str, int]] = [
     # Preprints.
     ("arXiv", r"\barXiv\b", _I),
 ]
+_COMPILED_WORKSHOPS = [(abbr, re.compile(pattern, flags)) for abbr, pattern, flags in _NAMED_WORKSHOPS]
 _COMPILED = [(abbr, re.compile(pattern, flags)) for abbr, pattern, flags in _RULES]
 _YEAR = re.compile(r"(?<!\d)(19\d{2}|20\d{2})(?!\d)")
 
@@ -141,10 +151,25 @@ def short_venue(raw: str | None) -> str | None:
     if not raw:
         return None
     text = _clean(raw)
-    for abbr, pattern in _COMPILED:
+    for abbr, pattern in _COMPILED_WORKSHOPS:
         if pattern.search(text):
-            return abbr
-    return None
+            return f"{abbr}-W"
+    host = next((abbr for abbr, pattern in _COMPILED if pattern.search(text)), None)
+    if _WORKSHOP.search(text):
+        return f"{host}-W" if host else None
+    if _COMPANION.search(text):
+        return f"{host}-C" if host else None
+    return host
+
+
+def pick_venue(candidates) -> str:
+    """First candidate field that names a known venue, else the first non-empty one.
+
+    Zotero items often hold a truncated conferenceName next to a complete
+    proceedingsTitle; taking the first non-empty field would pick the junk.
+    """
+    values = [value for value in candidates if value]
+    return next((value for value in values if short_venue(value)), values[0] if values else "")
 
 
 def _year(value) -> int | None:

@@ -52,6 +52,25 @@ class PaperDaemonTests(unittest.TestCase):
             self.assertEqual(self.module.get_venue_info(db, 11), {"venue_short": "arXiv", "venue_label": "arXiv'24"})
             self.assertEqual(self.module.get_venue_info(db, 12), {})
 
+    def test_get_venue_info_skips_a_truncated_conference_name(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "zotero.sqlite"
+            conn = sqlite3.connect(db_path)
+            conn.executescript(
+                """
+                CREATE TABLE fields (fieldID INTEGER PRIMARY KEY, fieldName TEXT);
+                CREATE TABLE itemDataValues (valueID INTEGER PRIMARY KEY, value TEXT);
+                CREATE TABLE itemData (itemID INTEGER, fieldID INTEGER, valueID INTEGER);
+                INSERT INTO fields VALUES (1, 'conferenceName'), (2, 'proceedingsTitle'), (3, 'date');
+                INSERT INTO itemDataValues VALUES (1, 'the 30th annual international symposium'),
+                    (2, 'Proceedings of the 30th annual international symposium on Computer architecture - ISCA ''03'), (3, '2003');
+                INSERT INTO itemData VALUES (20, 1, 1), (20, 2, 2), (20, 3, 3);
+                """
+            )
+            conn.commit()
+            conn.close()
+            self.assertEqual(self.module.get_venue_info(str(db_path), 20)["venue_label"], "ISCA'03")
+
     def _prompt_for(self, paper_source):
         captured = {}
 

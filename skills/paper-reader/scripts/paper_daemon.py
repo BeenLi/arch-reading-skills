@@ -41,7 +41,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
 
 from user_config import concepts_dir, obsidian_vault_path, paper_notes_dir, zotero_db_path, zotero_storage_dir
 from zotero_helper import build_note_index, find_matching_notes, infer_method_name, plan_note_save, remove_snapshot, snapshot_db
-from venue_label import short_venue, venue_label
+from venue_label import pick_venue, short_venue, venue_label
 
 # 配置
 ZOTERO_DB = str(zotero_db_path())
@@ -317,7 +317,7 @@ def get_venue_info(db_path: str, item_id: int) -> dict:
     finally:
         conn.close()
     fields = dict(rows)
-    venue = next((fields[name] for name in _VENUE_FIELDS if fields.get(name)), "")
+    venue = pick_venue(fields.get(name) for name in _VENUE_FIELDS)
     label = venue_label(venue, fields.get("date"))
     return {"venue_short": short_venue(venue), "venue_label": label} if label else {}
 
