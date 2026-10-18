@@ -69,7 +69,16 @@ Zotero 默认只读。阅读时不要按关键词自动改 Zotero 分类；如�
 
 ## Zotero 分类操作
 
-⚠️ 以下命令会修改 Zotero 数据库。默认不要主动调用；先在笔记或回复里写出分类调整建议和理由，只有用户明确确认执行后才调用：
+⚠️ 以下命令会修改 Zotero 里的条目。默认不要主动调用；先在笔记或回复里写出分类调整建议和理由，只有用户明确确认执行后才调用。
+
+所有写入都经 Zotero 10 的本地 API 完成，不直接改 `zotero.sqlite`：
+
+- 前提：Zotero 10 及以上已打开，并在 设置 → 高级 里启用了本地 API。
+- 每次写入 Zotero 会弹窗请求授权，用户点“允许”后才写；选“总是允许”可以免去后续弹窗。
+- 改动会立刻出现在 Zotero 界面里，并照常同步。
+- 写入时带上读到的版本号：条目在这期间被改过就拒绝写入，不会覆盖。
+
+调整分类：
 
 ```bash
 # 查看论文当前分类
@@ -82,4 +91,17 @@ python3 scripts/zotero_helper.py move {item_id} {new_collection_id} --from {old_
 python3 scripts/zotero_helper.py add-to-collection {item_id} {collection_id}
 # 从分类移除
 python3 scripts/zotero_helper.py remove-from-collection {item_id} {collection_id}
+```
+
+## Zotero 字段修改与删除
+
+同样经本地 API；默认只预览改动，确认无误后加 `--apply` 才写入。`ITEM` 可以是 ItemID（数字）或 item key。
+
+```bash
+# 预览字段修改
+python3 scripts/zotero_helper.py set-field ITEM --set conferenceName="30th Annual International Symposium on Computer Architecture (ISCA '03)" --set date=2003
+# 整体替换作者（分号分隔，最后一个词是姓）
+python3 scripts/zotero_helper.py set-field ITEM --creators "Gabriel H. Loh; Nuwan Jayasena" --apply
+# 移进 Zotero 回收站（可在 Zotero 里恢复，不是永久删除）
+python3 scripts/zotero_helper.py trash ITEM [ITEM ...] --apply
 ```

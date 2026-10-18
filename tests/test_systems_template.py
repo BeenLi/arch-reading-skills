@@ -191,6 +191,17 @@ class SystemsTemplateTests(unittest.TestCase):
         # 学习索引允许整段写 TODO 的硬规则
         self.assertIn("TODO: 待人工补充学习材料", text)
 
+    def test_zotero_writes_go_through_the_local_api(self):
+        skill = PAPER_READER_SKILL.read_text(encoding="utf-8")
+        guide = (REPO_ROOT / "skills" / "paper-reader" / "references" / "zotero-guide.md").read_text(encoding="utf-8")
+        for command in ["set-field", "trash"]:
+            self.assertIn(command, skill)
+            self.assertIn(f"zotero_helper.py {command}", guide)
+        for blob in (skill, guide):
+            self.assertIn("本地 API", blob)
+            self.assertIn("--apply", blob)
+        self.assertNotIn("会修改 Zotero 数据库", guide)
+
     def test_note_title_carries_the_venue_label(self):
         template = ASSET_TEMPLATE.read_text(encoding="utf-8")
         skill = PAPER_READER_SKILL.read_text(encoding="utf-8")

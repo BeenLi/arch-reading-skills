@@ -53,6 +53,7 @@ description: |
 - 单篇 item 位于多个 collection 时，让用户选择本次保存使用的 `selected_collection_path`。
 - 批量从 collection 进入时，使用 helper 返回的 `source_collection_path`；递归父 collection 时，优先使用 item 在该 subtree 下最具体的 child collection。
 - 如果 Zotero 分类明显不对，只提出建议；确认后才调用 `zotero_helper.py move`、`add-to-collection` 或 `remove-from-collection`。
+- 条目元数据有误（venue 截断、年份或作者错误）或用户要求删除条目时，先列出改动，用户确认后用 `zotero_helper.py set-field` / `trash` 加 `--apply` 写入；`trash` 只移进回收站。这些写入和分类调整都经 Zotero 10 本地 API，需要 Zotero 开着，并会在 Zotero 里弹窗请求授权，细节见 `references/zotero-guide.md`。
 
 ## 2. 阅读模式
 

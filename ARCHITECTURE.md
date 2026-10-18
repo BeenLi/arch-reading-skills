@@ -14,7 +14,7 @@
 
 它不是常驻服务，也不是 Obsidian 插件：核心输入是用户的一句自然语言、共享配置 `skills/_shared/user-config.json`（及本机覆盖 `user-config.local.json`）、Zotero 的 SQLite 库和 PDF 附件；核心输出是 Obsidian vault 里的 `DailyPapers/YYYY-MM-DD-论文推荐.md`、`PaperNotes/**/{MethodName}.md` 论文笔记、`_concepts/{concept_type}/*.md` 概念笔记和 `_index_*.md` 目录页。
 
-四条贯穿所有 skill 的原则（`README.md`、`skills/paper-reader/SKILL.md`、`skills/daily-papers/SKILL.md`）：论文目录由 Zotero collection path 决定，不靠关键词猜分类；概念目录由 `concept_type` 决定，不按论文研究领域分类；Zotero 默认只读，写 collection 只能在用户明确要求后执行；每日推荐默认只做 fetch + review，不自动精读生成长笔记。
+四条贯穿所有 skill 的原则（`README.md`、`skills/paper-reader/SKILL.md`、`skills/daily-papers/SKILL.md`）：论文目录由 Zotero collection path 决定，不靠关键词猜分类；概念目录由 `concept_type` 决定，不按论文研究领域分类；Zotero 默认只读，改分类、改字段或删条目只能在用户明确要求后执行，并且一律经 Zotero 10 本地 API 写入；每日推荐默认只做 fetch + review，不自动精读生成长笔记。
 
 ## 2. 核心心智模型
 
@@ -25,7 +25,8 @@
 | 共享配置 | `skills/_shared/scripts/user_config.py`、`skills/_shared/user-config.json` | 三层合并：内置 `DEFAULT_CONFIG` → `user-config.json` → `user-config.local.json`；所有脚本和 SKILL 都从这里取 vault、Zotero、关键词和自动化开关。 |
 | 论文笔记模板 | `skills/paper-reader/assets/paper-note-template.md` | 唯一的笔记模板，固定章节顺序 问题定义 → 动机实验与核心 Insights → 核心贡献 → 系统设计总览 → 关键机制拆解 → …，并规定锚点与跳转写法。 |
 | 模板的四份拷贝 | `skills/paper-reader/SKILL.md`、`skills/paper-reader/scripts/paper_daemon.py`、`tests/test_systems_template.py` | 模板结构同时写在 SKILL 自检、daemon 内嵌 prompt 和测试断言里，改模板必须四处同步。 |
-| Zotero helper | `skills/paper-reader/scripts/zotero_helper.py` | 只读解析 item / collection / PDF，规划笔记保存路径，用 `NoteIndex` 匹配已有笔记。 |
+| Zotero helper | `skills/paper-reader/scripts/zotero_helper.py` | 只读解析 item / collection / PDF，规划笔记保存路径，用 `NoteIndex` 匹配已有笔记；用户确认后经本地 API 改分类（`move` 等）、改字段（`set-field`）或移进回收站（`trash`）。 |
+| Zotero 本地 API 写入 | `skills/paper-reader/scripts/zotero_local_api.py` | 向 Zotero 10 申请写入 key（Zotero 弹窗由用户允许），带版本号 `PATCH` 条目，条目被改过时拒绝写入；不直接改 `zotero.sqlite`。 |
 | concept_type | `skills/paper-reader/references/concept-categories.md` | 概念库按概念本身性质分 8 类（data-structure … theory-model），不按论文领域分；seed vocabulary 列出必须成为 `[[概念]]` 的术语。 |
 | MOC | `skills/_shared/scripts/moc_builder.py`、`generate_paper_mocs.py`、`generate_concept_mocs.py` | 递归生成每个目录的 `_index_<目录名>.md` 导航页，内容不变时不重写。 |
 | 画图规则 | `skills/_shared/references/diagram-rules.md`、`skills/_shared/references/mermaid-rules.md` | 图表选型表（Mermaid 默认，时序 / 甘特 / 流水线分级图走 draw.io）和 Mermaid 的"渲染 → 看图 → 重排"闭环。 |
@@ -69,7 +70,7 @@ flowchart TB
 | `daily-papers-review` | `skills/daily-papers-review/SKILL.md` | 扫描笔记库匹配已有论文，按主推 / 备选 / 可跳过分流写点评，保存推荐文件并更新 `.history.json`。 |
 | `daily-papers-notes` | `skills/daily-papers-notes/SKILL.md` | 为"必读"论文补概念、调用 `paper-reader` 生成笔记、回填笔记链接、刷新 MOC；禁止手写骨架笔记。 |
 | `paper-reader` | `skills/paper-reader/SKILL.md` | 接收 PDF / arXiv / Zotero 输入，按模板生成笔记，维护概念库，按 Zotero collection 路径保存。 |
-| `zotero_helper.py` | `skills/paper-reader/scripts/zotero_helper.py` | 复制 `zotero.sqlite` 到临时文件并以 `PRAGMA query_only = ON` 打开；`resolve` / `note-path` 是新入口，`move` 等写命令只在用户确认后调用。 |
+| `zotero_helper.py` | `skills/paper-reader/scripts/zotero_helper.py` | 复制 `zotero.sqlite` 到临时文件并以 `PRAGMA query_only = ON` 打开；`resolve` / `note-path` 是新入口；`move` / `set-field` / `trash` 等写命令只在用户确认后调用，经 `zotero_local_api.py` 写入，`set-field` 和 `trash` 默认只预览。 |
 | `paper_daemon.py` | `skills/paper-reader/scripts/paper_daemon.py` | 按 Zotero collection 批量调用 Codex CLI 生成笔记，进度、日志、PID 写在 `PAPER_DAEMON_STATE_DIR`，支持断点续跑。 |
 | `reorganize_notes.py` | `skills/paper-reader/scripts/reorganize_notes.py` | 按 tags 把历史笔记归到分类目录；`--analyze` 只报告，`--execute` 才移动。 |
 | `download_note_images.py` | `skills/daily-papers/scripts/download_note_images.py` | 检查笔记外链图片可达性，不可达的下载到 `00_assets/` 并改写为 wikilink。 |
@@ -324,7 +325,7 @@ git diff --check
 | 画图规则 | `skills/_shared/references/diagram-rules.md`、`skills/_shared/references/mermaid-rules.md`、`skills/book-reader/references/mindmap-rules.md` |
 | 仓库布局与文档路径约束 | `tests/test_repo_layout.py`、`README.md` 的"目录约定" |
 | 模板与 SKILL 一致性测试 | `tests/test_systems_template.py` |
-| 脚本行为测试 | `tests/test_fetch_and_score.py`、`test_enrich_papers.py`、`test_zotero_helper.py`、`test_paper_daemon.py`、`test_generate_paper_mocs.py`、`test_scan_missing_concepts.py`、`test_regenerate_concepts.py`、`test_download_note_images.py`、`test_reorganize_notes.py`、`test_md_escape_check.py`、`test_daily_papers_theme.py` |
+| 脚本行为测试 | `tests/test_fetch_and_score.py`、`test_enrich_papers.py`、`test_zotero_helper.py`、`test_zotero_helper_writes.py`、`test_zotero_local_api.py`、`test_venue_label.py`、`test_backfill_venue_labels.py`、`test_paper_daemon.py`、`test_generate_paper_mocs.py`、`test_scan_missing_concepts.py`、`test_regenerate_concepts.py`、`test_download_note_images.py`、`test_reorganize_notes.py`、`test_md_escape_check.py`、`test_daily_papers_theme.py` |
 
 ## 10. 排错指南
 
