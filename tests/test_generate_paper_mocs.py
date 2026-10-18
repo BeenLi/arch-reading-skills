@@ -51,6 +51,34 @@ class GeneratePaperMocsTest(unittest.TestCase):
             self.assertFalse(assets_moc.exists())
             self.assertNotIn("00_assets", topic_moc.read_text(encoding="utf-8"))
 
+    def test_paper_entries_show_the_venue_label(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            vault = Path(tmp) / "Vault"
+            root = vault / "PaperNotes"
+            topic = root / "Topic"
+            topic.mkdir(parents=True)
+            (topic / "Labeled.md").write_text("---\nyear: 2025\nvenue: MICRO\n---\n# x\n", encoding="utf-8")
+            (topic / "Journal.md").write_text('---\nyear: "2024"\nvenue: "IEEE Access"\n---\n# x\n', encoding="utf-8")
+            (topic / "Unknown.md").write_text("---\nyear: 2024\nvenue: Notes\n---\n# x\n", encoding="utf-8")
+            (topic / "Bare.md").write_text("no frontmatter", encoding="utf-8")
+
+            with patch.object(self.module, "obsidian_vault_path", return_value=vault), patch.object(
+                self.module, "paper_notes_dir", return_value=root
+            ), patch.object(
+                self.module, "paths_config", return_value={"concepts_folder": "_concepts"}
+            ), patch.object(
+                self.module, "moc_filename_prefix", return_value="_index_"
+            ):
+                with redirect_stdout(io.StringIO()):
+                    self.module.main()
+
+            moc = (topic / "_index_Topic.md").read_text(encoding="utf-8")
+
+        self.assertIn("[[PaperNotes/Topic/Labeled|Labeled (MICRO'25)]]", moc)
+        self.assertIn("[[PaperNotes/Topic/Journal|Journal (IEEE Access'24)]]", moc)
+        self.assertIn("[[PaperNotes/Topic/Unknown|Unknown]]", moc)
+        self.assertIn("[[PaperNotes/Topic/Bare|Bare]]", moc)
+
 
 if __name__ == "__main__":
     unittest.main()

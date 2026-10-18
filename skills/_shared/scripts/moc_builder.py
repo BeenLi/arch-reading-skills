@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import Callable, Iterable
 
 
 @dataclass
@@ -35,7 +35,9 @@ def build_tree_mocs(
     intro: str,
     exclude_dir_names: Iterable[str] = (),
     moc_filename_prefix: str = "",
+    note_label: Callable[[Path], str] | None = None,
 ) -> MOCSummary:
+    """Write one MOC per directory; ``note_label`` gives each note's display text (default: its stem)."""
     root_dir.mkdir(parents=True, exist_ok=True)
     summary = MOCSummary(root_dir=root_dir)
     excluded = set(exclude_dir_names)
@@ -55,6 +57,7 @@ def build_tree_mocs(
             intro=intro,
             exclude_dir_names=excluded,
             moc_filename_prefix=moc_filename_prefix,
+            note_label=note_label,
         )
         moc_path = directory / _moc_filename(directory, moc_filename_prefix)
         if not moc_path.exists():
@@ -125,6 +128,7 @@ def _build_moc_content(
     intro: str,
     exclude_dir_names: set[str],
     moc_filename_prefix: str = "",
+    note_label: Callable[[Path], str] | None = None,
 ) -> str:
     relative_dir = directory.relative_to(root_dir)
     display_name = _display_name(root_dir, directory)
@@ -169,7 +173,8 @@ def _build_moc_content(
     if notes:
         lines.extend(["## 当前目录笔记", ""])
         for note in notes:
-            lines.append(f"- [[{_wikilink(note, vault_root)}|{note.stem}]]")
+            label = note_label(note) if note_label else note.stem
+            lines.append(f"- [[{_wikilink(note, vault_root)}|{label}]]")
         lines.append("")
 
     if not subdirs and not notes:
