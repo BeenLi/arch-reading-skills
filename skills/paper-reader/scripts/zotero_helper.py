@@ -428,7 +428,7 @@ def build_item_record(
     # pick_venue skips a truncated conferenceName in favour of a complete proceedingsTitle.
     venue = pick_venue(
         field_value(fields, name)
-        for name in ("publicationTitle", "conferenceName", "proceedingsTitle", "journalAbbreviation", "meetingName", "repository")
+        for name in ("publicationTitle", "conferenceName", "proceedingsTitle", "bookTitle", "journalAbbreviation", "meetingName", "repository")
     )
     year = extract_year(date)
 

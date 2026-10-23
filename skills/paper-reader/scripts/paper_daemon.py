@@ -297,7 +297,7 @@ def get_pdf_path(db_path: str, item_id: int) -> Optional[str]:
     return None
 
 
-_VENUE_FIELDS = ("publicationTitle", "conferenceName", "proceedingsTitle", "journalAbbreviation", "meetingName", "repository")
+_VENUE_FIELDS = ("publicationTitle", "conferenceName", "proceedingsTitle", "bookTitle", "journalAbbreviation", "meetingName", "repository")
 
 
 def get_venue_info(db_path: str, item_id: int) -> dict:

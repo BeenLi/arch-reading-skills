@@ -107,6 +107,7 @@ def create_fixture_db(db_path: Path):
         "repository": 7,
         "conferenceName": 8,
         "proceedingsTitle": 9,
+        "bookTitle": 10,
     }
     cursor.executemany("INSERT INTO fields VALUES (?, ?)", [(v, k) for k, v in fields.items()])
 
@@ -128,6 +129,7 @@ def create_fixture_db(db_path: Path):
             (101, 1, "PARENT"),
             (102, 1, "PROTO"),
             (103, 1, "QUEUE"),
+            (104, 1, "BOOKSEC"),
             (200, 14, "PDFKEY"),
         ],
     )
@@ -145,6 +147,9 @@ def create_fixture_db(db_path: Path):
     add_value(103, "date", "2003")
     add_value(103, "conferenceName", "the 30th annual international symposium")
     add_value(103, "proceedingsTitle", "Proceedings of the 30th annual international symposium on Computer architecture - ISCA '03")
+    add_value(104, "title", "Book Section Paper")
+    add_value(104, "date", "2026")
+    add_value(104, "bookTitle", "Proceedings of the ACM SIGCOMM 2026 Conference")
 
     cursor.executemany(
         "INSERT INTO collectionItems VALUES (?, ?, ?)",
@@ -212,6 +217,16 @@ class ZoteroHelperTests(unittest.TestCase):
                 conn.close()
         self.assertEqual(item["venue_label"], "ISCA'03")
         self.assertIn("ISCA '03", item["venue"])
+
+    def test_book_section_venue_comes_from_book_title(self):
+        # ACM DL exports some conference papers as bookSection, which keeps the proceedings in bookTitle.
+        with tempfile.TemporaryDirectory() as tmp:
+            conn = create_fixture_db(Path(tmp) / "zotero.sqlite")
+            try:
+                item = self.module.build_item_record(conn, 104, storage_dir=Path(tmp))
+            finally:
+                conn.close()
+        self.assertEqual(item["venue_label"], "SIGCOMM'26")
 
     def test_preprint_venue_comes_from_repository_and_missing_venue_has_no_label(self):
         with tempfile.TemporaryDirectory() as tmp:
