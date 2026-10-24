@@ -389,15 +389,32 @@ class ProgramPageTests(unittest.TestCase):
     def test_select_with_quota_keeps_highest_scoring_venue_papers(self):
         # 插入顺序按 VENUE_SPECS：低分的 ISCA 在前、高分的 MICRO 在后
         candidates = (
-            [{"source": "conference-program", "score": 4, "title": f"isca{i}"} for i in range(5)]
-            + [{"source": "conference-program", "score": 9, "title": f"micro{i}"} for i in range(5)]
+            [{"source": "conference-program", "venue": "ISCA 2026", "score": 4, "title": f"isca{i}"} for i in range(3)]
+            + [{"source": "conference-program", "venue": "MICRO 2026", "score": 9, "title": f"micro{i}"} for i in range(3)]
             + [{"source": "arxiv", "score": 5, "title": f"a{i}"} for i in range(10)]
         )
 
-        top = self.module.select_with_quota(candidates, top_n=10, dblp_max_ratio=0.4)
+        top = self.module.select_with_quota(candidates, top_n=40, dblp_max_ratio=0.1)  # 4 个会议名额，A 会每个 1 个
 
         venue_titles = {p["title"] for p in top if p["source"] != "arxiv"}
-        self.assertEqual(venue_titles, {"micro0", "micro1", "micro2", "micro3"})
+        self.assertEqual(venue_titles, {"micro0", "isca0"})
+
+    def test_select_with_quota_caps_each_venue_by_ccf_rank(self):
+        def venue_papers(venue, n):
+            return [{"source": "conference-program", "venue": venue, "score": 20, "title": f"{venue}{i}"} for i in range(n)]
+
+        candidates = venue_papers("MICRO 2026", 30) + venue_papers("PACT 2026", 30) + venue_papers("Some Workshop", 30)
+        candidates += [{"source": "arxiv", "score": 1, "title": f"a{i}"} for i in range(100)]
+
+        top = self.module.select_with_quota(candidates, top_n=140, dblp_max_ratio=0.4)  # 56 个会议名额
+
+        counts = {}
+        for paper in top:
+            counts[paper.get("venue")] = counts.get(paper.get("venue"), 0) + 1
+        self.assertEqual(counts["MICRO 2026"], 14)  # CCF-A: 25%
+        self.assertEqual(counts["PACT 2026"], 5)  # CCF-B: 10%
+        self.assertEqual(counts["Some Workshop"], 2)  # 不在 CCF 目录: 5%
+        self.assertEqual(len(top), 121)  # 空出来的会议名额没被占满，arXiv 只有 100 篇
 
 
 if __name__ == "__main__":

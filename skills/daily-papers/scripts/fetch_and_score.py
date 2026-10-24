@@ -708,6 +708,25 @@ def apply_age_decay(papers: list[dict], target_date) -> None:
         paper["score"] = int(paper["score"] * factor)
 
 
+def venue_slot_limit(venue: str, dblp_max: int) -> int:
+    """一个 venue（如 "MICRO 2026"）最多占几个非 arXiv 名额；CCF-A 给得多。"""
+    share = {"A": 0.25, "B": 0.10}.get(ccf_rank(venue) or "", 0.05)
+    return max(1, int(dblp_max * share))
+
+
+def cap_per_venue(papers: list[dict], dblp_max: int) -> list[dict]:
+    """papers 已按分数从高到低排好；每个 venue 超过上限的论文丢掉，空出来的名额留给 arXiv。"""
+    counts: dict[str, int] = {}
+    kept = []
+    for paper in papers:
+        venue = paper.get("venue") or ""
+        if counts.get(venue, 0) >= venue_slot_limit(venue, dblp_max):
+            continue
+        counts[venue] = counts.get(venue, 0) + 1
+        kept.append(paper)
+    return kept
+
+
 def select_with_quota(candidates: list[dict], top_n: int, dblp_max_ratio: float = 0.4) -> list[dict]:
     """Cap how many slots DBLP / venue scrapes can take, so today's arXiv
     is not crowded out by year-old conference papers."""
@@ -715,7 +734,7 @@ def select_with_quota(candidates: list[dict], top_n: int, dblp_max_ratio: float 
     arxiv = [p for p in candidates if p.get("source") == "arxiv"]
     # 先按分数排再截：candidates 是按 VENUE_SPECS 顺序插进来的，不排序的话名额全给了排在前面的会议
     others = sorted((p for p in candidates if p.get("source") != "arxiv"), key=lambda item: item["score"], reverse=True)
-    others = others[:dblp_max]
+    others = cap_per_venue(others, dblp_max)[:dblp_max]
     combined = arxiv + others
     combined.sort(key=lambda item: item["score"], reverse=True)
     return combined[:top_n]
