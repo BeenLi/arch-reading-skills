@@ -1,6 +1,6 @@
 # dailypaper-skills
 
-面向 `computer architecture / networking / distributed systems / LLM systems` 的 Codex skills 集合。目标是把每日论文发现、单篇精读、Zotero 文献库和 Obsidian 笔记库连成一条本地工作流。
+面向 `computer architecture / networking / distributed systems / LLM systems` 的 Codex skills 集合。目标是把每日论文发现、单篇精读、整本书阅读、代码仓库阅读、Zotero 文献库和 Obsidian 笔记库连成一条本地工作流。三类阅读对象各一个 reader：`paper-reader`（论文）、`book-reader`（书）、`repo-reader`（代码仓库）。
 
 演示：[论文流水线效果演示（旧视频）](http://xhslink.com/o/1dhQCn40EWY)
 
@@ -46,6 +46,9 @@ ObsidianVault/
 读一下 Zotero item 2487
 读一下 Zotero 里的 vLLM
 批量读一下 Zotero 里 Link & Fabric Integration 分类下的论文
+帮我读这本书 ~/Downloads/book.epub
+读一下这个仓库 https://github.com/vllm-project/vllm
+给 ~/hardware-project/tiny-gpu 写架构和使用文档
 ```
 
 `今日论文推荐` 默认只做“抓取 + 点评”，不会自动生成精读笔记。某篇值得细看时，再运行 `读一下 ...` 或 `跑一下论文笔记`。
@@ -72,7 +75,7 @@ cp -R ./skills/* ~/.codex/skills/
 
 ```bash
 mkdir -p ~/.codex/skills
-for d in paper-reader book-reader daily-papers daily-papers-fetch daily-papers-review daily-papers-notes generate-mocs _shared; do
+for d in paper-reader book-reader repo-reader daily-papers daily-papers-fetch daily-papers-review daily-papers-notes generate-mocs _shared; do
   ln -sfn "$PWD/skills/$d" "$HOME/.codex/skills/$d"
 done
 ```
@@ -129,6 +132,14 @@ Zotero 默认只读。只有用户明确要求移动、添加或移除 collectio
 
 论文笔记模板：[`skills/paper-reader/assets/paper-note-template.md`](skills/paper-reader/assets/paper-note-template.md)
 
+### 代码仓库阅读
+
+`repo-reader` 读一个本地仓库或 git URL，只做静态源码分析（不运行目标仓库的脚本、测试或构建），按固定 12 节契约写出《架构和使用文档》，每个论断可回溯到源码文件。
+
+- 契约：[`skills/repo-reader/references/doc-format.md`](skills/repo-reader/references/doc-format.md)；机器校验：`python3 skills/repo-reader/scripts/check_doc.py <draft> --name <Name>`
+- 原始材料：`python3 skills/repo-reader/scripts/repo_facts.py <repo>`（remote、HEAD、目录树、入口候选、README 命令、配置文件）
+- 落盘：仓库已有 `ARCHITECTURE.md` 或用户要求时写进仓库并硬链接到 vault 的使用指南目录；否则只写 vault。目录由 `skills/repo-reader/config.json` 的 `guide_dir` 决定（从 `config.example.json` 复制，不入库）
+
 ### 概念库与目录页
 
 概念笔记放在 `{PaperNotes}/_concepts/`，按概念性质分类：
@@ -162,6 +173,7 @@ skills/
 ├── generate-mocs/         # 手动刷新目录页
 ├── paper-reader/          # 单篇论文阅读与 Zotero 集成；scripts/ references/ assets/
 ├── book-reader/           # 整本书读书笔记与全书思维导图（MIT, Tao Jiang）
+├── repo-reader/           # 代码仓库 → 架构和使用文档；scripts/ 仓库事实采集、文档校验；references/ 12 节契约
 └── _shared/               # 共享配置；scripts/ MOC 生成、概念扫描、转义检查；references/ 画图规则
 ```
 

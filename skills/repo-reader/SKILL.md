@@ -1,9 +1,9 @@
 ---
-name: writing-architecture-docs
-description: Use when asked to write, regenerate or update an architecture-and-usage document (架构和使用文档 / 使用指南 / 说明书 / ARCHITECTURE.md / architecture doc / usage guide) for a code repository, or when given a repo path or git URL and asked what it is and how to use it.
+name: repo-reader
+description: 读一个代码仓库（本地路径或 GitHub/git URL），写出固定 12 节、每个论断可回溯到源码的「架构和使用文档」。当用户说「读一下这个仓库 / 这个项目」「帮我看看这个 GitHub 项目是干什么的、怎么用」「写/更新架构和使用文档 / 使用指南 / 说明书 / ARCHITECTURE.md」，或给出仓库路径、git URL 想了解它是什么、怎么用时使用。与 paper-reader（论文）、book-reader（书）并列：对象是代码工程。
 ---
 
-# Writing Architecture Docs
+# Repo Reader：代码仓库 → 架构和使用文档
 
 给一个代码仓库写一份"架构和使用文档"：固定 12 节、每个论断可回溯到源码文件、只做静态源码分析。契约在 `references/doc-format.md`，机器校验在 `scripts/check_doc.py`，两者是同一份规则。
 
@@ -17,7 +17,7 @@ description: Use when asked to write, regenerate or update an architecture-and-u
 1. **定位仓库**：URL 则 `git clone --depth 50 <url> <scratchpad>/<name>`。然后：
 
    ```bash
-   python3 ~/.claude/skills/writing-architecture-docs/scripts/repo_facts.py <repo>
+   python3 ~/.claude/skills/repo-reader/scripts/repo_facts.py <repo>
    ```
 
    输出里的 remote / HEAD / 目录树 / 入口候选 / README 命令 / 配置文件 / 已有文档，就是头部三行和第 5、7、9 节的原始材料。
@@ -32,7 +32,7 @@ description: Use when asked to write, regenerate or update an architecture-and-u
 5. **校验**：
 
    ```bash
-   python3 ~/.claude/skills/writing-architecture-docs/scripts/check_doc.py <draft> --name <Name>
+   python3 ~/.claude/skills/repo-reader/scripts/check_doc.py <draft> --name <Name>
    python3 ~/.claude/skills/_shared/scripts/md_escape_check.py <draft>   # 存在时
    ```
 
@@ -41,7 +41,7 @@ description: Use when asked to write, regenerate or update an architecture-and-u
 
 ## 落盘规则
 
-`config.json` 的 `guide_dir` 是 vault 使用指南目录（环境变量 `ARCH_DOC_GUIDE_DIR` 覆盖）。
+`config.json` 的 `guide_dir` 是 vault 使用指南目录（环境变量 `ARCH_DOC_GUIDE_DIR` 覆盖）；该文件不入库，首次使用从同目录 `config.example.json` 复制一份改路径。
 
 | 情况 | 写哪里 |
 |---|---|

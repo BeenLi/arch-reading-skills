@@ -20,3 +20,6 @@ out/
 
 # Personal machine-specific config overrides
 skills/_shared/user-config.local.json
+
+# repo-reader: where architecture docs are hard-linked into the vault (copy from config.example.json)
+skills/repo-reader/config.json

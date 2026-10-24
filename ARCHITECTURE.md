@@ -10,7 +10,7 @@
 
 `dailypaper-skills` 是一组面向 systems / architecture / networking / LLM systems 方向的 agent skills 加 Python 辅助脚本：agent（Codex 或 Claude Code）负责理解用户意图、写推荐点评和长篇论文笔记，Python 负责确定性的抓取、打分、去重、Zotero 读取、路径规划、目录页生成和文本检查。定位写在 `README.md` 开头和 `skills/daily-papers/SKILL.md`。
 
-仓库由四条主线组成：`skills/daily-papers*`（每日推荐流水线：`daily-papers` 是一句话入口，`daily-papers-fetch` / `daily-papers-review` / `daily-papers-notes` 是三步）、`skills/paper-reader`（单篇或批量论文精读，含 Zotero 集成和笔记模板）、`skills/book-reader`（整本书读书笔记与思维导图）、`skills/_shared`（所有 skill 共用的配置加载、MOC 生成、概念扫描、Markdown 转义检查和画图规则）。`skills/generate-mocs` 是手动刷新目录页的入口。`tests/` 用 pytest 钉住脚本行为和文档约束。
+仓库由四条主线组成：`skills/daily-papers*`（每日推荐流水线：`daily-papers` 是一句话入口，`daily-papers-fetch` / `daily-papers-review` / `daily-papers-notes` 是三步）、`skills/paper-reader`（单篇或批量论文精读，含 Zotero 集成和笔记模板）、`skills/book-reader`（整本书读书笔记与思维导图）、`skills/repo-reader`（读代码仓库写架构和使用文档，含 12 节契约与校验脚本）、`skills/_shared`（所有 skill 共用的配置加载、MOC 生成、概念扫描、Markdown 转义检查和画图规则）。`skills/generate-mocs` 是手动刷新目录页的入口。`tests/` 用 pytest 钉住脚本行为和文档约束。
 
 它不是常驻服务，也不是 Obsidian 插件：核心输入是用户的一句自然语言、共享配置 `skills/_shared/user-config.json`（及本机覆盖 `user-config.local.json`）、Zotero 的 SQLite 库和 PDF 附件；核心输出是 Obsidian vault 里的 `DailyPapers/YYYY-MM-DD-论文推荐.md`、`PaperNotes/**/{MethodName}.md` 论文笔记、`_concepts/{concept_type}/*.md` 概念笔记和 `_index_*.md` 目录页。
 

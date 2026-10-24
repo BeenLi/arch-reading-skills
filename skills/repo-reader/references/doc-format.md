@@ -38,7 +38,7 @@ H2 编号与标题固定，`<Name>` 代入。第 6、8、11 节允许用斜杠�
 
 ## 通用规则
 
-- 每个 H2 节（第 12 节除外）至少出现一个反引号包裹的仓库内路径作为来源，例如 `` `src/core/scheduler.py` ``、`` `README.md` ``，或含路径的命令 `` `python3 src/main.py --once` ``（反引号内任一个词含 `/`、以字母扩展名结尾、是 `Makefile` / `Dockerfile` / `LICENSE` 这类知名无扩展名文件或 `.gitignore` 这类点文件即可；`` `vLLM` ``、`` `1.0` ``、URL 不算）；第 5 节每个命令块前后一句话写出处。
+- 每个 H2 节（第 12 节除外）至少出现一个反引号包裹的仓库内路径作为来源，例如 `` `src/core/scheduler.py` ``、`` `README.md` ``，或含路径的命令 `` `node src/main.js --once` ``（反引号内任一个词含 `/`、以字母扩展名结尾、是 `Makefile` / `Dockerfile` / `LICENSE` 这类知名无扩展名文件或 `.gitignore` 这类点文件即可；`` `vLLM` ``、`` `1.0` ``、URL 不算）；第 5 节每个命令块前后一句话写出处。
 - Mermaid 图 2–5 张（```` ```mermaid ```` 或 `~~~mermaid` 围栏，列表里缩进的也算；放在更长围栏里的被引用示例不算），每张图下方一段自然段解释它表达的结构；按 `~/.claude/skills/_shared/references/mermaid-rules.md` 渲染、看图、重排。
 - 正文 250–800 行；中文叙述，标识符、命令、路径保持英文原样。
 - 除头部"本地路径"行外，正文不出现 `/Users/…`、`/home/…`、`C:\…` 这类机器专属绝对路径；需要时写 `<repo>`、`<vault>` 占位符。

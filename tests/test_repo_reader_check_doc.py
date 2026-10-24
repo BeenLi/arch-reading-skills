@@ -8,7 +8,7 @@ from conftest import SCRIPTS
 from check_doc import check
 
 CHECK_DOC = str(SCRIPTS / "check_doc.py")
-FIXTURE = Path(__file__).resolve().parent / "fixtures" / "valid-doc.md"
+FIXTURE = Path(__file__).resolve().parent / "fixtures" / "repo-reader" / "valid-doc.md"
 
 
 @pytest.fixture
