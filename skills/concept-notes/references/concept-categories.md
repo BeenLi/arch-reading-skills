@@ -83,53 +83,11 @@
 
 - `直观例子`：只是一个简单示例时写 10–25 行；按下面的规则写成逐步推导时目标 30–50 行。只有这一段可以因为推导而变长。
 - 其他段（`直观例子` 以外的所有段）：目标 50–70 行；超过上限说明在凑长度，请收敛。
-- 计数口径：Mermaid 代码块（含首尾 fence）不计；matplotlib 等脚本画的图用一行 `![[…]]` 嵌入，按 1 行计；空行照常计。
+- 计数口径：diagram-design / matplotlib 等导出的图用一行 `![[…]]` 嵌入，按 1 行计；退回的 Mermaid 代码块（含首尾 fence）不计；空行照常计。
 
-写完运行 `python3 ~/.claude/skills/_shared/scripts/check_concept_length.py <概念笔记>` 自检，超限时按提示收敛对应的段。
+写完运行 `python3 ~/.claude/skills/concept-notes/scripts/check_concept_length.py <概念笔记>` 自检，超限时按提示收敛对应的段。
 
-```markdown
----
-type: concept
-aliases: [中文别名, 英文别名]
-concept_type: <从上表 8 类选一>
-tags: [status/paper-specific]  # 仅在 paper-specific 时加
----
-
-# 概念名称
-
-## 定义
-一句话定义。只解释 what,不解释 why。
-
-## 动机与痛点
-为什么会出现这个 concept?它在解决什么瓶颈或抽象漏洞?跟它之前人们怎么做相比,核心改进是什么?
-
-## 直观例子
-用 1 个具体场景把 concept "走一遍"，按 §直观例子写作规则 写成"分步推导 + 配图"：先交代场景和假设，再用 `### 第 N 步：<这一步回答的问题>` 逐步推出结论，每个数字都给出来源，不直接甩结论；至少配 1 张图（Mermaid，或用 matplotlib 等脚本画的示意图），并做一个代入具体数值的算例。目标:读者不用自己补中间步骤，读完就能复述"它为什么是这个结果"。
-
-## 核心要点
-3-5 条,每条用一两句解释**原理**,不只是 fact 列表。
-
-<!-- 按 concept_type 加差异化段,见下面 §按 concept_type 差异化段 -->
-
-## 边界与对比
-- 什么情况**不**适用 / 反模式
-- 跟最容易混淆的近邻 concept 的关键差别(用 1-2 个 `[[xxx]]` 对比)
-
-## 代表工作与具体用法
-- [[Paper1]]: 它怎么使用这个 concept?用出了什么效果(具体数字 / 设计决策)?
-- [[Paper2]]: 同上
-
-## 相关概念
-- [[concept1]]: 和本概念的**关系**(组成 / 替代 / 协作 / 前置)
-- [[concept2]]: 同上
-
-## 学习索引
-- 入门 paper / 综述:1-2 个(必须有具体 URL 或论文标题,不要凭印象列)
-- 经典 blog / 教科书章节:1-2 个(必须有 URL)
-- 关键 GitHub 实现(可选)
-
-> 学习索引段允许整段写 `TODO: 待人工补充学习材料`,不要硬凑虚构内容。
-```
+模板骨架在 `../assets/concept-note-template.md`：按它复制，填 `{…}` 占位符，把 `## {差异化段名}` 换成下面“按 concept_type 差异化段”表里对应的段名。8 个统一段依次是 `## 定义`、`## 动机与痛点`、`## 直观例子`、`## 核心要点`、`## 边界与对比`、`## 代表工作与具体用法`、`## 相关概念`、`## 学习索引`；学习索引找不到证据时整段写 `TODO: 待人工补充学习材料`，不要硬凑。
 
 ## 直观例子写作规则
 
@@ -143,7 +101,7 @@ tags: [status/paper-specific]  # 仅在 paper-specific 时加
 6. **反向核对**：换一个角度把同一结论再算一遍（例如按"每个元素读几次"核对"总流量"），能发现推导中的系数错误。
 7. **配图**：
    - 空间结构类（矩阵分块、内存布局、数据摆放）优先用 matplotlib 等脚本画示意图，因为 Mermaid 画不了网格。图存到笔记同级的 `00_assets/<note-name>_<desc>.png`，用 `![[00_assets/...|说明]]` 嵌入，说明文字要写出图在表达什么。
-   - 流程或组件类用 Mermaid，并遵守 `../../_shared/references/mermaid-rules.md`。
+   - 流程或组件类用 diagram-design 画并导出 PNG 嵌入（`../../_shared/references/diagram-rules.md` §2）；不可用时退回 Mermaid，并遵守 `../../_shared/references/mermaid-rules.md`。
    - 不论哪种图，都必须渲染出来、打开看过，确认没有裁切、重叠和缺字（中文字体要配回退字体，否则 ³、² 这类上标会缺字）后再嵌入。
 8. **点出最容易误解的地方**：如果直觉结论和推导结果不同（如 1/T vs 2/T），要单独说明原因。
 9. **文本转义**：正文中的 `C[i][j]`、`$`、`|` 等符号按 vault 根目录 `AGENTS.md` 的"Markdown 特殊符号转义"一节处理；写完后运行 `python3 ~/.claude/skills/_shared/scripts/md_escape_check.py <笔记>` 自检，发现问题用 `--fix` 修正。
@@ -157,7 +115,7 @@ tags: [status/paper-specific]  # 仅在 paper-specific 时加
 | `data-structure` | `## 内存视图 / 字段布局` | 字段分布、字节大小、对齐、布局图 |
 | `algorithm` | `## 步骤` + `## 复杂度` | 伪代码 / 步骤列表;时空复杂度;典型变体 |
 | `mechanism` | `## 状态与触发条件` + `## 关键参数` | 触发条件、状态转移、可调参数 |
-| `architecture` | `## 组件与接口` | **必须** Mermaid `flowchart` 画组件图（按规则选 LR / TB）(遵守 `~/.claude/skills/_shared/references/mermaid-rules.md`:label 引号包裹、节点 ID 语义化、配色 ≤5);不允许 ASCII 状态图替代;描述接口契约;生成后按该规则渲染成 PNG、看图并重排 |
+| `architecture` | `## 组件与接口` | **必须**画组件图：按 `~/.claude/skills/_shared/references/diagram-rules.md` 用 diagram-design（Architecture 类型）导出 PNG 嵌入，看图确认后交付；diagram-design 不可用时退回 Mermaid `flowchart`（按规则选 LR / TB，遵守 `~/.claude/skills/_shared/references/mermaid-rules.md`：label 引号包裹、节点 ID 语义化、配色 ≤5，渲染成 PNG 看图并重排）；不允许 ASCII 状态图替代；描述接口契约 |
 | `hardware` | `## 接口与典型参数` | 指令 / API 接口、峰值算力 / 带宽、典型规格、演进史 |
 | `software-abstraction` | `## API 与生命周期` | 关键 API 签名、初始化-使用-销毁的生命周期 |
 | `metric` | `## 测量方法` | 怎么测、单位、典型范围、好 / 坏阈值参考 |

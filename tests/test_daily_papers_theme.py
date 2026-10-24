@@ -6,8 +6,6 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = REPO_ROOT / "skills" / "_shared" / "user-config.json"
 ORCHESTRATOR_SKILL = REPO_ROOT / "skills" / "daily-papers" / "SKILL.md"
-FETCH_SKILL = REPO_ROOT / "skills" / "daily-papers-fetch" / "SKILL.md"
-REVIEW_SKILL = REPO_ROOT / "skills" / "daily-papers-review" / "SKILL.md"
 
 
 class DailyPapersThemeTests(unittest.TestCase):
@@ -79,11 +77,10 @@ class DailyPapersThemeTests(unittest.TestCase):
 
         self.assertEqual(daily["top_n"], 20)
 
-    def test_fetch_and_review_skills_use_narrow_llm_systems_theme(self):
-        fetch_text = FETCH_SKILL.read_text(encoding="utf-8")
-        review_text = REVIEW_SKILL.read_text(encoding="utf-8")
+    def test_daily_papers_skill_uses_narrow_llm_systems_theme(self):
+        review_text = ORCHESTRATOR_SKILL.read_text(encoding="utf-8")
 
-        for text in (fetch_text, review_text):
+        for text in (review_text,):
             self.assertIn("LLM", text)
             self.assertIn("architecture", text)
             self.assertIn("network", text)
@@ -106,12 +103,13 @@ class DailyPapersThemeTests(unittest.TestCase):
 
     def test_daily_papers_workflow_defaults_to_lightweight_recommendation(self):
         orchestrator = ORCHESTRATOR_SKILL.read_text(encoding="utf-8")
-        review_text = REVIEW_SKILL.read_text(encoding="utf-8")
+        review_text = orchestrator
 
         self.assertIn("默认只串联论文抓取和推荐生成两步", orchestrator)
-        self.assertIn("不自动调用 `daily-papers-notes`", orchestrator)
         self.assertIn("是否精读交给用户决定", orchestrator)
-        self.assertNotIn("第 2 步完成后，自动调用 `daily-papers-notes` skill。", orchestrator)
+        self.assertIn("默认不生成论文笔记", orchestrator)
+        for retired in ("daily-papers-fetch", "daily-papers-review", "daily-papers-notes"):
+            self.assertFalse((REPO_ROOT / "skills" / retired).exists(), retired)
 
         self.assertIn("主推（1-2 篇）", review_text)
         self.assertIn("备选（最多 3 篇）", review_text)

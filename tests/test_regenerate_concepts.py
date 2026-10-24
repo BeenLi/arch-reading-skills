@@ -23,7 +23,7 @@ from unittest.mock import patch
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCRIPT_PATH = REPO_ROOT / "skills" / "_shared" / "scripts" / "regenerate_concepts.py"
+SCRIPT_PATH = REPO_ROOT / "skills" / "concept-notes" / "scripts" / "regenerate_concepts.py"
 
 
 def load_module():

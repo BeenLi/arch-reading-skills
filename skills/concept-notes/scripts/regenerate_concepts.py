@@ -30,9 +30,11 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-_SHARED_DIR = Path(__file__).resolve().parent
-if str(_SHARED_DIR) not in sys.path:
-    sys.path.insert(0, str(_SHARED_DIR))
+_SCRIPTS_DIR = Path(__file__).resolve().parent  # 同目录的 scan_missing_concepts
+_SHARED_DIR = Path(__file__).resolve().parents[2] / "_shared" / "scripts"
+for _path in (_SCRIPTS_DIR, _SHARED_DIR):
+    if str(_path) not in sys.path:
+        sys.path.insert(0, str(_path))
 
 from scan_missing_concepts import (
     clean_wikilink_target,
@@ -185,7 +187,7 @@ concept_type: {concept.concept_type}
 为什么会出现这个 concept？它解决什么瓶颈？跟之前的做法相比，核心改进是什么？
 
 ## 直观例子
-mini walk-through / 伪代码 / ASCII 状态图 / Mermaid 任选一种。
+分步推导 + 配图（diagram-design / matplotlib 导出 PNG 嵌入，不可用时用 Mermaid）+ 一个数值算例；找不到证据写 TODO。
 
 ## 核心要点
 3-5 条，每条解释原理，不只是 fact 列表。
@@ -216,7 +218,7 @@ mini walk-through / 伪代码 / ASCII 状态图 / Mermaid 任选一种。
 3. **学习索引**: 没具体 URL / 标题就整段写 TODO,不允许凭印象列 blog
 4. **差异化段(按 concept_type='{concept.concept_type}')必加**:
 {diff_section_lines}
-5. **architecture** 类必须用 Mermaid `flowchart LR`,不许 ASCII 替代
+5. **architecture** 类必须画组件图：默认用 diagram-design 导出 PNG 嵌入，不可用时退回 Mermaid `flowchart LR`,不许 ASCII 替代
 6. **长度上限 120 行**,超过说明在凑长度,请收敛
 
 # 重要: 直接输出新版 markdown 全文,不要额外解释、不要包 markdown fence

@@ -143,24 +143,11 @@ $$
 
 ![Figure 1: System overview / 系统总览](...) ^fig1
 
-<!-- 结构图二选一：论文有总体架构图用上面的原图；没有或看不清模块边界与数据流时删掉原图行，改用下面按 ../../_shared/references/diagram-rules.md 自画的一张（Mermaid 或 draw.io 嵌图），锚点 ^diag-arch。不要原图和自画图都放。 -->
+<!-- 结构图二选一：论文有总体架构图用上面的原图；没有或看不清模块边界与数据流时删掉原图行，改用下面按 ../../_shared/references/diagram-rules.md 自画的一张（默认 diagram-design 导出 PNG，或 draw.io 嵌图），锚点 ^diag-arch。不要原图和自画图都放。 -->
 
-```mermaid
-flowchart TB
-    Monitor["监控 / 采样 / 反馈"]
-    State["状态表 / metadata / profile"]
-    Policy["策略 / 参数配置"]
-    Core["核心决策模块"]
-    Executor["执行模块 / cache / memory / device"]
+![[00_assets/<note-name>_arch.png|系统架构：{一句话说明}]] ^diag-arch
 
-    Monitor -- "统计 / miss / latency / counter" --> State
-    State -- "lookup / update" --> Core
-    Policy -. "threshold / mapping / rule" .-> Core
-    Core -- "hint / schedule / prediction / action" --> Executor
-    Executor -. "执行结果 / 反馈" .-> Monitor
-```
-
-^diag-arch
+{自画时按论文实际替换模块，常见骨架：监控 / 采样 / 反馈 → 状态表 / metadata / profile → 核心决策模块（策略 / 参数配置以控制流虚线接入）→ 执行模块 / cache / memory / device，执行结果再反馈回监控。}
 
 {用自然段解释结构图在论文论证链中的作用：系统位于哪一层、边界在哪里、输入输出是什么、离线 / 在线如何分工，哪些模块是本文新增、哪些是复用的，以及图中的结构关系如何支撑的设计或结论。自画图时数据流用实线、控制流用虚线，若论文是硬件机制优先标出 pipeline stage、cache / predictor / controller 等模块，若是分布式系统优先标出 client、scheduler、worker、runtime、storage / network 等角色。}
 
@@ -290,19 +277,9 @@ $$
 
 ### 模拟器与微架构参数
 
-```mermaid
-flowchart LR
-    workload["Workload / trace"] --> driver["Evaluation driver"]
-    driver --> system["System under test"]
-    system --> compute["Compute resources<br/>CPU / GPU"]
-    system --> memory["Memory resources<br/>DRAM / HBM / cache"]
-    system --> fabric["Network / storage<br/>NIC / SSD / fabric"]
-    system --> metrics["Metrics collector"]
-```
+![[00_assets/<note-name>_platform.png|测试系统连接关系：{一句话说明}]] ^diag-platform
 
-^diag-platform
-
-{根据论文的 evaluation platform 改写这张图：只展示测试系统大概长什么样、组件如何连接、需要哪些硬件或模拟资源。优先画 client / benchmark driver / scheduler or runtime / worker / accelerator / memory / network / storage / simulator 的连接关系；不要把 CPU pipeline、cache level、BTB、ROB 等微架构细节硬塞进图里，除非它们就是论文评测对象。按 `../../_shared/references/diagram-rules.md` 选型，若选 draw.io，用 `![[00_assets/<note-name>_platform.drawio.png|说明]]` 嵌入替换上面的 Mermaid 块。}
+{根据论文的 evaluation platform 画这张图：只展示测试系统大概长什么样、组件如何连接、需要哪些硬件或模拟资源，典型骨架是 workload / trace → evaluation driver → system under test → compute（CPU / GPU）、memory（DRAM / HBM / cache）、network / storage（NIC / SSD / fabric）和 metrics collector。优先画 client / benchmark driver / scheduler or runtime / worker / accelerator / memory / network / storage / simulator 的连接关系；不要把 CPU pipeline、cache level、BTB、ROB 等微架构细节硬塞进图里，除非它们就是论文评测对象。按 `../../_shared/references/diagram-rules.md` 选型，默认 diagram-design 导出 PNG；若选 draw.io，改为嵌入 `![[00_assets/<note-name>_platform.drawio.png|说明]]`。}
 
 | 资源 / 组件 | 配置 | 在评测中的作用 |
 |-------------|------|----------------|

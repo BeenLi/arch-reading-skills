@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-MODULE_PATH = REPO_ROOT / "skills" / "_shared" / "scripts" / "scan_missing_concepts.py"
+MODULE_PATH = REPO_ROOT / "skills" / "concept-notes" / "scripts" / "scan_missing_concepts.py"
 
 
 def load_module():

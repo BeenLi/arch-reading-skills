@@ -71,8 +71,8 @@ description: |
 ### 核心质量规则
 
 1. 所有 Figure、公式、Table 都必须出现。
-2. 技术术语首次出现要加 `[[概念]]` 链接；`references/concept-categories.md` 的 seed list 命中词，首次出现必须写成 `[[概念名]]`，即使作者把它当常识。
-3. 不用 ASCII 流程图；改用结构化 Markdown 和必要公式。Mermaid 图遵守 `../_shared/references/mermaid-rules.md`（方向选择、消除回头线、控制流与数据流分离、渲染后看图重排）。图表选型按 `../_shared/references/diagram-rules.md`：时序 / 协议交互、时间线 / 甘特、流水线分级架构图优先 draw.io 路线，画图 skill 不可用时退回 Mermaid；汇报时写明每张自画图用了哪条路线（Mermaid / draw.io）以及是否退回。
+2. 技术术语首次出现要加 `[[概念]]` 链接；`../concept-notes/references/concept-categories.md` 的 seed list 命中词，首次出现必须写成 `[[概念名]]`，即使作者把它当常识。
+3. 不用 ASCII 流程图；改用结构化 Markdown 和必要公式。自画图按 `../_shared/references/diagram-rules.md` 选路线：流程、模块结构、评测平台默认用 diagram-design 画并导出 PNG 嵌入；时序 / 协议交互、时间线 / 甘特、流水线分级架构图优先 draw.io 路线；画图 skill 不可用时逐级退回，最后才退回 Mermaid 代码块；汇报时写明每张自画图用了哪条路线（diagram-design / draw.io / Mermaid）以及是否退回。
 4. 公式必须有名称和 LaTeX，并用自然段解释建模对象、变量角色及其支撑的设计或结论。
 5. 图片优先外链 arXiv HTML / 项目主页；如果图源是本地 PDF，则从 PDF 裁切图片并存放到笔记同目录下的 `00_assets/<note-name>_<原图片名>`，笔记中使用 `![[00_assets/<note-name>_<原图片名>]]`。
 6. Figure / Table / 单个公式必须嵌入对应叙事小节，不要默认用 H3/H4 图表或公式标题把素材提升为 Obsidian 大纲章节；图片标题写进图片引用的题注/alt 文本（如 `![Figure 3: ...](...)`），不要在图片上方单独写 `**Figure ...**` 标题；只有“核心结果”“消融实验”“附录图”等语义小节可以使用 `###`，只有按论文结构或 Agent 理解提炼出的机制子小节才可以使用 `####`。
@@ -89,7 +89,7 @@ description: |
 - 读 LLM systems 论文时，不要把重点写成模型能力；重点是计算、存储、通信和调度机制。
 - 笔记必须包含 `实验设置`、`核心结果`、`Overhead 与兼容性`、`经验与可迁移启示`、`复现`。
 - 章节顺序：`问题定义` → `动机实验与核心 Insights` → `核心贡献` → `系统设计总览`；`实现改动清单` 放在 `Overhead 与兼容性` 开头。
-- `实验设置` 的 `模拟器与微架构参数` 小节必须根据论文 evaluation platform 画一张测试系统连接关系图（Mermaid，或按 `diagram-rules.md` 产出的 draw.io 嵌图），展示 client / driver / runtime / worker / accelerator / memory / network / storage / simulator 等组件如何连接、需要哪些硬件资源；可以删减和图重复的参数表细节，不要为了完整性硬塞 CPU pipeline、BTB、ROB 等微架构参数，除非它们就是评测对象。
+- `实验设置` 的 `模拟器与微架构参数` 小节必须根据论文 evaluation platform 画一张测试系统连接关系图（按 `diagram-rules.md` 用 diagram-design 导出 PNG 嵌入，或 draw.io 嵌图），展示 client / driver / runtime / worker / accelerator / memory / network / storage / simulator 等组件如何连接、需要哪些硬件资源；可以删减和图重复的参数表细节，不要为了完整性硬塞 CPU pipeline、BTB、ROB 等微架构参数，除非它们就是评测对象。
 - `复现` 小节里的核查内容使用 `### 复现核查表`，优先写成 `项目 / 结论 / 证据或缺口` 三列表格；不要使用英文 checklist 标题，也不要用 `- [ ]` task list。
 - 必须明确写出 baseline 是否公平、实验设置是否足够复现、部署假设是否现实。
 
@@ -139,40 +139,19 @@ created: YYYY-MM-DD
 
 笔记第一行标题写成 `# 论文笔记：{论文标题} ({venue_label})`，例如 `(MICRO'25)`、`(TVLSI'24)`、`(arXiv'26)`。`venue_label` 和 frontmatter 的 `venue` 分别取 `zotero_helper.py resolve` 输出里的 `venue_label` / `venue_short`；不经过 Zotero 时在 skill 目录下运行 `python3 ../_shared/scripts/venue_label.py --venue "<venue 原文>" --year <年份>`（加 `--short` 只输出缩写）。脚本识别不出 venue 或缺年份时，标题不加括号、`venue` 保留原文，不要自己编缩写。文件名不带标签，已有的 wikilink 不受影响。
 
-## 5. 概念库维护
+## 5. 附带生成本篇新概念
 
-每篇论文读完后必须：
-
-1. 扫描所有 `[[概念]]` 链接
-2. 在 `{CONCEPTS_PATH}` 下**递归**查找是否已存在（不要只看顶层）
-3. 不存在的按 `references/concept-categories.md` 的 8 类 `concept_type` 归类后创建
-
-新建 concept 必须按 `references/concept-categories.md` 的**增强模板**生成：含「动机与痛点 / 直观例子 / 边界与对比 / 学习索引」4 个新必选段，加上按 `concept_type` 加的差异化段（如 architecture 必须含 Mermaid 组件图、algorithm 必须含步骤+复杂度等）。长度：直观例子 ≤ 100 行、其他段 ≤ 90 行（不计 frontmatter 和图的源码），计数口径见 `references/concept-categories.md`。`学习索引` 找不到证据时允许整段写 `TODO`，不要硬凑。
-
-概念按性质分类（`data-structure / algorithm / mechanism / architecture / hardware / software-abstraction / metric / theory-model`），**不**按论文研究领域分类。仅被本论文使用的方法名优先折回论文笔记，不独立成 concept（详见 `references/concept-categories.md`）。
-
-过滤默认规则：
-
-- 宁可漏判几个通用词，也不要误杀真正的 systems concept；不确定就创建，后续再 review。
-- `Admission Control`、`Kernel Fusion`、`RDMA`、`NVLink`、`PCIe`、`NUMA`、`HBM`、`CXL`、`AllReduce`、`NCCL`、`CUDA` 等 seed list 或 systems 基石术语必须保留为候选。
-- 数据集 / 仿真器不作为 concept；不要为数据集、benchmark suite、仿真器、纯实验环境名称创建 concept。
-- paper-method 按三档处理：论文首创且仅本论文实验 → `status/paper-specific`；论文具名实现且前人工作 / 被多篇当 baseline → 通用 concept；完全是前人工作且该论文只是引用 → 不独立建 concept。
+论文笔记写完后，调用 `concept-notes` skill 的**模式 E**，传入本篇笔记路径：它负责找出本篇新碰到的概念、按分类和增强模板创建、做长度自检，并返回新建的概念笔记路径。概念的分类、模板和过滤规则都在 `../concept-notes/`，这里不重复。
 
 ## 6. 生成后复查链接
 
-笔记写完、概念库补齐之后，在 paper-reader skill 目录下对论文笔记和本次新建的概念笔记一起运行：
+笔记写完、模式 E 返回之后，在 paper-reader skill 目录下对论文笔记和本次新建的概念笔记一起运行：
 
 ```bash
 python3 scripts/check_note_links.py "<笔记路径>" "<新建的概念笔记路径>" ...
 ```
 
 它检查标题链接与标题逐字一致、块链接的 `^id` 存在且不重复、`[[概念]]` / `[[笔记]]` 能找到对应 `.md`、`![[…]]` 嵌入的文件存在、表格行内 wikilink 别名写成 `\|`，以及正文里漏写链接的裸 “Figure N / Table N / 机制N / Insight N / 贡献N”（含 “机制 N”、“Figure 3–5” / “Table IV/VI” 这类范围，以及 `[[#^fig3|Figure 3]]–5` 链接后剩下的裸尾巴）。逐条修正后重跑，直到每个文件都输出 `OK`；汇报时写明复查结果。wikilink 默认在 `VAULT_PATH`（配置项 `obsidian_vault`）下递归查找；目标笔记在这个目录之外时，用 `--root <目录>` 改为在更上层的目录下查找。
-
-新建的概念笔记还要跑长度自检，超限的按提示收敛后重跑，直到输出 `OK`：
-
-```bash
-python3 ../_shared/scripts/check_concept_length.py "<新建的概念笔记路径>" ...
-```
 
 ## 7. 完成后自检
 
@@ -181,14 +160,14 @@ python3 ../_shared/scripts/check_concept_length.py "<新建的概念笔记路径
 - 所有 Table 完整保留？
 - Template 检查：是否对照 `assets/paper-note-template.md` 验证必备章节与层级？尤其 `## 关键机制拆解` 到下一个 `##` 之间，所有 `###` 是否都匹配 `### 机制N：...`，且 Algorithm / pipeline / 公式解释 / 图表解读 / 实现细节没有与机制并列？章节顺序是否为 `问题定义` → `动机实验与核心 Insights` → `核心贡献` → `系统设计总览`，`实现改动清单` 是否在 `Overhead 与兼容性` 下？
 - Obsidian 大纲是否干净：没有把普通 `Figure X` / `Table X` / 单个公式提升成 `###` 或 `####` 章节？`####` 是否只用于机制内部的语义子小节？
-- `### 系统架构` 是否有且只有一张结构图（优先论文原图，否则按 `../_shared/references/diagram-rules.md` 自画并走完渲染 / 校验闭环），配组件表与 `### 执行流` 编号走读？执行流满足四个触发条件之一时，是否有且只有一张 `^diag-flow` 全局图，且编号与列表一致、没有重画模块结构？所有 Mermaid 图都必须按 `../_shared/references/mermaid-rules.md` 走完“渲染 → 看图 → 重排”闭环：先用 `mmdc` 或 `npx -y @mermaid-js/mermaid-cli` 实际渲染成 PNG 并打开查看，确认没有回头线、交叉线和语义错误的边之后才能交付。
-- `实验设置` 的 `模拟器与微架构参数` 小节是否包含 evaluation platform 连接关系图（Mermaid 或 draw.io 嵌图），并说明测试系统形态与硬件资源需求？是否删除了和图重复、且对读者理解测试系统无帮助的参数细节？
+- `### 系统架构` 是否有且只有一张结构图（优先论文原图，否则按 `../_shared/references/diagram-rules.md` 自画并走完渲染 / 校验闭环），配组件表与 `### 执行流` 编号走读？执行流满足四个触发条件之一时，是否有且只有一张 `^diag-flow` 全局图，且编号与列表一致、没有重画模块结构？所有自画图的 PNG 都用 Read 打开看过，确认没有回头线、交叉线和语义错误的边之后才能交付；退回 Mermaid 的图按 `../_shared/references/mermaid-rules.md` 用 `mmdc` 或 `npx -y @mermaid-js/mermaid-cli` 实际渲染后再看。
+- `实验设置` 的 `模拟器与微架构参数` 小节是否包含 evaluation platform 连接关系图（diagram-design 或 draw.io 的 PNG 嵌图），并说明测试系统形态与硬件资源需求？是否删除了和图重复、且对读者理解测试系统无帮助的参数细节？
 - 第一行标题是否带 `(venue_label)`（识别不出时省略），frontmatter `venue` 是否是不带年份的缩写？
 - 正文是否没有 `- [ ]` / `- [x]` 这类 Obsidian task 语法？
 - 每个 Figure / Table / 公式 / 贡献是否挂了唯一锚点，正文引用是否都是 `[[#^…]]` / `[[#标题|…]]` 跳转链接？`scripts/check_note_links.py` 是否输出 `OK`？
 - `批判性思考` 是否只有 `优点 / 局限、假设与失效场景 / 潜在改进方向` 三个子节，且每条局限都写了 **失效场景**？
 - 关键术语有 `[[概念]]` 内联链接？
-- 概念库已更新？
+- 是否已调用 `concept-notes` 模式 E，新概念都通过长度自检？
 - 图片可用？本地 PDF 裁图是否写入 `00_assets/`，并按 `<note-name>_<原图片名>` 或长 note-name hash 规则命名？
 - 系统假设、瓶颈和性能结果是否解释清楚？
 - `Overhead 与兼容性` 是否写清面积、额外延时、资源占用或工程复杂度？
@@ -205,5 +184,4 @@ python3 ../_shared/scripts/check_concept_length.py "<新建的概念笔记路径
 
 - `references/zotero-guide.md`
 - `references/image-troubleshooting.md`
-- `references/concept-categories.md`
 - `references/quality-standards.md`

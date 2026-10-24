@@ -1,17 +1,16 @@
 # dailypaper-skills
 
-面向 `computer architecture / networking / distributed systems / LLM systems` 的 Codex skills 集合。目标是把每日论文发现、单篇精读、整本书阅读、代码仓库阅读、Zotero 文献库和 Obsidian 笔记库连成一条本地工作流。三类阅读对象各一个 reader：`paper-reader`（论文）、`book-reader`（书）、`repo-reader`（代码仓库）。
+面向 `computer architecture / networking / distributed systems / LLM systems` 的 Claude Code skills。把每日论文发现、单篇精读、概念库、整本书阅读、代码仓库阅读、Zotero 文献库和 Obsidian 笔记库连成一条本地工作流。
 
-演示：[论文流水线效果演示（旧视频）](http://xhslink.com/o/1dhQCn40EWY)
+| Skill | 一句话 |
+|---|---|
+| `daily-papers` | 每日论文推荐：抓取 → 点评 → 可选批量精读 |
+| `paper-reader` | 读一篇论文，按模板写 Obsidian 笔记，并附带生成本篇新概念 |
+| `concept-notes` | 概念库的唯一归属：生成 / 重写概念笔记，刷新论文与概念目录页 |
+| `book-reader` | 读整本书，输出带全书思维导图的读书笔记 |
+| `repo-reader` | 读一个代码仓库，写出可回溯到源码的架构和使用文档 |
 
-## 核心能力
-
-- 抓取 DBLP、会议页面、arXiv 和 Semantic Scholar fallback 的近期 systems / LLM infra 论文。
-- 按本地关键词配置打分、去重、生成每日推荐。
-- 从 PDF、arXiv / DOI / 网页链接、Zotero item / 搜索 / collection 生成论文笔记。
-- 按 Zotero collection path 保存笔记；无 collection 时保存到 `_inbox`。
-- 维护 `[[wikilink]]` 概念库，并按 `concept_type` 分类。
-- 刷新论文目录页和概念目录页。
+Agent 负责理解意图、写点评和长篇笔记；Python 脚本负责确定性的抓取、打分、去重、Zotero 读取、路径规划、目录页生成和文本检查。
 
 典型 Obsidian 输出：
 
@@ -25,60 +24,27 @@ ObsidianVault/
     └── _index_*.md
 ```
 
-## 快速入口
-
-最常用：
-
-```text
-今日论文推荐
-读一下这篇论文 https://arxiv.org/abs/2509.24527
-更新索引
-```
-
-常见变体：
-
-```text
-过去3天论文推荐
-过去一周论文推荐
-读一下这篇论文 ~/Downloads/paper.pdf
-快速看一下这篇论文 https://arxiv.org/abs/2509.24527
-批判性分析这篇论文 ~/Downloads/paper.pdf
-读一下 Zotero item 2487
-读一下 Zotero 里的 vLLM
-批量读一下 Zotero 里 Link & Fabric Integration 分类下的论文
-帮我读这本书 ~/Downloads/book.epub
-读一下这个仓库 https://github.com/vllm-project/vllm
-给 ~/hardware-project/tiny-gpu 写架构和使用文档
-```
-
-`今日论文推荐` 默认只做“抓取 + 点评”，不会自动生成精读笔记。某篇值得细看时，再运行 `读一下 ...` 或 `跑一下论文笔记`。
-
 ## 安装与配置
 
 前置环境：
 
-- Codex CLI
-- Python 3.10+；当前测试环境为 Python 3.13
+- Claude Code
+- Python 3.10+
 - Obsidian
-- Zotero，可选但推荐
+- Zotero，可选但推荐（Zotero 10 本地 API 用于写操作）
 - `poppler` / `poppler-utils`，提供 `pdftotext`、`pdfimages`
 - `mmdc`，可选，用于校验 Mermaid 图
 
-复制 skills：
+把 skills 软链接到 Claude Code 的 skills 目录，仓库里的改动立即生效：
 
 ```bash
-mkdir -p ~/.codex/skills
-cp -R ./skills/* ~/.codex/skills/
-```
-
-开发本仓库时建议软链接：
-
-```bash
-mkdir -p ~/.codex/skills
-for d in paper-reader book-reader repo-reader daily-papers daily-papers-fetch daily-papers-review daily-papers-notes generate-mocs _shared; do
-  ln -sfn "$PWD/skills/$d" "$HOME/.codex/skills/$d"
+mkdir -p ~/.claude/skills
+for d in paper-reader concept-notes daily-papers book-reader repo-reader _shared; do
+  ln -sfn "$PWD/skills/$d" "$HOME/.claude/skills/$d"
 done
 ```
+
+`_shared` 不是 skill，是各 skill 共用的配置、脚本和画图规则；SKILL.md 里的 `../_shared/…` 相对路径依赖它和其他 skill 放在同一目录下。
 
 初始化 Obsidian 目录：
 
@@ -87,13 +53,7 @@ VAULT=~/ObsidianVault
 mkdir -p "$VAULT/DailyPapers" "$VAULT/PaperNotes/_concepts" "$VAULT/PaperNotes/_inbox"
 ```
 
-共享配置位于：
-
-```text
-~/.codex/skills/_shared/user-config.json
-```
-
-建议用同目录的 `user-config.local.json` 放个人路径和关键词覆盖。加载顺序为 `user_config.py` 默认值、`user-config.json`、`user-config.local.json`。
+共享配置在 `skills/_shared/user-config.json`。个人路径和关键词覆盖写在同目录的 `user-config.local.json`（git 忽略）。加载顺序：`user_config.py` 默认值 → `user-config.json` → `user-config.local.json`。
 
 | 配置组 | 说明 |
 |---|---|
@@ -107,74 +67,106 @@ mkdir -p "$VAULT/DailyPapers" "$VAULT/PaperNotes/_concepts" "$VAULT/PaperNotes/_
 
 ## 工作流
 
-### 每日论文推荐
+下面每节先列对 Claude Code 说的话，再说明它做什么。
 
-`daily-papers` 是用户入口，内部串联：
+### 每日论文推荐 — `daily-papers`
 
-1. `daily-papers-fetch`：抓取、打分、去重、富化候选，输出 `/tmp/daily_papers_enriched.json`。
-2. `daily-papers-review`：生成 `{DailyPapers}/YYYY-MM-DD-论文推荐.md`，并更新 `.history.json`。
+```text
+今日论文推荐
+过去3天论文推荐
+过去一周论文推荐
+跑一下论文笔记
+```
 
-默认不执行 `daily-papers-notes`，避免一次推荐直接生成大量长笔记。
+一个 skill 走完三步：
 
-### 单篇论文阅读
+1. 抓取：DBLP、会议 program 页面、arXiv，候选不足时用 Semantic Scholar 补充；按关键词打分、历史去重、富化，输出 `/tmp/daily_papers_enriched.json`。
+2. 点评：生成 `{DailyPapers}/YYYY-MM-DD-论文推荐.md`（主推 1–2 篇、备选最多 3 篇），更新 `.history.json`。
+3. 笔记（可选）：为主推论文逐篇调用 `paper-reader` 生成精读笔记，并把笔记链接回填到推荐文件。
 
-`paper-reader` 支持本地 PDF、arXiv / DOI / 网页链接、Zotero item、Zotero 搜索和 Zotero collection 批量处理。
+默认只跑前两步，避免一次推荐直接生成大量长笔记。`跑一下论文抓取 / 点评 / 笔记` 可以单独跑某一步。
 
-保存规则：
+### 读论文 — `paper-reader`
 
-- 文件名使用主方法名 / 系统名：`{MethodName}.md`
-- 有 Zotero collection 时保存到 `{PaperNotes}/{collection_path}/{MethodName}.md`
-- 无 collection 时保存到 `{PaperNotes}/_inbox/{MethodName}.md`
-- `zotero_item_id`、`doi`、`arxiv_id` 写入 frontmatter，用于精确去重
-- 批量模式默认跳过已有笔记
+```text
+读一下这篇论文 https://arxiv.org/abs/2509.24527
+读一下这篇论文 ~/Downloads/paper.pdf
+快速看一下这篇论文 https://arxiv.org/abs/2509.24527
+批判性分析这篇论文 ~/Downloads/paper.pdf
+读一下 Zotero item 2487
+读一下 Zotero 里的 vLLM
+批量读一下 Zotero 里 Link & Fabric Integration 分类下的论文
+```
 
-Zotero 默认只读。只有用户明确要求移动、添加或移除 collection 时，才会修改 Zotero 数据库。
+支持本地 PDF、arXiv / DOI / 网页链接、Zotero item、Zotero 搜索和 Zotero collection（批量时由 agent 逐篇调用本 skill）。
 
-论文笔记模板：[`skills/paper-reader/assets/paper-note-template.md`](skills/paper-reader/assets/paper-note-template.md)
+- 严格按 [`skills/paper-reader/assets/paper-note-template.md`](skills/paper-reader/assets/paper-note-template.md) 写笔记。
+- 文件名用主方法名 / 系统名：`{MethodName}.md`。有 Zotero collection 时保存到 `{PaperNotes}/{collection_path}/`，没有就保存到 `{PaperNotes}/_inbox/`。
+- `zotero_item_id`、`doi`、`arxiv_id` 写入 frontmatter，用于精确去重；批量模式默认跳过已有笔记。
+- 笔记写完后调用 `concept-notes` 的模式 E，附带生成这篇论文新碰到的概念，再用 `check_note_links.py` 一起复查论文笔记和新概念的链接。
+- Zotero 默认只读。只有用户明确要求移动、添加、移除 collection，或修正字段、删除条目时，才经 Zotero 本地 API 写入。
 
-### 代码仓库阅读
+### 概念库与目录页 — `concept-notes`
 
-`repo-reader` 读一个本地仓库或 git URL，只做静态源码分析（不运行目标仓库的脚本、测试或构建），按固定 12 节契约写出《架构和使用文档》，每个论断可回溯到源码文件。
+```text
+生成概念 KV Cache
+补全缺失的概念
+重新生成概念笔记
+检查概念长度
+更新索引
+```
 
-- 契约：[`skills/repo-reader/references/doc-format.md`](skills/repo-reader/references/doc-format.md)；机器校验：`python3 skills/repo-reader/scripts/check_doc.py <draft> --name <Name>`
-- 原始材料：`python3 skills/repo-reader/scripts/repo_facts.py <repo>`（remote、HEAD、目录树、入口候选、README 命令、配置文件）
-- 落盘：仓库已有 `ARCHITECTURE.md` 或用户要求时写进仓库并硬链接到 vault 的使用指南目录；否则只写 vault。目录由 `skills/repo-reader/config.json` 的 `guide_dir` 决定（从 `config.example.json` 复制，不入库）
+概念相关的规则和脚本只在这里维护：概念笔记模板在 [`skills/concept-notes/assets/concept-note-template.md`](skills/concept-notes/assets/concept-note-template.md)，分类规则在 [`skills/concept-notes/references/concept-categories.md`](skills/concept-notes/references/concept-categories.md)，扫描、重写、长度自检脚本在 `skills/concept-notes/scripts/`。
 
-### 概念库与目录页
-
-概念笔记放在 `{PaperNotes}/_concepts/`，按概念性质分类：
+概念笔记放在 `{PaperNotes}/_concepts/`，按概念本身的性质分类，不按论文研究领域分类：
 
 ```text
 data-structure / algorithm / mechanism / architecture
 hardware / software-abstraction / metric / theory-model
 ```
 
-概念分类规则和模板：[`skills/paper-reader/references/concept-categories.md`](skills/paper-reader/references/concept-categories.md)
-
-常用命令：
+也可以直接跑脚本：
 
 ```bash
-python3 skills/_shared/scripts/scan_missing_concepts.py --dry-run
-python3 skills/_shared/scripts/scan_missing_concepts.py --with-seed --output /tmp/missing_concepts.csv
+python3 skills/concept-notes/scripts/scan_missing_concepts.py --with-seed --dry-run
+python3 skills/concept-notes/scripts/check_concept_length.py "<概念笔记>"
 python3 skills/_shared/scripts/generate_concept_mocs.py
 python3 skills/_shared/scripts/generate_paper_mocs.py
 ```
 
 扫描器会排除 `_concepts/`、`_inbox/`、`_index_*.md` 和论文笔记之间的互链。
 
+### 读书 — `book-reader`
+
+```text
+帮我读这本书 ~/Downloads/book.epub
+```
+
+PDF / EPUB / MOBI / TXT 按页或按章提取，分批提炼知识点，输出带全书思维导图的读书笔记。
+
+### 读代码仓库 — `repo-reader`
+
+```text
+读一下这个仓库 https://github.com/vllm-project/vllm
+给 ~/hardware-project/tiny-gpu 写架构和使用文档
+```
+
+只做静态源码分析（不运行目标仓库的脚本、测试或构建），按固定 12 节契约写出《架构和使用文档》，每个论断可回溯到源码文件。
+
+- 契约：[`skills/repo-reader/references/doc-format.md`](skills/repo-reader/references/doc-format.md)；机器校验：`python3 skills/repo-reader/scripts/check_doc.py <draft> --name <Name>`
+- 原始材料：`python3 skills/repo-reader/scripts/repo_facts.py <repo>`（remote、HEAD、目录树、入口候选、README 命令、配置文件）
+- 落盘：仓库已有 `ARCHITECTURE.md` 或用户要求时写进仓库并硬链接到 vault 的使用指南目录；否则只写 vault。目录由 `skills/repo-reader/config.json` 的 `guide_dir` 决定（从 `config.example.json` 复制，不入库）
+
 ## 仓库结构
 
 ```text
 skills/
-├── daily-papers/          # 每日推荐一句话入口；scripts/ 抓取、打分、富化、图片本地化
-├── daily-papers-fetch/    # 抓取、打分、富化
-├── daily-papers-review/   # 推荐点评生成
-├── daily-papers-notes/    # 可选批量精读
-├── generate-mocs/         # 手动刷新目录页
+├── daily-papers/          # 每日推荐：抓取 → 点评 → 可选批量笔记；scripts/ 抓取、打分、富化、图片本地化
 ├── paper-reader/          # 单篇论文阅读与 Zotero 集成；scripts/ references/ assets/
+├── concept-notes/         # 概念的唯一归属：assets/ 概念笔记模板；references/ 分类规则；scripts/ 扫描、重写、长度自检；也负责刷新目录页
 ├── book-reader/           # 整本书读书笔记与全书思维导图（MIT, Tao Jiang）
 ├── repo-reader/           # 代码仓库 → 架构和使用文档；scripts/ 仓库事实采集、文档校验；references/ 12 节契约
-└── _shared/               # 共享配置；scripts/ MOC 生成、概念扫描、转义检查；references/ 画图规则
+└── _shared/               # 共享配置；scripts/ MOC 生成、转义检查、venue 标签；references/ 画图规则
 ```
 
 ### 目录约定
@@ -187,12 +179,12 @@ skills/
 | `references/` | agent 读进上下文的规则、指南、分类标准 | 读完影响 agent 怎么做 |
 | `assets/` | 填充或复制到输出里的模板 | 内容会出现在生成物里 |
 
-`book-reader` 已按此布局，新增文件按此归位。
+新增文件按此归位；`tests/test_repo_layout.py` 会检查 `.py` 只在 `scripts/` 下，以及所有 Markdown 里的 `python3 …py` 路径都能解析。
 
 ## 开发维护
 
 ```bash
-pytest tests/
+python3 -m pytest tests/ -q
 python3 skills/daily-papers/scripts/fetch_and_score.py > /tmp/daily_papers_top30.json
 cat /tmp/daily_papers_top30.json | python3 skills/daily-papers/scripts/enrich_papers.py /tmp/daily_papers_enriched.json
 ```

@@ -7,13 +7,14 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 ASSET_TEMPLATE = REPO_ROOT / "skills" / "paper-reader" / "assets" / "paper-note-template.md"
 LEGACY_OBSIDIAN_TEMPLATE = REPO_ROOT / "obsidian-templates" / "论文笔记模板.md"
 PAPER_READER_SKILL = REPO_ROOT / "skills" / "paper-reader" / "SKILL.md"
-DAILY_PAPERS_NOTES_SKILL = REPO_ROOT / "skills" / "daily-papers-notes" / "SKILL.md"
+DAILY_PAPERS_SKILL = REPO_ROOT / "skills" / "daily-papers" / "SKILL.md"
+CONCEPT_NOTES_SKILL = REPO_ROOT / "skills" / "concept-notes" / "SKILL.md"
 README = REPO_ROOT / "README.md"
-PAPER_DAEMON = REPO_ROOT / "skills" / "paper-reader" / "scripts" / "paper_daemon.py"
 QUALITY_STANDARDS = REPO_ROOT / "skills" / "paper-reader" / "references" / "quality-standards.md"
-CONCEPT_CATEGORIES = REPO_ROOT / "skills" / "paper-reader" / "references" / "concept-categories.md"
+CONCEPT_CATEGORIES = REPO_ROOT / "skills" / "concept-notes" / "references" / "concept-categories.md"
+CONCEPT_TEMPLATE = REPO_ROOT / "skills" / "concept-notes" / "assets" / "concept-note-template.md"
 DIAGRAM_RULES = REPO_ROOT / "skills" / "_shared" / "references" / "diagram-rules.md"
-REGENERATE_CONCEPTS = REPO_ROOT / "skills" / "_shared" / "scripts" / "regenerate_concepts.py"
+REGENERATE_CONCEPTS = REPO_ROOT / "skills" / "concept-notes" / "scripts" / "regenerate_concepts.py"
 CONCEPT_LENGTH_RULE = "直观例子 ≤ 100 行、其他段 ≤ 90 行（不计 frontmatter 和图的源码）"
 
 
@@ -95,9 +96,9 @@ class SystemsTemplateTests(unittest.TestCase):
         self.assertIn("#### 参数与权衡", text)
         self.assertIn("### 模拟器与微架构参数", text)
         self.assertIn("#### Silicon-feasibility", text)
-        self.assertIn("```mermaid", text)
-        self.assertIn("flowchart LR", text)
-        self.assertIn("flowchart TB", text)
+        # 自画图默认走 diagram-design 导出 PNG，模板不再内嵌 Mermaid 代码块
+        self.assertNotIn("```mermaid", text)
+        self.assertIn("![[00_assets/<note-name>_platform.png|", text)
         assert_table_header(self, text, ["组件", "职责", "输入输出", "关键状态或参数", "关联概念"])
 
     def test_asset_template_removes_cv_robotics_defaults(self):
@@ -164,9 +165,8 @@ class SystemsTemplateTests(unittest.TestCase):
 
     def test_concept_generation_prompts_prefer_recall_and_exclude_datasets(self):
         paper_reader = PAPER_READER_SKILL.read_text(encoding="utf-8")
-        daily_notes = DAILY_PAPERS_NOTES_SKILL.read_text(encoding="utf-8")
-        daemon = PAPER_DAEMON.read_text(encoding="utf-8")
-        combined = "\n".join([paper_reader, daily_notes, daemon])
+        concept_skill = CONCEPT_NOTES_SKILL.read_text(encoding="utf-8")
+        combined = "\n".join([paper_reader, concept_skill])
 
         self.assertIn("宁可漏判几个通用词，也不要误杀真正的 systems concept", combined)
         self.assertIn("不确定就创建", combined)
@@ -178,10 +178,15 @@ class SystemsTemplateTests(unittest.TestCase):
 
     def test_concept_reference_uses_enhanced_template_with_required_sections(self):
         text = CONCEPT_CATEGORIES.read_text(encoding="utf-8")
+        template = CONCEPT_TEMPLATE.read_text(encoding="utf-8")
 
-        # 4 个新必选段必须在 reference 里出现
-        for section in ["## 动机与痛点", "## 直观例子", "## 边界与对比", "## 学习索引"]:
-            self.assertIn(section, text)
+        # 8 个统一段按顺序写在 assets 模板里，reference 指向模板
+        sections = ["## 定义", "## 动机与痛点", "## 直观例子", "## 核心要点",
+                    "## 边界与对比", "## 代表工作与具体用法", "## 相关概念", "## 学习索引"]
+        positions = [heading_index(template, s) for s in sections]
+        self.assertEqual(positions, sorted(positions))
+        self.assertIn("assets/concept-note-template.md", text)
+        self.assertIn("TODO: 待人工补充学习材料", template)
 
         # 长度按直观例子和其他段分别计，并给出自检脚本
         self.assertIn(CONCEPT_LENGTH_RULE, text)
@@ -205,12 +210,10 @@ class SystemsTemplateTests(unittest.TestCase):
     def test_note_title_carries_the_venue_label(self):
         template = ASSET_TEMPLATE.read_text(encoding="utf-8")
         skill = PAPER_READER_SKILL.read_text(encoding="utf-8")
-        daemon = PAPER_DAEMON.read_text(encoding="utf-8")
 
         self.assertIn("# 论文笔记：{Title} ({VenueLabel})", template)
         self.assertIn("venue: {VenueShort}", template)
-        for blob, name in [(skill, "paper-reader SKILL.md"), (daemon, "paper_daemon.py")]:
-            self.assertIn("venue_label", blob, f"{name} 没有说明标题标签")
+        self.assertIn("venue_label", skill, "paper-reader SKILL.md 没有说明标题标签")
         self.assertIn("venue_label.py", skill)
 
     def test_concept_reference_lists_per_type_differentiation_sections(self):
@@ -236,34 +239,24 @@ class SystemsTemplateTests(unittest.TestCase):
         self.assertIn("不允许 ASCII", text)
         self.assertIn("Mermaid", text)
 
-    def test_enhanced_template_propagated_to_paper_daemon_and_daily_notes(self):
+    def test_concept_rules_live_in_concept_skill_and_readers_delegate(self):
         paper_reader = PAPER_READER_SKILL.read_text(encoding="utf-8")
-        daily_notes = DAILY_PAPERS_NOTES_SKILL.read_text(encoding="utf-8")
-        daemon = PAPER_DAEMON.read_text(encoding="utf-8")
-
-        # 三处都要提到增强模板和 4 个必选段;daemon 自带模板示例
-        for blob, name in [
-            (paper_reader, "paper-reader SKILL.md"),
-            (daily_notes, "daily-papers-notes SKILL.md"),
-            (daemon, "paper_daemon.py"),
-        ]:
-            for keyword in ["动机与痛点", "直观例子", "边界与对比", "学习索引"]:
-                self.assertIn(keyword, blob, f"{name} 缺少关键词 {keyword}")
-
-        # 生成概念的四处入口写同一条长度规则，旧的全文目标不能残留
+        concept_skill = CONCEPT_NOTES_SKILL.read_text(encoding="utf-8")
         regenerate = REGENERATE_CONCEPTS.read_text(encoding="utf-8")
-        for blob, name in [
-            (paper_reader, "paper-reader SKILL.md"),
-            (daily_notes, "daily-papers-notes SKILL.md"),
-            (daemon, "paper_daemon.py"),
-            (regenerate, "regenerate_concepts.py"),
-        ]:
-            self.assertIn(CONCEPT_LENGTH_RULE, blob, f"{name} 缺少长度规则")
-            self.assertNotIn("60-100 行", blob, f"{name} 残留旧长度目标")
 
-        # 建完概念后要跑长度自检
-        for blob, name in [(paper_reader, "paper-reader SKILL.md"), (daily_notes, "daily-papers-notes SKILL.md"), (daemon, "paper_daemon.py")]:
-            self.assertIn("check_concept_length.py", blob, f"{name} 没有要求跑长度自检")
+        # 增强模板的 4 个必选段、长度规则、长度自检只写在 concept-notes
+        for keyword in ["动机与痛点", "直观例子", "边界与对比", "学习索引"]:
+            self.assertIn(keyword, concept_skill, f"concept-notes SKILL.md 缺少关键词 {keyword}")
+        for blob, name in [(concept_skill, "concept-notes SKILL.md"), (regenerate, "regenerate_concepts.py")]:
+            self.assertIn(CONCEPT_LENGTH_RULE, blob, f"{name} 缺少长度规则")
+        self.assertIn("check_concept_length.py", concept_skill)
+        for blob in (paper_reader, concept_skill, regenerate):
+            self.assertNotIn("60-100 行", blob)
+
+        # paper-reader 交给 concept-notes 模式 E，不再自己抄一份规则
+        self.assertIn("模式 E", paper_reader, "paper-reader SKILL.md 没有调用 concept-notes 模式 E")
+        self.assertNotIn(CONCEPT_LENGTH_RULE, paper_reader, "paper-reader SKILL.md 又复制了一份概念长度规则")
+        self.assertNotIn("宁可漏判几个通用词", paper_reader, "paper-reader SKILL.md 又复制了一份概念过滤规则")
 
     def test_paper_reader_zotero_workflow_is_readonly_and_collection_path_based(self):
         text = PAPER_READER_SKILL.read_text(encoding="utf-8")
@@ -276,8 +269,8 @@ class SystemsTemplateTests(unittest.TestCase):
         self.assertIn("批量从 collection 进入时", text)
         self.assertIn("确认后才调用", text)
 
-    def test_daily_notes_skill_uses_new_template_quality_gates(self):
-        text = DAILY_PAPERS_NOTES_SKILL.read_text(encoding="utf-8")
+    def test_daily_papers_notes_step_uses_new_template_quality_gates(self):
+        text = DAILY_PAPERS_SKILL.read_text(encoding="utf-8")
 
         self.assertIn("## 批判性思考", ASSET_TEMPLATE.read_text(encoding="utf-8"))
         self.assertIn("## 关联笔记", ASSET_TEMPLATE.read_text(encoding="utf-8"))
@@ -290,7 +283,6 @@ class SystemsTemplateTests(unittest.TestCase):
 
     def test_figure_and_formula_guidance_uses_natural_explanations(self):
         template_text = ASSET_TEMPLATE.read_text(encoding="utf-8")
-        daemon_text = PAPER_DAEMON.read_text(encoding="utf-8")
         standards_text = QUALITY_STANDARDS.read_text(encoding="utf-8")
 
         rigid_phrases = [
@@ -322,7 +314,7 @@ class SystemsTemplateTests(unittest.TestCase):
             "复现与借鉴价值",
             "复现线索",
         ]
-        combined_text = "\n".join([template_text, daemon_text, standards_text])
+        combined_text = "\n".join([template_text, standards_text])
         for phrase in rigid_phrases:
             self.assertNotIn(phrase, combined_text)
 
@@ -338,9 +330,8 @@ class SystemsTemplateTests(unittest.TestCase):
     def test_image_titles_live_in_image_captions_not_separate_lines(self):
         template_text = ASSET_TEMPLATE.read_text(encoding="utf-8")
         paper_reader = PAPER_READER_SKILL.read_text(encoding="utf-8")
-        daemon_text = PAPER_DAEMON.read_text(encoding="utf-8")
         standards_text = QUALITY_STANDARDS.read_text(encoding="utf-8")
-        combined_text = "\n".join([template_text, paper_reader, daemon_text, standards_text])
+        combined_text = "\n".join([template_text, paper_reader, standards_text])
 
         self.assertNotIn("加粗图注行", combined_text)
         self.assertNotIn("`**Figure X:", combined_text)
@@ -352,9 +343,8 @@ class SystemsTemplateTests(unittest.TestCase):
 
     def test_local_pdf_image_guidance_uses_00_assets_and_note_name_prefix(self):
         paper_reader = PAPER_READER_SKILL.read_text(encoding="utf-8")
-        daemon = PAPER_DAEMON.read_text(encoding="utf-8")
         standards = QUALITY_STANDARDS.read_text(encoding="utf-8")
-        combined = "\n".join([paper_reader, daemon, standards])
+        combined = "\n".join([paper_reader, standards])
 
         for phrase in [
             "00_assets",
@@ -409,7 +399,7 @@ class SystemsTemplateTests(unittest.TestCase):
         arch = text[heading_index(text, "### 系统架构"):heading_index(text, "### 执行流")]
         flow = text[heading_index(text, "### 执行流"):heading_index(text, "### 优化目标与度量口径")]
         self.assertEqual(arch.count("![Figure"), 1)
-        self.assertEqual(arch.count("```mermaid"), 1)
+        self.assertEqual(arch.count("![[00_assets/<note-name>_arch.png|"), 1)
         self.assertIn("二选一", arch)
         self.assertIn("diagram-rules.md", arch)
         self.assertNotIn("```mermaid", flow)
@@ -429,10 +419,9 @@ class SystemsTemplateTests(unittest.TestCase):
             self.assertIn(f"[[#{heading}：{m.group(1)}|{short}]]", text)
         self.assertIn("## 笔记内跳转", QUALITY_STANDARDS.read_text(encoding="utf-8"))
 
-    def test_skill_and_daemon_follow_new_structure(self):
+    def test_skill_follows_new_structure(self):
         skill = PAPER_READER_SKILL.read_text(encoding="utf-8")
-        daemon = PAPER_DAEMON.read_text(encoding="utf-8")
-        for name, blob in (("SKILL.md", skill), ("paper_daemon.py", daemon)):
+        for name, blob in (("SKILL.md", skill),):
             for stale in ["问题定义与瓶颈", "作者核心 Insights", "动机实验 / Characterization",
                           "系统架构与执行流", "系统组成与职责", "模块关系图"]:
                 self.assertNotIn(stale, blob, f"{name} still mentions {stale}")
@@ -452,11 +441,8 @@ class SystemsTemplateTests(unittest.TestCase):
 
     def test_formula_location_rule_names_design_space_section(self):
         template_lines = ASSET_TEMPLATE.read_text(encoding="utf-8").splitlines()
-        daemon_lines = PAPER_DAEMON.read_text(encoding="utf-8").splitlines()
         rule_2 = next(line for line in template_lines if line.startswith("2. 公式和图表必须嵌入"))
-        item_13 = next(line for line in daemon_lines if line.startswith("13. **结构约束**"))
-        for line in (rule_2, item_13):
-            self.assertIn("现有方法与设计空间", line)
+        self.assertIn("现有方法与设计空间", rule_2)
 
     def test_diag_anchor_placement_consistent_across_rule_files(self):
         for path in (QUALITY_STANDARDS, DIAGRAM_RULES):
@@ -470,9 +456,6 @@ class SystemsTemplateTests(unittest.TestCase):
     def test_section_order_statements_place_contributions_after_insights(self):
         order = "`问题定义` → `动机实验与核心 Insights` → `核心贡献` → `系统设计总览`"
         self.assertEqual(PAPER_READER_SKILL.read_text(encoding="utf-8").count(order), 2)
-        item_13 = next(line for line in PAPER_DAEMON.read_text(encoding="utf-8").splitlines()
-                       if line.startswith("13. **结构约束**"))
-        self.assertIn(order, item_13)
         rule_9 = next(line for line in ASSET_TEMPLATE.read_text(encoding="utf-8").splitlines()
                       if line.startswith("9. "))
         self.assertIn("核心贡献", rule_9)
@@ -487,8 +470,7 @@ class SystemsTemplateTests(unittest.TestCase):
         for phrase in ("^diag-flow", "diagram-rules.md", "编号", "不要重画"):
             self.assertIn(phrase, flow, phrase)
         skill = PAPER_READER_SKILL.read_text(encoding="utf-8")
-        daemon = PAPER_DAEMON.read_text(encoding="utf-8")
-        for name, blob in (("template", text), ("SKILL.md", skill), ("paper_daemon.py", daemon)):
+        for name, blob in (("template", text), ("SKILL.md", skill)):
             self.assertNotIn("不画第二张框图", blob, name)
             self.assertIn("^diag-flow", blob, name)
             # 触发条件要能直接观察：步数按列表条数，普通请求-响应不算闭环，第 4 条看架构图有没有顺序箭头
@@ -505,24 +487,17 @@ class SystemsTemplateTests(unittest.TestCase):
             ["优点", "局限、假设与失效场景", "潜在改进方向"],
         )
         self.assertIn("**失效场景**", critical)
-        daemon = PAPER_DAEMON.read_text(encoding="utf-8")
-        item_9 = next(line for line in daemon.splitlines() if line.startswith("9. **批判性思考**"))
-        self.assertIn("局限、假设与失效场景", item_9)
-        self.assertNotIn("可能失效场景", item_9)
 
-    def test_skill_and_daemon_require_post_write_link_check(self):
+    def test_skill_requires_post_write_link_check(self):
         skill = PAPER_READER_SKILL.read_text(encoding="utf-8")
-        daemon = PAPER_DAEMON.read_text(encoding="utf-8")
         self.assertIn("python3 scripts/check_note_links.py", skill)
-        self.assertIn("check_note_links.py", daemon)
         # 复查范围包括本次新建的概念笔记，根目录说清是 VAULT_PATH
         for phrase in ("新建的概念笔记", "VAULT_PATH"):
             self.assertIn(phrase, skill, phrase)
-        self.assertIn("新建的概念笔记", daemon)
         template_rule_13 = next(line for line in ASSET_TEMPLATE.read_text(encoding="utf-8").splitlines() if line.startswith("13. "))
         self.assertIn("新建的概念笔记", template_rule_13)
-        # 复查放在概念库维护之后：概念笔记建好后，[[概念]] 链接才可能全部解析
-        self.assertLess(skill.index("## 5. 概念库维护"), skill.index("python3 scripts/check_note_links.py"))
+        # 复查放在补概念之后：概念笔记建好后，[[概念]] 链接才可能全部解析
+        self.assertLess(skill.index("## 5. 附带生成本篇新概念"), skill.index("python3 scripts/check_note_links.py"))
 
     def test_diagram_rules_gate_verilog_only_for_pipeline_route(self):
         text = DIAGRAM_RULES.read_text(encoding="utf-8")

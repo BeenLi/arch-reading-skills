@@ -93,7 +93,7 @@
 | 公式 | 公式下方解释段末尾 ` ^eq-ttft`（语义名） | `[[#^eq-ttft\|TTFT 分解式]]` |
 | Insight / 机制 / 任何章节 | 标题本身，不加标记 | `[[#Insight 2：…\|Insight 2]]`、`[[#机制1：…\|机制1]]` |
 | 核心贡献条目 | 列表项末尾 ` ^contrib-1` | `[[#^contrib-1\|贡献1]]` |
-| agent 自画的图（Mermaid / draw.io） | draw.io 嵌入行在行尾加 ` ^diag-arch`；Mermaid 代码块之后单独一行 `^diag-arch`，前后空行；执行流全局图用 `^diag-flow`、评测平台图用 `^diag-platform` | `[[#^diag-arch\|架构图]]`、`[[#^diag-flow\|执行流图]]` |
+| agent 自画的图（diagram-design / draw.io / 退回的 Mermaid） | PNG 嵌入行在行尾加 ` ^diag-arch`；退回 Mermaid 时代码块之后单独一行 `^diag-arch`，前后空行；执行流全局图用 `^diag-flow`、评测平台图用 `^diag-platform` | `[[#^diag-arch\|架构图]]`、`[[#^diag-flow\|执行流图]]` |
 
 规则：
 

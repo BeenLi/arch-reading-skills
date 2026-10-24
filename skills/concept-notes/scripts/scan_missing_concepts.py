@@ -206,7 +206,8 @@ def render_csv(rows: list[dict]) -> str:
 
 
 def default_paths() -> tuple[Path, Path, Path]:
-    shared_dir = Path(__file__).resolve().parent
+    skill_dir = Path(__file__).resolve().parents[1]
+    shared_dir = skill_dir.parent / "_shared" / "scripts"
     if str(shared_dir) not in sys.path:
         sys.path.insert(0, str(shared_dir))
 
@@ -214,7 +215,7 @@ def default_paths() -> tuple[Path, Path, Path]:
 
     notes_root = paper_notes_dir()
     concepts_root = concepts_dir()
-    reference_path = shared_dir.parent / "paper-reader" / "references" / "concept-categories.md"
+    reference_path = skill_dir / "references" / "concept-categories.md"
     return notes_root, concepts_root, reference_path
 
 

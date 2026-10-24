@@ -87,7 +87,7 @@ class RepoLayoutTests(unittest.TestCase):
         root = SKILLS / "paper-reader"
         self.assertEqual(sorted(root.glob("*.py")), [])
         self.assertEqual(sorted(p.name for p in (root / "assets").iterdir() if p.suffix == ".py"), [])
-        for name in ("zotero_helper.py", "reorganize_notes.py", "paper_daemon.py"):
+        for name in ("zotero_helper.py", "reorganize_notes.py"):
             self.assertTrue((root / "scripts" / name).exists(), name)
         self.assertTrue((root / "assets" / "paper-note-template.md").exists())
 
