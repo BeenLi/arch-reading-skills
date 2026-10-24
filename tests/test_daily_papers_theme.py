@@ -32,8 +32,13 @@ class DailyPapersThemeTests(unittest.TestCase):
         self.assertIn("multicore", daily["focus_phrases"])
         self.assertEqual(daily["venue_rank_scores"], {"A": 3, "B": 2, "C": 1})
 
-        for keyword in ("humanoid", "embodied ai", "vision-language action", "edge computing"):
-            self.assertIn(keyword, daily["negative_keywords"])
+        # 排除词只放和体系结构 / LLM 系统毫无关联的；机器人、具身智能、扩散模型、VLM、边缘计算、agent 都是需要加速的 workload
+        negatives = daily["negative_keywords"]
+        self.assertIn("medical imaging", negatives)
+        for workload in ("humanoid", "embodied ai", "diffusion model", "vision-language model", "edge computing",
+                         "federated learning", "coding agent", "retrieval-augmented", "code generation", "drug discovery"):
+            self.assertNotIn(workload, negatives)
+        self.assertLess(len(negatives), 25)
         self.assertEqual(daily["top_n"], 20)
 
     def test_daily_papers_skill_states_theme_triage_and_defaults(self):
@@ -89,12 +94,19 @@ class DailyPapersThemeTests(unittest.TestCase):
             ("ShadowServe: Interference-Free KV Cache Fetching for Distributed Prefix Caching", ""),
             ("Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism", "arXiv"),
         ]
+        not_excluded = [
+            ("SweepANN: A GPU-Accelerated Large-K Approximate Vector Search for Drug Discovery", ""),
+            ("A Heterogeneous Accelerator Architecture for Humanoid Whole-Body Control", ""),
+        ]
+        # 应用领域词不再一票否决：这两篇只看标题分数可能不高，但不能是 -999
+        for title, venue in not_excluded:
+            self.assertGreaterEqual(score(title, venue), 0, title)
         for title, venue in on_topic:
             self.assertGreaterEqual(score(title, venue), module.MIN_SCORE, title)
 
         off_topic = [
-            "Fault-Tolerant Offloading Framework for Real-Time Applications in Mobile Edge Computing",
-            "Reliable Task Offloading in LEO Satellite Networks",
+            "Pathology Informed Score-based Diffusion Model for Unsupervised Anomaly Detection in Medical Imaging",
+            "Steering intonational tunes in text-to-speech synthesis",
         ]
         for title in off_topic:
             self.assertEqual(score(title), -999, title)

@@ -37,7 +37,7 @@ class FetchAndScoreTests(unittest.TestCase):
 
         self.assertGreaterEqual(score, 4)
 
-    def test_score_paper_rejects_pure_agent_paper(self):
+    def test_pure_agent_application_paper_scores_below_min_score(self):
         paper = {
             "title": "A Browser Agent for Automatic Web Shopping",
             "abstract": (
@@ -48,7 +48,9 @@ class FetchAndScoreTests(unittest.TestCase):
 
         score = self.module.score_paper(paper)
 
-        self.assertEqual(score, -999)
+        # agent 不再按名字一票否决（agent 也是 LLM 系统的 workload），没有体系结构内容就自然低于门槛
+        self.assertGreaterEqual(score, 0)
+        self.assertLess(score, self.module.MIN_SCORE)
 
     def test_score_paper_does_not_hard_exclude_negative_keyword_in_abstract_only(self):
         paper = {
