@@ -1,4 +1,4 @@
-# dailypaper-skills 架构
+# arch-reading-skills 架构
 
 本文讲清两条主线和两套模板：
 

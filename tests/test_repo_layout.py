@@ -15,6 +15,7 @@ RULE_REF = re.compile(r"_shared/(?:mermaid|diagram)-rules\.md")  # 正确路径�
 def markdown_files():
     yield from SKILLS.rglob("*.md")
     yield REPO_ROOT / "README.md"
+    yield REPO_ROOT / "README.zh-CN.md"
     yield REPO_ROOT / "ARCHITECTURE.md"
 
 
@@ -98,7 +99,7 @@ class RepoLayoutTests(unittest.TestCase):
         self.assertIn("sentinel-keyword-from-json", keywords)
 
     def test_readme_and_architecture_state_directory_convention(self):
-        for doc in (REPO_ROOT / "README.md", REPO_ROOT / "ARCHITECTURE.md"):
+        for doc in (REPO_ROOT / "README.md", REPO_ROOT / "README.zh-CN.md", REPO_ROOT / "ARCHITECTURE.md"):
             text = doc.read_text(encoding="utf-8")
             for cell in ("`scripts/`", "`references/`", "`assets/`"):
                 self.assertIn(cell, text, doc.name)

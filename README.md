@@ -1,18 +1,20 @@
-# dailypaper-skills
+# arch-reading-skills
 
-面向 `computer architecture`（多核、缓存与内存层次、异构计算、互连）和 `LLM systems` 的 Claude Code skills。默认推荐配置开箱即用：体系结构为主、LLM 系统为辅。把每日论文发现、单篇精读、概念库、整本书阅读、代码仓库阅读、Zotero 文献库和 Obsidian 笔记库连成一条本地工作流。
+**English** | [简体中文](README.zh-CN.md)
 
-| Skill | 一句话 |
+Claude Code skills for computer-architecture (multicore, cache and memory hierarchy, heterogeneous computing, interconnects) and LLM-systems research. The daily-recommendation defaults work out of the box: architecture first, LLM systems second. Together they connect daily paper discovery, close reading of single papers, a concept library, whole-book reading, code-repository reading, your Zotero library and your Obsidian vault into one local workflow.
+
+| Skill | What it does |
 |---|---|
-| `daily-papers` | 每日论文推荐：抓取 → 点评 → 可选批量精读 |
-| `paper-reader` | 读一篇论文，按模板写 Obsidian 笔记，并附带生成本篇新概念 |
-| `concept-notes` | 概念库的唯一归属：生成 / 重写概念笔记，刷新论文与概念目录页 |
-| `book-reader` | 读整本书，输出带全书思维导图的读书笔记 |
-| `repo-reader` | 读一个代码仓库，写出可回溯到源码的架构和使用文档 |
+| `daily-papers` | Daily paper recommendations: fetch → review → optional batch close reading |
+| `paper-reader` | Reads one paper, writes an Obsidian note from a template, and creates notes for the new concepts it meets |
+| `concept-notes` | Sole owner of the concept library: creates / rewrites concept notes and refreshes the paper and concept index pages |
+| `book-reader` | Reads a whole book and writes reading notes with a mind map of the book |
+| `repo-reader` | Reads a code repository and writes an architecture and usage guide whose claims trace back to source files |
 
-Agent 负责理解意图、写点评和长篇笔记；Python 脚本负责确定性的抓取、打分、去重、Zotero 读取、路径规划、目录页生成和文本检查。
+The agent interprets requests and writes reviews and long notes; Python scripts do the deterministic parts: fetching, scoring, de-duplication, Zotero lookups, path planning, index generation and text checks.
 
-典型 Obsidian 输出：
+Typical Obsidian output:
 
 ```text
 ObsidianVault/
@@ -24,18 +26,18 @@ ObsidianVault/
     └── _index_*.md
 ```
 
-## 安装与配置
+## Installation and configuration
 
-前置环境：
+Requirements:
 
 - Claude Code
 - Python 3.10+
 - Obsidian
-- Zotero，可选但推荐（Zotero 10 本地 API 用于写操作）
-- `poppler` / `poppler-utils`，提供 `pdftotext`、`pdfimages`
-- `mmdc`，可选，用于校验 Mermaid 图
+- Zotero, optional but recommended (writes go through the Zotero 10 local API)
+- `poppler` / `poppler-utils`, for `pdftotext` and `pdfimages`
+- `mmdc`, optional, to validate Mermaid diagrams
 
-把 skills 软链接到 Claude Code 的 skills 目录，仓库里的改动立即生效：
+Symlink the skills into Claude Code's skills directory so changes in the repo take effect immediately:
 
 ```bash
 mkdir -p ~/.claude/skills
@@ -44,146 +46,146 @@ for d in paper-reader concept-notes daily-papers book-reader repo-reader _shared
 done
 ```
 
-`_shared` 不是 skill，是各 skill 共用的配置、脚本和画图规则；SKILL.md 里的 `../_shared/…` 相对路径依赖它和其他 skill 放在同一目录下。
+`_shared` is not a skill: it holds the configuration, scripts and diagram rules the skills share. The `../_shared/…` paths in each SKILL.md assume it sits next to the other skills.
 
-初始化 Obsidian 目录：
+Create the Obsidian folders:
 
 ```bash
 VAULT=~/ObsidianVault
 mkdir -p "$VAULT/DailyPapers" "$VAULT/PaperNotes/_concepts" "$VAULT/PaperNotes/_inbox"
 ```
 
-共享配置在 `skills/_shared/user-config.json`。个人路径和关键词覆盖写在同目录的 `user-config.local.json`（git 忽略）。加载顺序：`user_config.py` 默认值 → `user-config.json` → `user-config.local.json`。
+Shared settings live in `skills/_shared/user-config.json`. Put personal paths and keyword overrides in `user-config.local.json` next to it (git-ignored). Load order: defaults in `user_config.py` → `user-config.json` → `user-config.local.json`.
 
-| 配置组 | 说明 |
+| Setting | Meaning |
 |---|---|
-| `paths.*` | Obsidian vault、论文笔记目录、每日推荐目录、概念库目录、Zotero DB / storage |
-| `daily_papers.keywords` | 论文打分主关键词 |
-| `daily_papers.negative_keywords` | 标题命中时触发 `-999` 硬排除；只在摘要中出现不会直接排除 |
-| `daily_papers.domain_boost_keywords` | 体系结构相关性加分词 |
-| `daily_papers.focus_phrases` | 重点方向短语（多核、缓存 / 内存层次、异构计算…），每命中一个 +1 |
-| `daily_papers.venue_rank_scores` | venue 按 CCF 等级加分，默认 A / B / C = 3 / 2 / 1；主题不相关时不加 |
-| `daily_papers.arxiv_categories` / `min_score` / `top_n` | arXiv 查询范围、最低分、单日候选上限 |
-| `automation.*` | 是否自动刷新 MOC、commit、push；`git_push` 只有 `git_commit=true` 时生效 |
-| `mocs.filename_prefix` | MOC 文件名前缀，常用 `_index_` |
+| `paths.*` | Obsidian vault, paper-notes folder, daily-papers folder, concept folder, Zotero DB / storage |
+| `daily_papers.keywords` | Main scoring keywords (+3 in the title, +1 in the abstract) |
+| `daily_papers.negative_keywords` | A title hit excludes the paper (`-999`); kept to topics unrelated to architecture or LLM systems |
+| `daily_papers.domain_boost_keywords` | Architecture relevance words, scored by how many appear |
+| `daily_papers.focus_phrases` | Core-topic phrases (multicore, cache / memory hierarchy, heterogeneous computing…), +1 each |
+| `daily_papers.venue_rank_scores` | Points by CCF tier, default A / B / C = 3 / 2 / 1; only added when the topic matches |
+| `daily_papers.arxiv_categories` / `min_score` / `top_n` | arXiv categories, minimum score, daily candidate cap |
+| `automation.*` | Whether to refresh index pages, commit and push automatically; `git_push` only applies when `git_commit=true` |
+| `mocs.filename_prefix` | Index page file-name prefix, usually `_index_` |
 
-## 工作流
+## Workflows
 
-下面每节先列对 Claude Code 说的话，再说明它做什么。
+Each section lists what to say to Claude Code, then what happens. The trigger phrases are Chinese; `paper-reader` also responds to English requests such as "read this paper".
 
-### 每日论文推荐 — `daily-papers`
+### Daily paper recommendations — `daily-papers`
 
 ```text
-今日论文推荐
-过去3天论文推荐
-过去一周论文推荐
-跑一下论文笔记
+今日论文推荐          # today's recommendations
+过去3天论文推荐        # last 3 days
+过去一周论文推荐       # last week
+跑一下论文笔记         # batch notes for the top picks
 ```
 
-一个 skill 走完三步：
+One skill runs three steps:
 
-1. 抓取：DBLP、会议 program 页面、arXiv，候选不足时用 Semantic Scholar 补充；按关键词打分、历史去重、富化，输出 `/tmp/daily_papers_enriched.json`。
-2. 点评：生成 `{DailyPapers}/YYYY-MM-DD-论文推荐.md`（主推 1–2 篇、备选最多 3 篇），更新 `.history.json`。
-3. 笔记（可选）：为主推论文逐篇调用 `paper-reader` 生成精读笔记，并把笔记链接回填到推荐文件。
+1. Fetch: DBLP, conference program pages and arXiv, with Semantic Scholar as a fallback; score by keywords and CCF venue tier, drop already-recommended papers, enrich, and write `/tmp/daily_papers_enriched.json`.
+2. Review: write `{DailyPapers}/YYYY-MM-DD-论文推荐.md` (1–2 top picks, up to 3 alternates) and update `.history.json`.
+3. Notes (optional): call `paper-reader` for each top pick and link the notes back into the recommendation file.
 
-默认只跑前两步，避免一次推荐直接生成大量长笔记。`跑一下论文抓取 / 点评 / 笔记` 可以单独跑某一步。
+By default only the first two steps run, so one recommendation doesn't produce a pile of long notes. `跑一下论文抓取 / 点评 / 笔记` runs a single step.
 
-### 读论文 — `paper-reader`
+### Reading papers — `paper-reader`
 
 ```text
-读一下这篇论文 https://arxiv.org/abs/2509.24527
+读一下这篇论文 https://arxiv.org/abs/2509.24527          # read this paper
 读一下这篇论文 ~/Downloads/paper.pdf
-快速看一下这篇论文 https://arxiv.org/abs/2509.24527
-批判性分析这篇论文 ~/Downloads/paper.pdf
+快速看一下这篇论文 https://arxiv.org/abs/2509.24527      # quick summary
+批判性分析这篇论文 ~/Downloads/paper.pdf                  # critical analysis
 读一下 Zotero item 2487
-读一下 Zotero 里的 vLLM
-批量读一下 Zotero 里 Link & Fabric Integration 分类下的论文
+读一下 Zotero 里的 vLLM                                   # search Zotero
+批量读一下 Zotero 里 Link & Fabric Integration 分类下的论文  # a whole collection
 ```
 
-支持本地 PDF、arXiv / DOI / 网页链接、Zotero item、Zotero 搜索和 Zotero collection（批量时由 agent 逐篇调用本 skill）。
+Inputs: local PDF, arXiv / DOI / web links, a Zotero item, a Zotero search, or a Zotero collection (the agent calls this skill once per paper).
 
-- 严格按 [`skills/paper-reader/assets/paper-note-template.md`](skills/paper-reader/assets/paper-note-template.md) 写笔记。
-- 文件名用主方法名 / 系统名：`{MethodName}.md`。有 Zotero collection 时保存到 `{PaperNotes}/{collection_path}/`，没有就保存到 `{PaperNotes}/_inbox/`。
-- `zotero_item_id`、`doi`、`arxiv_id` 写入 frontmatter，用于精确去重；批量模式默认跳过已有笔记。
-- 笔记写完后调用 `concept-notes` 的模式 E，附带生成这篇论文新碰到的概念，再用 `check_note_links.py` 一起复查论文笔记和新概念的链接。
-- Zotero 默认只读。只有用户明确要求移动、添加、移除 collection，或修正字段、删除条目时，才经 Zotero 本地 API 写入。
+- Notes follow [`skills/paper-reader/assets/paper-note-template.md`](skills/paper-reader/assets/paper-note-template.md) exactly.
+- File names use the main method or system name, `{MethodName}.md`. Papers in a Zotero collection are saved under `{PaperNotes}/{collection_path}/`, others under `{PaperNotes}/_inbox/`.
+- `zotero_item_id`, `doi` and `arxiv_id` go into the frontmatter for exact de-duplication; batch mode skips papers that already have notes.
+- After the note is written, `concept-notes` mode E creates notes for the paper's new concepts, then `check_note_links.py` checks the links of the paper note and the new concepts together.
+- Zotero is read-only by default. Moving, adding or removing collections, fixing fields or deleting items happens only when you ask, through the Zotero local API.
 
-### 概念库与目录页 — `concept-notes`
+### Concept library and index pages — `concept-notes`
 
 ```text
-生成概念 KV Cache
-补全缺失的概念
-重新生成概念笔记
-检查概念长度
-更新索引
+生成概念 KV Cache      # create a concept note
+补全缺失的概念         # fill in missing concepts
+重新生成概念笔记       # rewrite concept notes with the current template
+检查概念长度           # check concept length
+更新索引               # refresh index pages
 ```
 
-概念相关的规则和脚本只在这里维护：概念笔记模板在 [`skills/concept-notes/assets/concept-note-template.md`](skills/concept-notes/assets/concept-note-template.md)，分类规则在 [`skills/concept-notes/references/concept-categories.md`](skills/concept-notes/references/concept-categories.md)，扫描、重写、长度自检脚本在 `skills/concept-notes/scripts/`。
+Concept rules and scripts live only here: the template in [`skills/concept-notes/assets/concept-note-template.md`](skills/concept-notes/assets/concept-note-template.md), the classification rules in [`skills/concept-notes/references/concept-categories.md`](skills/concept-notes/references/concept-categories.md), and the scan / rewrite / length-check scripts in `skills/concept-notes/scripts/`.
 
-概念笔记放在 `{PaperNotes}/_concepts/`，按概念本身的性质分类，不按论文研究领域分类：
+Concept notes live in `{PaperNotes}/_concepts/`, grouped by what the concept is, not by research field:
 
 ```text
 data-structure / algorithm / mechanism / architecture
 hardware / software-abstraction / metric / theory-model
 ```
 
-也可以直接跑脚本：
+You can also run the scripts directly:
 
 ```bash
 python3 skills/concept-notes/scripts/scan_missing_concepts.py --with-seed --dry-run
-python3 skills/concept-notes/scripts/check_concept_length.py "<概念笔记>"
+python3 skills/concept-notes/scripts/check_concept_length.py "<concept note>"
 python3 skills/_shared/scripts/generate_concept_mocs.py
 python3 skills/_shared/scripts/generate_paper_mocs.py
 ```
 
-扫描器会排除 `_concepts/`、`_inbox/`、`_index_*.md` 和论文笔记之间的互链。
+The scanner ignores `_concepts/`, `_inbox/`, `_index_*.md` and links between paper notes.
 
-### 读书 — `book-reader`
-
-```text
-帮我读这本书 ~/Downloads/book.epub
-```
-
-PDF / EPUB / MOBI / TXT 按页或按章提取，分批提炼知识点，输出带全书思维导图的读书笔记。
-
-### 读代码仓库 — `repo-reader`
+### Reading books — `book-reader`
 
 ```text
-读一下这个仓库 https://github.com/vllm-project/vllm
-给 ~/hardware-project/tiny-gpu 写架构和使用文档
+帮我读这本书 ~/Downloads/book.epub    # read this book
 ```
 
-只做静态源码分析（不运行目标仓库的脚本、测试或构建），按固定 12 节契约写出《架构和使用文档》，每个论断可回溯到源码文件。
+Extracts PDF / EPUB / MOBI / TXT by page or chapter, distils knowledge points in batches, and writes reading notes with a mind map of the whole book.
 
-- 契约：[`skills/repo-reader/references/doc-format.md`](skills/repo-reader/references/doc-format.md)；机器校验：`python3 skills/repo-reader/scripts/check_doc.py <draft> --name <Name>`
-- 原始材料：`python3 skills/repo-reader/scripts/repo_facts.py <repo>`（remote、HEAD、目录树、入口候选、README 命令、配置文件）
-- 落盘：仓库已有 `ARCHITECTURE.md` 或用户要求时写进仓库并硬链接到 vault 的使用指南目录；否则只写 vault。目录由 `skills/repo-reader/config.json` 的 `guide_dir` 决定（从 `config.example.json` 复制，不入库）
+### Reading code repositories — `repo-reader`
 
-## 仓库结构
+```text
+读一下这个仓库 https://github.com/vllm-project/vllm     # read this repository
+给 ~/hardware-project/tiny-gpu 写架构和使用文档          # write an architecture and usage guide
+```
+
+Static source analysis only (it never runs the target repository's scripts, tests or builds). It writes a fixed 12-section architecture and usage guide in which every claim traces back to a source file.
+
+- Contract: [`skills/repo-reader/references/doc-format.md`](skills/repo-reader/references/doc-format.md); checker: `python3 skills/repo-reader/scripts/check_doc.py <draft> --name <Name>`
+- Raw facts: `python3 skills/repo-reader/scripts/repo_facts.py <repo>` (remote, HEAD, directory tree, entry-point candidates, README commands, config files)
+- Output: written into the repository and hard-linked into the vault's guide folder when the repository already has an `ARCHITECTURE.md` or you ask for it; otherwise only into the vault. The folder comes from `guide_dir` in `skills/repo-reader/config.json` (copy it from `config.example.json`; not committed)
+
+## Repository layout
 
 ```text
 skills/
-├── daily-papers/          # 每日推荐：抓取 → 点评 → 可选批量笔记；scripts/ 抓取、打分、富化、图片本地化
-├── paper-reader/          # 单篇论文阅读与 Zotero 集成；scripts/ references/ assets/
-├── concept-notes/         # 概念的唯一归属：assets/ 概念笔记模板；references/ 分类规则；scripts/ 扫描、重写、长度自检；也负责刷新目录页
-├── book-reader/           # 整本书读书笔记与全书思维导图（MIT, Tao Jiang）
-├── repo-reader/           # 代码仓库 → 架构和使用文档；scripts/ 仓库事实采集、文档校验；references/ 12 节契约
-└── _shared/               # 共享配置；scripts/ MOC 生成、转义检查、venue 标签；references/ 画图规则
+├── daily-papers/          # Daily recommendations: fetch → review → optional notes; scripts/ fetch, score, enrich, localise images
+├── paper-reader/          # Single-paper reading and Zotero integration; scripts/ references/ assets/
+├── concept-notes/         # Owns concepts: assets/ template; references/ classification; scripts/ scan, rewrite, length check; index refresh
+├── book-reader/           # Whole-book notes and mind maps (MIT, Tao Jiang)
+├── repo-reader/           # Repository → architecture and usage guide; scripts/ facts and checker; references/ 12-section contract
+└── _shared/               # Shared config; scripts/ index generation, escape checks, venue labels, CCF ranks; references/ diagram rules
 ```
 
-### 目录约定
+### Directory convention
 
-每个 skill 目录内按职责分三类子目录：
+Each skill splits its files into three folders by role:
 
-| 目录 | 放什么 | 判断标准 |
+| Folder | Holds | Test |
 |---|---|---|
-| `scripts/` | 可执行代码 | `python3 …` 能跑的东西 |
-| `references/` | agent 读进上下文的规则、指南、分类标准 | 读完影响 agent 怎么做 |
-| `assets/` | 填充或复制到输出里的模板 | 内容会出现在生成物里 |
+| `scripts/` | Executable code | Something you run with `python3 …` |
+| `references/` | Rules, guides and classifications the agent reads into context | Changes how the agent works |
+| `assets/` | Templates filled in or copied into the output | Appears in what gets generated |
 
-新增文件按此归位；`tests/test_repo_layout.py` 会检查 `.py` 只在 `scripts/` 下，以及所有 Markdown 里的 `python3 …py` 路径都能解析。
+New files follow this split; `tests/test_repo_layout.py` checks that `.py` files live only under `scripts/` and that every `python3 …py` path in the Markdown resolves.
 
-## 开发维护
+## Development
 
 ```bash
 python3 -m pytest tests/ -q
@@ -191,17 +193,17 @@ python3 skills/daily-papers/scripts/fetch_and_score.py > /tmp/daily_papers_top30
 cat /tmp/daily_papers_top30.json | python3 skills/daily-papers/scripts/enrich_papers.py /tmp/daily_papers_enriched.json
 ```
 
-Zotero helper 兼容期规则：
+Zotero helper compatibility:
 
-- 新文档和脚本使用 `zotero_helper.py resolve ...` 和 `zotero_helper.py note-path ...`
-- 旧命令 `papers`、`search`、`info`、`find-collection` 暂时保留，会打印 deprecation warning；下一次相关清理时移除
+- New docs and scripts use `zotero_helper.py resolve ...` and `zotero_helper.py note-path ...`
+- The old `papers`, `search`, `info` and `find-collection` commands still work and print a deprecation warning; they will be removed in a later cleanup
 
-## 注意事项
+## Notes
 
-- 去重优先使用 `zotero_item_id`、`doi`、`arxiv_id`，再退到规范化标题 / 方法名匹配。
-- 不用 Zotero 也可以跑每日推荐和 PDF / arXiv 论文阅读；Zotero 主要用于本地文献检索、PDF 定位和 collection path。
-- `git_commit` 和 `git_push` 默认关闭。
-- AI 生成的推荐、点评和笔记可能有事实错误或遗漏，应作为阅读辅助，不应替代研究判断。
+- De-duplication prefers `zotero_item_id`, `doi` and `arxiv_id`, then falls back to normalised title / method name.
+- Daily recommendations and PDF / arXiv reading work without Zotero; Zotero adds local search, PDF lookup and collection paths.
+- `git_commit` and `git_push` are off by default.
+- AI-generated recommendations, reviews and notes can contain factual errors or omissions; use them as reading aids, not as a substitute for research judgement.
 
 ## License
 
