@@ -40,8 +40,22 @@ Requirements:
 - Python 3.10+
 - Obsidian
 - Zotero, optional but recommended (writes go through the Zotero 10 local API)
-- `poppler` / `poppler-utils`, for `pdftotext` and `pdfimages`
-- `mmdc`, optional, to validate Mermaid diagrams
+- `poppler` (`pdftotext`, `pdfimages`): affiliation extraction in `daily-papers` and PDF figure extraction
+- Optional, for self-drawn diagrams in notes (see `skills/_shared/references/diagram-rules.md`):
+  - [diagram-design](https://github.com/cathrynlavery/diagram-design) plus Playwright: the default route, exported as PNG
+  - draw.io desktop and [drawio-skill](https://github.com/Agents365-ai/drawio-skill): sequence, Gantt and pipeline diagrams; also needed by `verilog-diagram`
+  - `mmdc` (mermaid-cli): renders the Mermaid fallback so it can be checked by eye
+
+On macOS:
+
+```bash
+brew install poppler
+npm install -g @mermaid-js/mermaid-cli
+python3 -m pip install --user playwright && python3 -m playwright install chromium
+npx skills add cathrynlavery/diagram-design -g -a claude-code
+npx skills add Agents365-ai/drawio-skill -g -a claude-code
+brew install --cask drawio
+```
 
 Symlink the skills into Claude Code's skills directory so changes in the repo take effect immediately:
 

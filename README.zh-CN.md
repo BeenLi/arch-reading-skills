@@ -40,8 +40,22 @@ ObsidianVault/
 - Python 3.10+
 - Obsidian
 - Zotero，可选但推荐（Zotero 10 本地 API 用于写操作）
-- `poppler` / `poppler-utils`，提供 `pdftotext`、`pdfimages`
-- `mmdc`，可选，用于校验 Mermaid 图
+- `poppler`（`pdftotext`、`pdfimages`）：`daily-papers` 抽取作者机构、从 PDF 裁图
+- 可选，笔记里的自画图用（见 `skills/_shared/references/diagram-rules.md`）：
+  - [diagram-design](https://github.com/cathrynlavery/diagram-design) 加 Playwright：默认路线，导出 PNG
+  - draw.io 桌面版和 [drawio-skill](https://github.com/Agents365-ai/drawio-skill)：时序图、甘特图、流水线图；`verilog-diagram` 也需要
+  - `mmdc`（mermaid-cli）：渲染退回的 Mermaid 图，供目检
+
+macOS 上：
+
+```bash
+brew install poppler
+npm install -g @mermaid-js/mermaid-cli
+python3 -m pip install --user playwright && python3 -m playwright install chromium
+npx skills add cathrynlavery/diagram-design -g -a claude-code
+npx skills add Agents365-ai/drawio-skill -g -a claude-code
+brew install --cask drawio
+```
 
 把 skills 软链接到 Claude Code 的 skills 目录，仓库里的改动立即生效：
 
