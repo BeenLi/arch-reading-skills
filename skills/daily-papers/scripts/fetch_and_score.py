@@ -52,9 +52,13 @@ ATOM_NS = {
 
 VENUE_SPECS = [
     {"slug": "isca", "name": "ISCA", "dblp_path": "conf/isca/isca{year}.html", "program_url": "https://iscaconf.org/isca{year}/program/"},
-    {"slug": "micro", "name": "MICRO", "dblp_path": "conf/micro/micro{year}.html", "program_url": "https://microarch.org/micro{yy}/program.php"},
-    {"slug": "hpca", "name": "HPCA", "dblp_path": "conf/hpca/hpca{year}.html", "program_url": "https://hpca-conf.org/{year}/program/"},
+    # MICRO 的网址用届数（2026 年是 MICRO-59），见 program_page_url
+    {"slug": "micro", "name": "MICRO", "dblp_path": "conf/micro/micro{year}.html", "program_url": "https://microarch.org/micro{micro_no}/program/"},
+    # hpca-conf.org/{year}/program/ 会跳到 researchr 首页（没有论文列表），直接取主会 track 页
+    {"slug": "hpca", "name": "HPCA", "dblp_path": "conf/hpca/hpca{year}.html", "program_url": "https://conf.researchr.org/track/hpca-{year}/hpca-{year}-main-conference"},
     {"slug": "asplos", "name": "ASPLOS", "dblp_path": "conf/asplos/asplos{year}.html", "program_url": "https://www.asplos-conference.org/asplos{year}/program/"},
+    {"slug": "ppopp", "name": "PPoPP", "dblp_path": "conf/ppopp/ppopp{year}.html", "program_url": "https://conf.researchr.org/track/PPoPP-{year}/PPoPP-{year}-papers"},
+    {"slug": "fast", "name": "FAST", "dblp_path": "conf/fast/fast{year}.html", "program_url": "https://www.usenix.org/conference/fast{yy}/technical-sessions"},
     {"slug": "sigcomm", "name": "SIGCOMM", "dblp_path": "conf/sigcomm/sigcomm{year}.html", "program_url": "https://conferences.sigcomm.org/sigcomm/{year}/program/"},
     {"slug": "nsdi", "name": "NSDI", "dblp_path": "conf/nsdi/nsdi{year}.html", "program_url": "https://www.usenix.org/conference/nsdi{yy}/technical-sessions"},
     {"slug": "osdi", "name": "OSDI", "dblp_path": "conf/osdi/osdi{year}.html", "program_url": "https://www.usenix.org/conference/osdi{yy}/technical-sessions"},
@@ -81,6 +85,8 @@ VENUE_MONTH_HINTS = {
     "sc": 11,
     "mlsys": 5,
     "hpca": 3,
+    "ppopp": 2,
+    "fast": 2,
 }
 
 
@@ -228,13 +234,15 @@ def display_venue_name(venue: str) -> str:
         "atc": "USENIX ATC",
         "sc": "SC",
         "mlsys": "MLSys",
+        "ppopp": "PPoPP",
+        "fast": "FAST",
     }
     return names.get(normalized, venue)
 
 
 # 会议程序页里的日程条目，不是论文
 _PROGRAM_NOISE = re.compile(
-    r"\b(breakfast|lunch|dinner|reception|registration|coffee|snack|welcome remarks|opening remarks|closing remarks"
+    r"\b(breakfast|lunch|dinner|reception|registration|coffee|snack|welcome remarks|welcome message|opening remarks|closing remarks"
     r"|business meeting|meetup|excursion|award|luncheon|social event)\b"
     r"|^index of /"
     r"|\b(symposium|conference)\b.*\b20\d\d\)?$"  # 会议名称行，如 "... Computer Architecture (HPCA) 2026"
@@ -263,6 +271,76 @@ def extract_program_titles(html: str) -> list[str]:
             if title not in candidates:
                 candidates.append(title)
     return candidates
+
+
+def _html_text(fragment: str) -> str:
+    return normalize_whitespace(strip_tags(fragment or ""))
+
+
+def _parse_paper_div_program(html: str) -> list[tuple[str, str]]:
+    """ISCA / MICRO / ASPLOS 共用的模板：<div class="paper-title"> 后跟 <div class="paper-authors">。"""
+    return [
+        (_html_text(m.group(1)), _html_text(m.group(2)))
+        for m in re.finditer(
+            r'<div class="paper-title">(.*?)</div>\s*(?:<div class="paper-authors">(.*?)</div>)?',
+            html,
+            re.DOTALL,
+        )
+    ]
+
+
+def _parse_researchr_program(html: str) -> list[tuple[str, str]]:
+    """conf.researchr.org 的 track 页（HPCA / PPoPP）：每个 <tr data-slot-id> 是一个日程条目，
+    有 performers（作者）的才是论文；茶歇、颁奖这类条目没有作者。"""
+    papers = []
+    for row in re.findall(r"<tr data-slot-id=.*?</tr>", html, re.DOTALL):
+        title_match = re.search(r'<a href="#" data-event-modal="[^"]+">(.*?)</a>', row, re.DOTALL)
+        performers = re.search(r'<div class="performers">(.*?)</div>', row, re.DOTALL)
+        if not title_match or not performers:
+            continue
+        # 标题里嵌着 “Best Paper Award” 之类的徽章
+        title = re.sub(r'<span class="pull-right">.*?</span></span></span>', "", title_match.group(1), flags=re.DOTALL)
+        authors = [_html_text(a) for a in re.findall(r"<a [^>]*>(.*?)</a>", performers.group(1), re.DOTALL)]
+        papers.append((_html_text(title), ", ".join(a for a in authors if a)))
+    return papers
+
+
+def _parse_usenix_program(html: str) -> list[tuple[str, str]]:
+    """usenix.org 的 technical-sessions 页（NSDI / OSDI / ATC / FAST）：每篇是 <article class="node node-paper">。"""
+    papers = []
+    for block in re.findall(r'<article [^>]*class="node node-paper.*?</article>', html, re.DOTALL):
+        title_match = re.search(r"<h2[^>]*>\s*<a [^>]*>(.*?)</a>", block, re.DOTALL)
+        if not title_match:
+            continue
+        people = re.search(r'field-name-field-paper-people-text.*?<p>(.*?)</p>', block, re.DOTALL)
+        papers.append((_html_text(title_match.group(1)), _html_text(people.group(1)) if people else ""))
+    return papers
+
+
+def parse_program_page(html: str) -> list[tuple[str, str]]:
+    """从会议程序页抽 (标题, 作者)。按页面结构选解析器（不按 venue 配置，网址跳转到别的站也能认出来），
+    认不出结构时才退回 extract_program_titles 的 <h1-4>/<strong> 启发式（它会混进分会场标题）。"""
+    if 'class="paper-title"' in html:
+        papers = _parse_paper_div_program(html)
+    elif "data-event-modal=" in html:
+        papers = _parse_researchr_program(html)
+    elif "node node-paper" in html:
+        papers = _parse_usenix_program(html)
+    else:
+        return [(title, "") for title in extract_program_titles(html)]
+
+    seen = set()
+    unique = []
+    for title, authors in papers:
+        if len(title) < 8 or title.lower() in seen or _PROGRAM_NOISE.search(title):
+            continue
+        seen.add(title.lower())
+        unique.append((title, authors))
+    return unique
+
+
+def program_page_url(spec: dict, year: int) -> str:
+    return spec["program_url"].format(year=year, yy=str(year)[-2:], micro_no=year - 1967)
 
 
 def parse_dblp_proceedings_html(html: str, venue: str, year: int) -> list[dict]:
@@ -310,6 +388,11 @@ def parse_journal_html(html: str, journal_name: str, year: int) -> list[dict]:
     return entries
 
 
+def is_bot_challenge(html: str) -> bool:
+    """DBLP 从 2026 年起对脚本返回 Anubis 验证页（HTTP 200/202，没有论文）。"""
+    return "anubis_challenge" in (html or "")
+
+
 def fetch_dblp_papers(target_date, years_back: int = 2) -> list[dict]:
     papers = []
     seen_titles = set()
@@ -322,6 +405,9 @@ def fetch_dblp_papers(target_date, years_back: int = 2) -> list[dict]:
             url = f"https://dblp.org/db/{spec['dblp_path'].format(year=year)}"
             print(f"  Fetching DBLP {spec['name']} {year}...", file=sys.stderr)
             html = fetch_url(url, timeout=30)
+            if is_bot_challenge(html):
+                print("  [WARN] DBLP is behind a bot challenge; skipping DBLP for this run", file=sys.stderr)
+                return papers
             if not html:
                 continue
             parsed = parse_dblp_proceedings_html(html, venue=spec["name"], year=year)
@@ -362,23 +448,27 @@ def fetch_conference_program_papers(target_date) -> list[dict]:
 
     papers = []
     seen_titles = set()
-    year = target_date.year
-    yy = str(year)[-2:]
 
     for spec in VENUE_SPECS:
         if not spec["program_url"]:
             continue
-        url = spec["program_url"].format(year=year, yy=yy)
-        print(f"  Fetching program page {spec['name']} {year}...", file=sys.stderr)
-        html = fetch_url(url, timeout=20)
-        if not html:
+        # 今年的程序页还没出（年初）就用去年的
+        for year in (target_date.year, target_date.year - 1):
+            url = program_page_url(spec, year)
+            print(f"  Fetching program page {spec['name']} {year}...", file=sys.stderr)
+            entries = parse_program_page(fetch_url(url, timeout=20))
+            if entries:
+                break
+        else:
             continue
-        for title in extract_program_titles(html):
+        print(f"    {len(entries)} entries", file=sys.stderr)
+        for title, authors in entries:
             title_key = title.lower()
             if title_key in seen_titles:
                 continue
             paper = make_base_paper(
                 title=title,
+                authors=authors,
                 url=url,
                 source="conference-program",
                 venue=venue_label(spec, year),
@@ -623,7 +713,8 @@ def select_with_quota(candidates: list[dict], top_n: int, dblp_max_ratio: float 
     is not crowded out by year-old conference papers."""
     dblp_max = max(1, int(top_n * dblp_max_ratio))
     arxiv = [p for p in candidates if p.get("source") == "arxiv"]
-    others = [p for p in candidates if p.get("source") != "arxiv"]
+    # 先按分数排再截：candidates 是按 VENUE_SPECS 顺序插进来的，不排序的话名额全给了排在前面的会议
+    others = sorted((p for p in candidates if p.get("source") != "arxiv"), key=lambda item: item["score"], reverse=True)
     others = others[:dblp_max]
     combined = arxiv + others
     combined.sort(key=lambda item: item["score"], reverse=True)
@@ -762,8 +853,8 @@ def main():
     )
 
     primary_papers = fetch_dblp_papers(target_date)
-    if not primary_papers:
-        primary_papers = fetch_conference_program_papers(target_date)
+    # 程序页总是抓：DBLP 收录要滞后几个月，刚开完的会只在程序页上；重复的论文在 merge_and_dedup 里按标题去重
+    primary_papers.extend(fetch_conference_program_papers(target_date))
 
     arxiv_papers = fetch_arxiv_papers(start_date, target_date, days)
 

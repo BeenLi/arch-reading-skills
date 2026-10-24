@@ -127,7 +127,7 @@ _RULES: list[tuple[str, str, int]] = [
     ("NSDI", r"Networked Systems Design and Implementation|\bNSDI\b", _I),
     ("ATC", r"USENIX Annual Technical Conference|USENIX ATC|^ATC\b", _I),
     ("EuroSys", r"European Conference on Computer Systems|\bEuroSys\b", _I),
-    ("FAST", r"File and Storage Technologies|\bFAST '?\d\d\b", _I),
+    ("FAST", r"File and Storage Technologies|\bFAST '?(?:\d{4}|\d\d)\b", _I),
     ("SoCC", r"Symposium on Cloud Computing|\bSoCC\b", _I),
     ("MLSys", r"Conference on Machine Learning and Systems|Proceedings of Machine Learning and Systems|\bMLSys\b", _I),
     ("NeurIPS", r"Neural Information Processing Systems|\bNeurIPS\b|\bNIPS\b", _I),

@@ -8,6 +8,7 @@ from urllib.error import HTTPError
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MODULE_PATH = REPO_ROOT / "skills" / "daily-papers" / "scripts" / "fetch_and_score.py"
+PROGRAM_FIXTURES = Path(__file__).resolve().parent / "fixtures" / "program_pages"
 
 
 def load_module():
@@ -275,6 +276,128 @@ class FetchAndScoreTests(unittest.TestCase):
         self.assertEqual(body, "<feed />")
         self.assertEqual(len(attempts), 2)
         sleep.assert_called_once_with(0)
+
+
+class ProgramPageTests(unittest.TestCase):
+    """程序页解析：fixtures 是从真实页面截下来的片段（2026-10-24 抓取），测试不联网。"""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.module = load_module()
+
+    def parse_fixture(self, name):
+        return self.module.parse_program_page((PROGRAM_FIXTURES / name).read_text(encoding="utf-8"))
+
+    def test_paper_div_template_isca(self):
+        entries = self.parse_fixture("isca2026.html")
+
+        self.assertEqual(len(entries), 4)
+        title, authors = entries[0]
+        self.assertEqual(title, "MLX: Multi-Layer Execution for Structured LLM Workload Acceleration on Spatial Architectures")
+        self.assertTrue(authors.startswith("Haibin Wu (Institute of Computing Technology, CAS)"))
+
+    def test_paper_div_template_asplos_skips_session_heading(self):
+        titles = [title for title, _ in self.parse_fixture("asplos2026.html")]
+
+        self.assertEqual(titles[0], "Towards High-Goodput LLM Serving with Prefill-decode Multiplexing")
+        self.assertFalse(any(title.startswith("Session") for title in titles))
+
+    def test_paper_div_template_micro_drops_welcome_message(self):
+        titles = [title for title, _ in self.parse_fixture("micro59.html")]
+
+        self.assertEqual(len(titles), 4)
+        self.assertEqual(titles[0], "Ray-by-Ray: Fine-Grained Resource Management for GPU Ray Tracing Units")
+        self.assertFalse(any("Welcome Message" in title for title in titles))
+
+    def test_researchr_track_page_hpca(self):
+        entries = self.parse_fixture("hpca2026.html")
+        titles = [title for title, _ in entries]
+
+        self.assertEqual(titles[0], "$C^3$ : CXL Coherence Controllers for Heterogeneous Architectures")
+        self.assertNotIn("Cache Coherence and Chiplet Interconnects", titles)  # 分会场标题
+        self.assertNotIn("Break", titles)  # 茶歇条目没有作者
+        self.assertTrue(entries[0][1].startswith("Anatole Lefort, David Schall"))
+        self.assertNotIn("Technical University of Munich", entries[0][1])  # span.prog-aff 不算作者
+
+    def test_researchr_strips_award_badge(self):
+        titles = [title for title, _ in self.parse_fixture("ppopp2026.html")]
+
+        self.assertEqual(titles[0], "Binary Compatible Critical Section Delegation")
+
+    def test_usenix_technical_sessions(self):
+        entries = self.parse_fixture("fast26.html")
+        titles = [title for title, _ in entries]
+
+        self.assertEqual(len(titles), 3)
+        self.assertEqual(titles[1], "Cost-efficient Archive Cloud Storage with Tape: Design and Deployment")
+        self.assertNotIn("Cloud Technologies I", titles)  # 分会场标题
+        self.assertFalse(any("Test of Time" in title for title in titles))
+        self.assertTrue(entries[0][1].startswith("Leping Yang, Shanghai Jiao Tong University"))
+
+    def test_unknown_layout_falls_back_to_heading_heuristic(self):
+        html = "<h2>Session 1: Caches</h2><h3>A Very Long Paper Title About Cache Replacement</h3>"
+
+        self.assertEqual(
+            self.module.parse_program_page(html),
+            [("A Very Long Paper Title About Cache Replacement", "")],
+        )
+
+    def test_program_page_urls(self):
+        specs = {spec["slug"]: spec for spec in self.module.VENUE_SPECS}
+
+        self.assertEqual(self.module.program_page_url(specs["micro"], 2026), "https://microarch.org/micro59/program/")
+        self.assertEqual(
+            self.module.program_page_url(specs["hpca"], 2026),
+            "https://conf.researchr.org/track/hpca-2026/hpca-2026-main-conference",
+        )
+        self.assertEqual(
+            self.module.program_page_url(specs["fast"], 2026),
+            "https://www.usenix.org/conference/fast26/technical-sessions",
+        )
+
+    def test_fetch_program_papers_uses_parsers_and_falls_back_to_last_year(self):
+        today = date.today()
+        specs = {spec["slug"]: spec for spec in self.module.VENUE_SPECS}
+        pages = {
+            self.module.program_page_url(specs["micro"], today.year): "micro59.html",
+            # 今年的 ISCA 程序页还没上线 → 用去年的
+            self.module.program_page_url(specs["isca"], today.year - 1): "isca2026.html",
+        }
+
+        def fake_fetch(url, timeout=30, retries=2):
+            name = pages.get(url)
+            return (PROGRAM_FIXTURES / name).read_text(encoding="utf-8") if name else ""
+
+        with patch.object(self.module, "fetch_url", side_effect=fake_fetch), \
+                patch.object(self.module, "score_paper", return_value=10):
+            papers = self.module.fetch_conference_program_papers(today)
+
+        venues = {paper["venue"] for paper in papers}
+        self.assertEqual(venues, {f"MICRO {today.year}", f"ISCA {today.year - 1}"})
+        self.assertEqual(len(papers), 8)
+        self.assertTrue(all(paper["authors"] for paper in papers))
+
+    def test_dblp_bot_challenge_stops_after_first_request(self):
+        challenge = '<html><script id="anubis_challenge" type="application/json">{}</script></html>'
+
+        with patch.object(self.module, "fetch_url", return_value=challenge) as fetch:
+            papers = self.module.fetch_dblp_papers(date(2026, 10, 24))
+
+        self.assertEqual(papers, [])
+        self.assertEqual(fetch.call_count, 1)
+
+    def test_select_with_quota_keeps_highest_scoring_venue_papers(self):
+        # 插入顺序按 VENUE_SPECS：低分的 ISCA 在前、高分的 MICRO 在后
+        candidates = (
+            [{"source": "conference-program", "score": 4, "title": f"isca{i}"} for i in range(5)]
+            + [{"source": "conference-program", "score": 9, "title": f"micro{i}"} for i in range(5)]
+            + [{"source": "arxiv", "score": 5, "title": f"a{i}"} for i in range(10)]
+        )
+
+        top = self.module.select_with_quota(candidates, top_n=10, dblp_max_ratio=0.4)
+
+        venue_titles = {p["title"] for p in top if p["source"] != "arxiv"}
+        self.assertEqual(venue_titles, {"micro0", "micro1", "micro2", "micro3"})
 
 
 if __name__ == "__main__":
