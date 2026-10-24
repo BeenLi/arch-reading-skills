@@ -11,6 +11,7 @@ Claude Code skills for computer-architecture (multicore, cache and memory hierar
 | `concept-notes` | Sole owner of the concept library: creates / rewrites concept notes and refreshes the paper and concept index pages |
 | `book-reader` | Reads a whole book and writes reading notes with a mind map of the book |
 | `repo-reader` | Reads a code repository and writes an architecture and usage guide whose claims trace back to source files |
+| `verilog-diagram` | Turns Verilog / SystemVerilog (or a paper or description) into editable draw.io architecture, block, FSM and control diagrams |
 
 The agent interprets requests and writes reviews and long notes; Python scripts do the deterministic parts: fetching, scoring, de-duplication, Zotero lookups, path planning, index generation and text checks.
 
@@ -41,10 +42,12 @@ Symlink the skills into Claude Code's skills directory so changes in the repo ta
 
 ```bash
 mkdir -p ~/.claude/skills
-for d in paper-reader concept-notes daily-papers book-reader repo-reader _shared; do
+for d in paper-reader concept-notes daily-papers book-reader repo-reader verilog-diagram _shared; do
   ln -sfn "$PWD/skills/$d" "$HOME/.claude/skills/$d"
 done
 ```
+
+`verilog-diagram` also needs the third-party [drawio-skill](https://github.com/Agents365-ai/drawio-skill) (`npx skills add Agents365-ai/drawio-skill -g -a claude-code`), plus `yosys`, `sv2v` and Graphviz for block and control diagrams.
 
 `_shared` is not a skill: it holds the configuration, scripts and diagram rules the skills share. The `../_shared/…` paths in each SKILL.md assume it sits next to the other skills.
 
@@ -161,6 +164,16 @@ Static source analysis only (it never runs the target repository's scripts, test
 - Raw facts: `python3 skills/repo-reader/scripts/repo_facts.py <repo>` (remote, HEAD, directory tree, entry-point candidates, README commands, config files)
 - Output: written into the repository and hard-linked into the vault's guide folder when the repository already has an `ARCHITECTURE.md` or you ask for it; otherwise only into the vault. The folder comes from `guide_dir` in `skills/repo-reader/config.json` (copy it from `config.example.json`; not committed)
 
+### Hardware diagrams — `verilog-diagram`
+
+```text
+把这个 module 画成架构图 rtl/dcache_pipe.v     # architecture diagram, paper-figure style
+画出 load_pipe.v 的状态机                      # FSM diagram
+根据这篇论文画架构图                           # from a paper or a description
+```
+
+Four views: a paper-style architecture diagram (default; the agent reads the code and writes a layout description, a script draws it), a gate-level block diagram from the Yosys netlist, an FSM diagram, and a control-structure diagram. Output is an editable `.drawio` file, plus PNG / SVG when a draw.io exporter is available; on a headless Linux server without root, `skills/verilog-diagram/scripts/install-drawio-linux.sh` sets one up.
+
 ## Repository layout
 
 ```text
@@ -170,6 +183,7 @@ skills/
 ├── concept-notes/         # Owns concepts: assets/ template; references/ classification; scripts/ scan, rewrite, length check; index refresh
 ├── book-reader/           # Whole-book notes and mind maps (MIT, Tao Jiang)
 ├── repo-reader/           # Repository → architecture and usage guide; scripts/ facts and checker; references/ 12-section contract
+├── verilog-diagram/       # Verilog / papers → draw.io diagrams; scripts/ generators, exporter, Linux draw.io installer; examples/
 └── _shared/               # Shared config; scripts/ index generation, escape checks, venue labels, CCF ranks; references/ diagram rules
 ```
 

@@ -11,7 +11,7 @@ allowed-tools: [Bash, Read, Write]
 **谁指挥谁**（整体控制结构）→ `fsm2drawio.py ctrl`。以控制为主的模块（FSM、译码、仲裁控制器）用框图会乱，改用后两者。
 
 依赖：PyYAML；导出 PNG/SVG 需要 `drawio`（查找顺序 `$DRAWIO_BIN` → PATH → macOS app → `~/.local/opt/drawio`；
-Linux 无 `$DISPLAY` 时自动套 `xvfb-run`，无 root 的服务器用仓库里的 `tools/install-drawio-linux.sh` 装）。**没有导出器时所有命令照常生成
+Linux 无 `$DISPLAY` 时自动套 `xvfb-run`，无 root 的服务器用本 skill 的 `scripts/install-drawio-linux.sh` 装）。**没有导出器时所有命令照常生成
 `.drawio`，只少 PNG，stderr 提示一行**。框图/控制结构另需 `yosys`、`sv2v`（SystemVerilog）、`dot`（Graphviz），以及已安装的 drawio-skill
 （默认 `~/.claude/skills/drawio-skill`，可用环境变量 `DRAWIO_SKILL_DIR` 覆盖；只调用它的 `autolayout.py`，不改它）。
 三个生成脚本都接受 `--png` / `--svg` / `--scale N`（PNG 默认 scale 3，约 1 model unit = 3 px；`$DRAWIO_SCALE` 可改默认），

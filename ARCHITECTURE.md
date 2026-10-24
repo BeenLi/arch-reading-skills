@@ -15,6 +15,7 @@
 | `daily-papers` | 抓取 → 点评 → 可选批量精读 | `DailyPapers/YYYY-MM-DD-论文推荐.md` |
 | `paper-reader` | 读一篇论文，按论文模板写笔记 | `PaperNotes/**/{MethodName}.md` |
 | `concept-notes` | 概念的唯一归属：分类、模板、生成、重写、自检；刷新目录页 | `PaperNotes/_concepts/{concept_type}/*.md`、`_index_*.md` |
+| `verilog-diagram` | 把 Verilog / 论文画成可编辑的 draw.io 图；也是 `_shared/references/diagram-rules.md` 里流水线分级架构图那条路线 | `.drawio` + PNG / SVG |
 | `_shared`（不是 skill） | 共享配置、目录页生成、转义检查、venue 标签、画图规则 | — |
 
 ```mermaid

@@ -51,14 +51,14 @@ def export(drawio_path, fmt="png", scale=None, out=None, border=16):
     """Export `drawio_path` to `fmt` (png|svg|pdf). Returns the output path, or None (reason on stderr)."""
     binary = find_drawio()
     if not binary:
-        print(f"note: no draw.io binary found (set DRAWIO_BIN or run tools/install-drawio-linux.sh); "
+        print(f"note: no draw.io binary found (set DRAWIO_BIN or run ~/.claude/skills/verilog-diagram/scripts/install-drawio-linux.sh); "
               f"kept {drawio_path} only", file=sys.stderr)
         return None
     out = out or os.path.splitext(drawio_path)[0] + "." + fmt
     scale = scale or int(os.environ.get("DRAWIO_SCALE", DEFAULT_SCALE))
     prefix, env_over = _xvfb_prefix()
     if prefix is None:
-        print("note: Linux without $DISPLAY and no xvfb-run; run tools/install-drawio-linux.sh. "
+        print("note: Linux without $DISPLAY and no xvfb-run; run ~/.claude/skills/verilog-diagram/scripts/install-drawio-linux.sh. "
               f"kept {drawio_path} only", file=sys.stderr)
         return None
     cmd = prefix + [binary, "-x", "-f", fmt, "-b", str(border), "-o", out, drawio_path]
@@ -95,7 +95,7 @@ def main():
     a = ap.parse_args()
     fmts = [f for f, on in (("png", a.png), ("svg", a.svg), ("pdf", a.pdf)) if on] or ["png"]
     if a.output and len(fmts) > 1: sys.exit("error: -o takes a single format")
-    if not find_drawio(): sys.exit("error: no draw.io binary found; set DRAWIO_BIN or run tools/install-drawio-linux.sh")
+    if not find_drawio(): sys.exit("error: no draw.io binary found; set DRAWIO_BIN or run ~/.claude/skills/verilog-diagram/scripts/install-drawio-linux.sh")
     ok = all(export(a.drawio, f, a.scale, a.output if a.output else None) for f in fmts)
     sys.exit(0 if ok else 1)
 

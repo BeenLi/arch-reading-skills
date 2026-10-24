@@ -11,6 +11,7 @@
 | `concept-notes` | 概念库的唯一归属：生成 / 重写概念笔记，刷新论文与概念目录页 |
 | `book-reader` | 读整本书，输出带全书思维导图的读书笔记 |
 | `repo-reader` | 读一个代码仓库，写出可回溯到源码的架构和使用文档 |
+| `verilog-diagram` | 把 Verilog / SystemVerilog（或论文、描述）画成可编辑的 draw.io 架构图、框图、状态机和控制结构图 |
 
 Agent 负责理解意图、写点评和长篇笔记；Python 脚本负责确定性的抓取、打分、去重、Zotero 读取、路径规划、目录页生成和文本检查。
 
@@ -41,10 +42,12 @@ ObsidianVault/
 
 ```bash
 mkdir -p ~/.claude/skills
-for d in paper-reader concept-notes daily-papers book-reader repo-reader _shared; do
+for d in paper-reader concept-notes daily-papers book-reader repo-reader verilog-diagram _shared; do
   ln -sfn "$PWD/skills/$d" "$HOME/.claude/skills/$d"
 done
 ```
+
+`verilog-diagram` 还依赖第三方的 [drawio-skill](https://github.com/Agents365-ai/drawio-skill)（`npx skills add Agents365-ai/drawio-skill -g -a claude-code`），画框图和控制结构图另需 `yosys`、`sv2v` 和 Graphviz。
 
 `_shared` 不是 skill，是各 skill 共用的配置、脚本和画图规则；SKILL.md 里的 `../_shared/…` 相对路径依赖它和其他 skill 放在同一目录下。
 
@@ -161,6 +164,16 @@ PDF / EPUB / MOBI / TXT 按页或按章提取，分批提炼知识点，输出�
 - 原始材料：`python3 skills/repo-reader/scripts/repo_facts.py <repo>`（remote、HEAD、目录树、入口候选、README 命令、配置文件）
 - 落盘：仓库已有 `ARCHITECTURE.md` 或用户要求时写进仓库并硬链接到 vault 的使用指南目录；否则只写 vault。目录由 `skills/repo-reader/config.json` 的 `guide_dir` 决定（从 `config.example.json` 复制，不入库）
 
+### 画硬件图 — `verilog-diagram`
+
+```text
+把这个 module 画成架构图 rtl/dcache_pipe.v
+画出 load_pipe.v 的状态机
+根据这篇论文画架构图
+```
+
+四种视角：论文插图风格的架构图（默认，agent 读代码写出排版描述，脚本确定性出图）、基于 Yosys 网表的门级框图、状态机图、整体控制结构图。产物是可编辑的 `.drawio`，有 draw.io 导出器时再出 PNG / SVG；没有 root 的 Linux 服务器用 `skills/verilog-diagram/scripts/install-drawio-linux.sh` 装导出器。
+
 ## 仓库结构
 
 ```text
@@ -170,6 +183,7 @@ skills/
 ├── concept-notes/         # 概念的唯一归属：assets/ 概念笔记模板；references/ 分类规则；scripts/ 扫描、重写、长度自检；也负责刷新目录页
 ├── book-reader/           # 整本书读书笔记与全书思维导图（MIT, Tao Jiang）
 ├── repo-reader/           # 代码仓库 → 架构和使用文档；scripts/ 仓库事实采集、文档校验；references/ 12 节契约
+├── verilog-diagram/       # Verilog / 论文 → draw.io 图；scripts/ 生成器、导出器、Linux draw.io 安装脚本；examples/ 样例
 └── _shared/               # 共享配置；scripts/ MOC 生成、转义检查、venue 标签、CCF 分级；references/ 画图规则
 ```
 
