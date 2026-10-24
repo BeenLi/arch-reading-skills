@@ -24,7 +24,7 @@ class GeneratePaperMocsTest(unittest.TestCase):
     def setUp(self):
         self.module = load_module()
 
-    def test_paper_mocs_exclude_00_assets_directories(self):
+    def test_paper_mocs_exclude_00_assets_and_inbox_directories(self):
         with tempfile.TemporaryDirectory() as tmp:
             vault = Path(tmp) / "Vault"
             root = vault / "PaperNotes"
@@ -32,6 +32,9 @@ class GeneratePaperMocsTest(unittest.TestCase):
             assets = topic / "00_assets"
             assets.mkdir(parents=True)
             (topic / "Paper.md").write_text("paper", encoding="utf-8")
+            inbox = root / "_inbox"
+            inbox.mkdir()
+            (inbox / "Draft.md").write_text("draft", encoding="utf-8")
 
             with patch.object(self.module, "obsidian_vault_path", return_value=vault), patch.object(
                 self.module, "paper_notes_dir", return_value=root
@@ -50,6 +53,7 @@ class GeneratePaperMocsTest(unittest.TestCase):
             self.assertTrue(topic_moc.exists())
             self.assertFalse(assets_moc.exists())
             self.assertNotIn("00_assets", topic_moc.read_text(encoding="utf-8"))
+            self.assertFalse((inbox / "_index__inbox.md").exists())
 
     def test_paper_entries_show_the_venue_label(self):
         with tempfile.TemporaryDirectory() as tmp:

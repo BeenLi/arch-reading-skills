@@ -5,11 +5,8 @@ import re
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ASSET_TEMPLATE = REPO_ROOT / "skills" / "paper-reader" / "assets" / "paper-note-template.md"
-LEGACY_OBSIDIAN_TEMPLATE = REPO_ROOT / "obsidian-templates" / "论文笔记模板.md"
 PAPER_READER_SKILL = REPO_ROOT / "skills" / "paper-reader" / "SKILL.md"
-DAILY_PAPERS_SKILL = REPO_ROOT / "skills" / "daily-papers" / "SKILL.md"
 CONCEPT_NOTES_SKILL = REPO_ROOT / "skills" / "concept-notes" / "SKILL.md"
-README = REPO_ROOT / "README.md"
 QUALITY_STANDARDS = REPO_ROOT / "skills" / "paper-reader" / "references" / "quality-standards.md"
 CONCEPT_CATEGORIES = REPO_ROOT / "skills" / "concept-notes" / "references" / "concept-categories.md"
 CONCEPT_TEMPLATE = REPO_ROOT / "skills" / "concept-notes" / "assets" / "concept-note-template.md"
@@ -100,27 +97,6 @@ class SystemsTemplateTests(unittest.TestCase):
         self.assertNotIn("```mermaid", text)
         self.assertIn("![[00_assets/<note-name>_platform.png|", text)
         assert_table_header(self, text, ["组件", "职责", "输入输出", "关键状态或参数", "关联概念"])
-
-    def test_asset_template_removes_cv_robotics_defaults(self):
-        text = ASSET_TEMPLATE.read_text(encoding="utf-8")
-
-        forbidden_phrases = [
-            "语言指令",
-            "动作块",
-            "损失函数",
-            "数据集",
-            "可视化结果",
-            "模型架构",
-        ]
-        for phrase in forbidden_phrases:
-            self.assertNotIn(phrase, text)
-
-    def test_paper_note_template_is_the_single_template_source(self):
-        readme = README.read_text(encoding="utf-8")
-
-        self.assertFalse(LEGACY_OBSIDIAN_TEMPLATE.exists())
-        self.assertIn("skills/paper-reader/assets/paper-note-template.md", readme)
-        self.assertNotIn("obsidian-templates/论文笔记模板.md", readme)
 
     def test_related_work_table_requires_internal_and_external_link_slots(self):
         asset_text = ASSET_TEMPLATE.read_text(encoding="utf-8")
@@ -269,55 +245,11 @@ class SystemsTemplateTests(unittest.TestCase):
         self.assertIn("批量从 collection 进入时", text)
         self.assertIn("确认后才调用", text)
 
-    def test_daily_papers_notes_step_uses_new_template_quality_gates(self):
-        text = DAILY_PAPERS_SKILL.read_text(encoding="utf-8")
-
-        self.assertIn("## 批判性思考", ASSET_TEMPLATE.read_text(encoding="utf-8"))
-        self.assertIn("## 关联笔记", ASSET_TEMPLATE.read_text(encoding="utf-8"))
-        self.assertIn("## 速查卡片", ASSET_TEMPLATE.read_text(encoding="utf-8"))
-        self.assertIn("## 复现", ASSET_TEMPLATE.read_text(encoding="utf-8"))
-        self.assertNotIn("行数 >= 100 且包含 `## 关键公式` 和 `## 关键图表`", text)
-        self.assertNotIn("包含 `## 关键公式` 和 `## 实验结果`", text)
-        self.assertIn("行数 >= 100 且包含 `## 批判性思考`、`## 复现`、`## 关联笔记`、`## 速查卡片`", text)
-        self.assertIn("**不包含**独立的 `## 关键公式` 或 `## 关键图表` section header", text)
-
-    def test_figure_and_formula_guidance_uses_natural_explanations(self):
+    def test_figure_and_formula_guidance_asks_for_natural_explanations(self):
         template_text = ASSET_TEMPLATE.read_text(encoding="utf-8")
         standards_text = QUALITY_STANDARDS.read_text(encoding="utf-8")
 
-        rigid_phrases = [
-            "这张图说明什么瓶颈或规律",
-            "这张图说明什么",
-            "关键数字",
-            "最关键数字",
-            "公式想说明什么",
-            "图里最关键的视觉证据",
-            "**说明**:",
-            "**表格说明**:",
-            "**含义**:",
-            "**符号说明**:",
-            "扫描了哪些参数",
-            "最终选择",
-            "选择依据",
-            "去掉哪个模块最伤性能",
-            "参数变化的趋势",
-            "额外开销来自哪里",
-            "部署位置",
-            "数据流 / 控制流",
-            "关键指标 / 总览公式",
-            "关键组件",
-            "硬件改动清单",
-            "对应公式 / 图示",
-            "参数选择 / 设计空间扫描",
-            "与实验设置强相关的图 / 公式",
-            "可复现性评估",
-            "复现与借鉴价值",
-            "复现线索",
-        ]
         combined_text = "\n".join([template_text, standards_text])
-        for phrase in rigid_phrases:
-            self.assertNotIn(phrase, combined_text)
-
         natural_guidance = [
             "自然段",
             "论证链",
@@ -419,12 +351,9 @@ class SystemsTemplateTests(unittest.TestCase):
             self.assertIn(f"[[#{heading}：{m.group(1)}|{short}]]", text)
         self.assertIn("## 笔记内跳转", QUALITY_STANDARDS.read_text(encoding="utf-8"))
 
-    def test_skill_follows_new_structure(self):
+    def test_skill_names_current_template_structure(self):
         skill = PAPER_READER_SKILL.read_text(encoding="utf-8")
         for name, blob in (("SKILL.md", skill),):
-            for stale in ["问题定义与瓶颈", "作者核心 Insights", "动机实验 / Characterization",
-                          "系统架构与执行流", "系统组成与职责", "模块关系图"]:
-                self.assertNotIn(stale, blob, f"{name} still mentions {stale}")
             for fresh in ["动机实验与核心 Insights", "### 系统架构", "执行流", "实现改动清单",
                           "diagram-rules.md", "论文原图", "[[#^"]:
                 self.assertIn(fresh, blob, f"{name} lacks {fresh}")

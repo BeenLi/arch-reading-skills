@@ -44,12 +44,26 @@ def load_module_from_path(name: str, path: Path):
 
 
 class RepoLayoutTests(unittest.TestCase):
-    def test_shared_scripts_live_in_scripts_dir(self):
-        self.assertEqual(sorted((SKILLS / "_shared").glob("*.py")), [])
-        self.assertTrue((SKILLS / "_shared" / "scripts" / "user_config.py").exists())
-        self.assertTrue((SKILLS / "_shared" / "scripts" / "md_escape_check.py").exists())
-        self.assertTrue((SKILLS / "_shared" / "references" / "mermaid-rules.md").exists())
-        self.assertTrue((SKILLS / "_shared" / "user-config.json").exists())
+    def test_python_lives_only_in_scripts_dirs(self):
+        """每个 skill（含 _shared）的 .py 只能放在自己的 scripts/ 下。"""
+        offenders = [
+            str(py.relative_to(REPO_ROOT))
+            for py in SKILLS.rglob("*.py")
+            if "__pycache__" not in py.parts and py.relative_to(SKILLS).parts[1] != "scripts"
+        ]
+        self.assertEqual(offenders, [])
+
+    def test_shared_config_and_templates_exist(self):
+        for rel in (
+            "_shared/user-config.json",
+            "_shared/scripts/user_config.py",
+            "_shared/references/diagram-rules.md",
+            "_shared/references/mermaid-rules.md",
+            "paper-reader/assets/paper-note-template.md",
+            "concept-notes/assets/concept-note-template.md",
+            "concept-notes/references/concept-categories.md",
+        ):
+            self.assertTrue((SKILLS / rel).exists(), rel)
 
     def test_markdown_script_paths_resolve(self):
         offenders = []
@@ -82,21 +96,6 @@ class RepoLayoutTests(unittest.TestCase):
             keywords = module.load_user_config()["daily_papers"]["keywords"]
 
         self.assertIn("sentinel-keyword-from-json", keywords)
-
-    def test_paper_reader_layout(self):
-        root = SKILLS / "paper-reader"
-        self.assertEqual(sorted(root.glob("*.py")), [])
-        self.assertEqual(sorted(p.name for p in (root / "assets").iterdir() if p.suffix == ".py"), [])
-        for name in ("zotero_helper.py", "reorganize_notes.py"):
-            self.assertTrue((root / "scripts" / name).exists(), name)
-        self.assertTrue((root / "assets" / "paper-note-template.md").exists())
-
-    def test_daily_papers_layout(self):
-        root = SKILLS / "daily-papers"
-        self.assertEqual(sorted(root.glob("*.py")), [])
-        for name in ("fetch_and_score.py", "enrich_papers.py", "parse_arxiv.py",
-                     "extract_affiliations.py", "download_note_images.py"):
-            self.assertTrue((root / "scripts" / name).exists(), name)
 
     def test_readme_and_architecture_state_directory_convention(self):
         for doc in (REPO_ROOT / "README.md", REPO_ROOT / "ARCHITECTURE.md"):

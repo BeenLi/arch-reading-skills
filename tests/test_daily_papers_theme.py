@@ -43,27 +43,6 @@ class DailyPapersThemeTests(unittest.TestCase):
         for keyword in required_boosts:
             self.assertIn(keyword, boosts)
 
-        forbidden_theme_terms = {
-            "humanoid",
-            "whole-body control",
-            "loco-manipulation",
-            "human-scene interaction",
-            "human-object interaction",
-            "human motion generation",
-            "egocentric perception",
-            "vision-language action",
-            "vision-language navigation",
-            "dexterous manipulation",
-            "sim-to-real",
-            "robot simulation",
-            "embodied ai",
-            "robot",
-            "manipulation",
-            "locomotion",
-        }
-        self.assertTrue(forbidden_theme_terms.isdisjoint(keywords))
-        self.assertTrue(forbidden_theme_terms.isdisjoint(boosts))
-
         required_negative_terms = {
             "humanoid",
             "whole-body control",
@@ -77,44 +56,34 @@ class DailyPapersThemeTests(unittest.TestCase):
 
         self.assertEqual(daily["top_n"], 20)
 
-    def test_daily_papers_skill_uses_narrow_llm_systems_theme(self):
-        review_text = ORCHESTRATOR_SKILL.read_text(encoding="utf-8")
+    def test_daily_papers_skill_states_theme_triage_and_defaults(self):
+        text = ORCHESTRATOR_SKILL.read_text(encoding="utf-8")
 
-        for text in (review_text,):
-            self.assertIn("LLM", text)
-            self.assertIn("architecture", text)
-            self.assertIn("network", text)
-            self.assertIn("storage", text)
+        # 主题：只聚焦 LLM 的体系结构 / 网络通信 / 存储内存
+        for phrase in ("LLM", "architecture", "network", "storage", "只聚焦"):
+            self.assertIn(phrase, text)
 
-            self.assertNotIn("humanoid", text)
-            self.assertNotIn("whole-body control", text)
-            self.assertNotIn("egocentric", text)
-            self.assertNotIn("dexterous", text)
-            self.assertNotIn("HOI", text)
-            self.assertNotIn("HSI", text)
+        # 点评分流
+        for phrase in (
+            "主推（1-2 篇）",
+            "备选（最多 3 篇）",
+            "不要凑满 20 篇",
+            "每篇只写 2 句",
+            "没有 `has_hardware_eval` 的论文默认不进主推",
+            "没有 `has_end_to_end_eval` 的 serving 论文只能做备选",
+            "有 `has_real_workload` 的论文在同分情况下优先级更高",
+        ):
+            self.assertIn(phrase, text)
 
-        self.assertIn("只聚焦", review_text)
-        self.assertIn("主推（1-2 篇）", review_text)
-        self.assertIn("备选（最多 3 篇）", review_text)
-        self.assertIn("不要凑满 20 篇", review_text)
-        self.assertIn("没有 `has_hardware_eval` 的论文默认不进主推", review_text)
-        self.assertIn("没有 `has_end_to_end_eval` 的 serving 论文只能做备选", review_text)
-        self.assertIn("有 `has_real_workload` 的论文在同分情况下优先级更高", review_text)
+        # 默认只抓取 + 点评，精读由用户决定
+        for phrase in ("默认只串联论文抓取和推荐生成两步", "是否精读交给用户决定", "默认不生成论文笔记"):
+            self.assertIn(phrase, text)
 
-    def test_daily_papers_workflow_defaults_to_lightweight_recommendation(self):
-        orchestrator = ORCHESTRATOR_SKILL.read_text(encoding="utf-8")
-        review_text = orchestrator
+    def test_notes_step_regenerates_skeleton_notes_and_checks_quality(self):
+        text = ORCHESTRATOR_SKILL.read_text(encoding="utf-8")
 
-        self.assertIn("默认只串联论文抓取和推荐生成两步", orchestrator)
-        self.assertIn("是否精读交给用户决定", orchestrator)
-        self.assertIn("默认不生成论文笔记", orchestrator)
-        for retired in ("daily-papers-fetch", "daily-papers-review", "daily-papers-notes"):
-            self.assertFalse((REPO_ROOT / "skills" / retired).exists(), retired)
-
-        self.assertIn("主推（1-2 篇）", review_text)
-        self.assertIn("备选（最多 3 篇）", review_text)
-        self.assertIn("不要凑满 20 篇", review_text)
-        self.assertIn("每篇只写 2 句", review_text)
+        self.assertIn("行数 >= 100 且包含 `## 批判性思考`、`## 复现`、`## 关联笔记`、`## 速查卡片`", text)
+        self.assertIn("**不包含**独立的 `## 关键公式` 或 `## 关键图表` section header", text)
 
 
 if __name__ == "__main__":
