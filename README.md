@@ -4,6 +4,11 @@
 
 Claude Code skills for computer-architecture (multicore, cache and memory hierarchy, heterogeneous computing, interconnects) and LLM-systems research. The daily-recommendation defaults work out of the box: architecture first, LLM systems second. Together they connect daily paper discovery, close reading of single papers, a concept library, whole-book reading, code-repository reading, your Zotero library and your Obsidian vault into one local workflow.
 
+https://github.com/user-attachments/assets/1abe137d-5dd1-46b5-b766-40f239380d6c
+
+<p align="center"><sub>51-second demo of <code>daily-papers</code>: fetch → score (keywords + CCF tiers) → review, using numbers and picks from a real 7-day run. Made with Remotion.
+⬇ <a href="https://github.com/BeenLi/arch-reading-skills/raw/main/media/daily-papers-demo.mp4">Download mp4</a></sub></p>
+
 | Skill | What it does |
 |---|---|
 | `daily-papers` | Daily paper recommendations: fetch → review → optional batch close reading |

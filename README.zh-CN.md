@@ -4,6 +4,11 @@
 
 面向 `computer architecture`（多核、缓存与内存层次、异构计算、互连）和 `LLM systems` 的 Claude Code skills。默认推荐配置开箱即用：体系结构为主、LLM 系统为辅。把每日论文发现、单篇精读、概念库、整本书阅读、代码仓库阅读、Zotero 文献库和 Obsidian 笔记库连成一条本地工作流。
 
+https://github.com/user-attachments/assets/1abe137d-5dd1-46b5-b766-40f239380d6c
+
+<p align="center"><sub>51 秒演示 <code>daily-papers</code>：抓取 → 打分（关键词 + CCF 分级）→ 点评，数字和推荐都来自一次真实的 7 天运行。用 Remotion 制作。
+⬇ <a href="https://github.com/BeenLi/arch-reading-skills/raw/main/media/daily-papers-demo.mp4">下载 mp4</a></sub></p>
+
 | Skill | 一句话 |
 |---|---|
 | `daily-papers` | 每日论文推荐：抓取 → 点评 → 可选批量精读 |
