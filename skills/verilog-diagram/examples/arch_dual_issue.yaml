@@ -1,0 +1,43 @@
+title: 双发射执行（整数 / 访存两条流水，级对齐）
+stages:
+  - {id: IS, name: 发射}
+  - {id: RF, name: 读寄存器}
+  - {id: EX, name: 执行}
+  - {id: WB, name: 写回}
+lanes:
+  - {id: alu, name: 整数流水}
+  - {id: mem, name: 访存流水}
+nodes:
+  - {id: iq, type: fifo, label: 发射队列, stage: IS, lane: alu, hl: true, num: 1}
+  - {id: r0a, type: reg, between: [IS, RF], lane: alu, label: uop}
+  - {id: prf, type: table, label: "物理寄存器堆 · 128 项", fields: [V, "Data (64b)"], stage: RF, lane: alu}
+  - {id: r1a, type: reg, between: [RF, EX], lane: alu, label: src}
+  - {id: byp, type: mux, stage: EX, lane: alu, label: 旁路}
+  - {id: alu, type: alu, label: ALU, stage: EX, lane: alu}
+  - {id: r2a, type: reg, between: [EX, WB], lane: alu, label: res}
+  - {id: wba, type: out, label: 写回, stage: WB, lane: alu}
+  - {id: r0m, type: reg, between: [IS, RF], lane: mem, label: uop}
+  - {id: agu, type: adder, label: AGU, stage: RF, lane: mem}
+  - {id: r1m, type: reg, between: [RF, EX], lane: mem, label: VA}
+  - {id: dc, type: table, label: "D-Cache", fields: [V, Tag, Data], stage: EX, lane: mem, stack: 4}
+  - {id: r2m, type: reg, between: [EX, WB], lane: mem, label: data}
+  - {id: wbm, type: out, label: 写回, stage: WB, lane: mem}
+edges:
+  - "iq -> r0a"
+  - "iq -> r0m"
+  - "r0a -> prf : rs"
+  - "prf => r1a"
+  - "r1a => byp"
+  - "byp => alu"
+  - "alu => r2a"
+  - "r2a => wba"
+  - "r2a => byp : 前递 | fb hl"
+  - "r0m -> agu"
+  - "agu => r1m"
+  - "r1m => dc"
+  - "dc => r2m"
+  - "r2m => wbm"
+  - "r2m => byp : load 前递 | fb"
+  - "r2m ~> iq : 唤醒 | fb via=top"
+legend: {reg: 流水寄存器, fb: 反馈 / 前递, hl: 关键设计}
+callouts: {1: "发射队列同时向两条流水发射，EX 级结果与访存结果都前递回旁路 MUX"}
