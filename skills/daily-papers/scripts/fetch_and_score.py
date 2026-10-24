@@ -20,13 +20,14 @@ from datetime import datetime, timedelta
 from html import unescape
 from pathlib import Path
 from urllib.parse import quote
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 _SHARED_DIR = Path(__file__).resolve().parents[2] / "_shared" / "scripts"
 if str(_SHARED_DIR) not in sys.path:
     sys.path.insert(0, str(_SHARED_DIR))
 
+from ccf_rank import ccf_rank
 from user_config import daily_papers_config, daily_papers_dir
 
 
@@ -37,6 +38,8 @@ NEGATIVE_KEYWORDS = _CONFIG["negative_keywords"]
 DOMAIN_BOOST_KEYWORDS = _CONFIG["domain_boost_keywords"]
 ARXIV_CATEGORIES = _CONFIG["arxiv_categories"]
 MIN_SCORE = _CONFIG["min_score"]
+FOCUS_PHRASES = _CONFIG.get("focus_phrases", [])
+VENUE_RANK_SCORES = _CONFIG.get("venue_rank_scores", {})
 TOP_N = _CONFIG["top_n"]
 
 DAILYPAPERS_DIR = daily_papers_dir()
@@ -112,7 +115,6 @@ def placeholder_publication_date(venue: str, year: int) -> str:
 def score_paper(paper: dict) -> int:
     text = (paper.get("title", "") + " " + paper.get("abstract", "")).lower()
     title_lower = paper.get("title", "").lower()
-    venue_text = (paper.get("venue", "") + " " + paper.get("source", "")).lower()
 
     for neg in NEGATIVE_KEYWORDS:
         if neg.lower() in title_lower:
@@ -137,22 +139,15 @@ def score_paper(paper: dict) -> int:
     elif domain_hits == 1:
         score += 1
 
-    venue_hits = sum(1 for spec in VENUE_SPECS if spec["slug"] in venue_text or spec["name"].lower() in venue_text)
-    if venue_hits:
-        score += 2
+    # 重点方向短语（user-config.json 的 focus_phrases）：标题或摘要里出现一个 +1
+    score += sum(1 for phrase in FOCUS_PHRASES if phrase.lower() in text)
 
-    systems_phrases = [
-        "serving system",
-        "runtime system",
-        "distributed inference",
-        "distributed training",
-        "cluster scheduling",
-        "memory hierarchy",
-        "network stack",
-        "datacenter network",
-        "collective communication",
-    ]
-    score += sum(1 for phrase in systems_phrases if phrase in text)
+    # 主题一个都没命中就不给 venue 分：venue 强只是加分项，不能单独把论文（或程序页里的日程条目）送进推荐
+    if score == 0:
+        return 0
+
+    # 按 CCF 等级给 venue 分（user-config.json 的 venue_rank_scores），不在 CCF 目录里的 venue 不加分
+    score += VENUE_RANK_SCORES.get(ccf_rank(paper.get("venue")) or "", 0)
 
     return score
 
@@ -178,6 +173,15 @@ def fetch_url(url: str, timeout: int = 30, retries: int = 2) -> str:
                     f"  [WARN] fetch failed {url}: HTTP {exc.code}; retrying in {delay}s",
                     file=sys.stderr,
                 )
+                time.sleep(delay)
+                continue
+            print(f"  [WARN] fetch failed {url}: {exc}", file=sys.stderr)
+            return ""
+        except (URLError, OSError) as exc:
+            # 连接被重置 / TLS EOF / 超时这类瞬时网络错误，和 5xx 一样退避重试
+            if attempt < retries:
+                delay = min(5 * (2 ** attempt), 60)
+                print(f"  [WARN] fetch failed {url}: {exc}; retrying in {delay}s", file=sys.stderr)
                 time.sleep(delay)
                 continue
             print(f"  [WARN] fetch failed {url}: {exc}", file=sys.stderr)
@@ -228,6 +232,17 @@ def display_venue_name(venue: str) -> str:
     return names.get(normalized, venue)
 
 
+# 会议程序页里的日程条目，不是论文
+_PROGRAM_NOISE = re.compile(
+    r"\b(breakfast|lunch|dinner|reception|registration|coffee|snack|welcome remarks|opening remarks|closing remarks"
+    r"|business meeting|meetup|excursion|award|luncheon|social event)\b"
+    r"|^index of /"
+    r"|\b(symposium|conference)\b.*\b20\d\d\)?$"  # 会议名称行，如 "... Computer Architecture (HPCA) 2026"
+    r"|^(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d",
+    re.IGNORECASE,
+)
+
+
 def extract_program_titles(html: str) -> list[str]:
     candidates = []
     for pattern in (
@@ -240,6 +255,8 @@ def extract_program_titles(html: str) -> list[str]:
             if len(title) < 20 or len(title) > 220:
                 continue
             if re.match(r"^(session|keynote|break|poster session|coffee break|panel)\b", title, re.IGNORECASE):
+                continue
+            if _PROGRAM_NOISE.search(title):
                 continue
             if not re.search(r"[A-Za-z]{4,}", title):
                 continue
@@ -377,7 +394,7 @@ def fetch_conference_program_papers(target_date) -> list[dict]:
 
 
 def fetch_semantic_scholar_papers(target_date, days: int = 1) -> list[dict]:
-    query = quote("LLM serving OR GPU cluster OR RDMA OR accelerator OR distributed systems")
+    query = quote("computer architecture OR memory hierarchy OR multicore OR accelerator OR interconnect OR LLM serving")
     limit = min(30 * days, 100)
     url = (
         "https://api.semanticscholar.org/graph/v1/paper/search"

@@ -1,6 +1,6 @@
 # dailypaper-skills
 
-面向 `computer architecture / networking / distributed systems / LLM systems` 的 Claude Code skills。把每日论文发现、单篇精读、概念库、整本书阅读、代码仓库阅读、Zotero 文献库和 Obsidian 笔记库连成一条本地工作流。
+面向 `computer architecture`（多核、缓存与内存层次、异构计算、互连）和 `LLM systems` 的 Claude Code skills。默认推荐配置开箱即用：体系结构为主、LLM 系统为辅。把每日论文发现、单篇精读、概念库、整本书阅读、代码仓库阅读、Zotero 文献库和 Obsidian 笔记库连成一条本地工作流。
 
 | Skill | 一句话 |
 |---|---|
@@ -60,7 +60,9 @@ mkdir -p "$VAULT/DailyPapers" "$VAULT/PaperNotes/_concepts" "$VAULT/PaperNotes/_
 | `paths.*` | Obsidian vault、论文笔记目录、每日推荐目录、概念库目录、Zotero DB / storage |
 | `daily_papers.keywords` | 论文打分主关键词 |
 | `daily_papers.negative_keywords` | 标题命中时触发 `-999` 硬排除；只在摘要中出现不会直接排除 |
-| `daily_papers.domain_boost_keywords` | systems 相关性加分词 |
+| `daily_papers.domain_boost_keywords` | 体系结构相关性加分词 |
+| `daily_papers.focus_phrases` | 重点方向短语（多核、缓存 / 内存层次、异构计算…），每命中一个 +1 |
+| `daily_papers.venue_rank_scores` | venue 按 CCF 等级加分，默认 A / B / C = 3 / 2 / 1；主题不相关时不加 |
 | `daily_papers.arxiv_categories` / `min_score` / `top_n` | arXiv 查询范围、最低分、单日候选上限 |
 | `automation.*` | 是否自动刷新 MOC、commit、push；`git_push` 只有 `git_commit=true` 时生效 |
 | `mocs.filename_prefix` | MOC 文件名前缀，常用 `_index_` |

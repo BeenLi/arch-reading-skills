@@ -12,7 +12,7 @@ description: |
 
 # 每日论文推荐
 
-面向 `computer architecture / networking / memory-storage for LLM` 的每日推荐。流水线三步：
+面向 `computer architecture`（为主）与 `LLM systems`（为辅）的每日推荐。流水线三步：
 
 1. **抓取**：抓取、打分、去重、富化，输出 `/tmp/daily_papers_enriched.json`
 2. **点评**：生成 `{DAILY_PAPERS_PATH}/YYYY-MM-DD-论文推荐.md`，更新 `.history.json`
@@ -87,7 +87,7 @@ python3 scripts/fetch_and_score.py --days N > /tmp/daily_papers_top30.json
 - 补抓最近会议的 `program pages`
 - 抓 `arXiv API`
 - 候选不足时再用 `Semantic Scholar` 做补充
-- 按 LLM systems 相关关键词打分、历史去重、Top-N 选择
+- 按 `user-config.json` 的关键词、重点方向短语和 venue 的 CCF 等级打分，历史去重、Top-N 选择
 
 默认目标 venue 包括：
 
@@ -122,8 +122,8 @@ cat /tmp/daily_papers_top30.json | python3 scripts/enrich_papers.py /tmp/daily_p
 抓取注意事项：
 
 - 默认不再依赖 Hugging Face daily / trending。
-- 候选应优先落在 `LLM inference / serving / training` 的体系结构、网络通信、存储/内存问题上。
-- 与 LLM 无关的通用 systems 论文，即便来自顶会，也不应该因为 venue 强就自动进推荐。
+- 候选应优先落在计算机体系结构问题上：多核与处理器、缓存与内存层次、内存扩展与分解、异构计算与加速器、互连与网络侧硬件；LLM 系统的硬件、内存与通信问题其次。
+- venue 分按 CCF 等级给（A / B / C），但只是加分项，主题不对的论文不会因为 venue 强就自动进推荐。
 - 如果 DBLP 或 program page 不可用，允许退化到 arXiv + Semantic Scholar。
 - 本步不做 git 操作，不生成推荐文件，只输出临时 JSON。
 
@@ -141,11 +141,16 @@ cat /tmp/daily_papers_top30.json | python3 scripts/enrich_papers.py /tmp/daily_p
 
 #### 点评人设
 
-你是一个毒舌但判断准确的 systems researcher。用户的研究方向只聚焦：
+你是一个毒舌但判断准确的 computer architecture researcher。用户的研究方向只聚焦以下两类，第一类为主：
 
-- LLM inference / serving 的计算机体系结构与加速器
-- LLM training / serving 的网络通信、RDMA、collective communication、interconnect
-- LLM 的存储、内存层次、KV cache、offloading、memory disaggregation
+1. 计算机体系结构（主）：
+   - 多核 / 众核与处理器微架构（core、branch prediction、out-of-order、RISC-V）
+   - 缓存层次与内存层次（cache coherence、replacement、prefetch、DRAM / HBM、虚拟内存）
+   - 内存扩展与分解（CXL、memory pooling、tiered / hybrid memory）
+   - 异构计算与加速器（GPU、FPGA、domain-specific accelerator、near-data processing、PIM）
+   - 片上与系统互连、网络侧硬件（NoC、RDMA、SmartNIC / DPU、datacenter network）
+   - 体系结构评测方法（模拟器、性能建模、workload characterization）
+2. LLM 系统（辅）：LLM inference / serving / training 的硬件、内存层次、KV cache 与通信问题
 
 #### 数据来源提醒
 
@@ -168,14 +173,14 @@ cat /tmp/daily_papers_top30.json | python3 scripts/enrich_papers.py /tmp/daily_p
 
 #### 兜底过滤
 
-如果某篇论文与 `LLM inference / serving / training` 直接无关，直接跳过不写。即便它属于一般 systems 顶会论文，只要不是围绕 LLM 的体系结构、网络通信或存储/内存问题，也默认排除。典型可排除方向包括：
+如果某篇论文既不属于上面的体系结构方向，也不是 LLM 系统的硬件 / 内存 / 通信问题，直接跳过不写。与 LLM 无关的纯体系结构论文**不排除**，它们是主推的首选。典型可排除方向包括：
 
 - 医学影像、蛋白质、药物发现
 - 纯模型结构创新、纯 prompt、纯 agent workflow
 - 纯 NLP / 纯多模态应用、没有系统贡献
 - 纯 GUI agent、纯文档理解、纯金融
 - 机器人 / 具身智能 / 自动驾驶 / 图形学
-- 与 LLM 无关的通用 benchmark、通用 storage、通用 distributed training
+- 没有硬件或系统贡献的纯算法、纯软件工程、纯应用论文
 
 补货规则：
 
@@ -245,7 +250,7 @@ frontmatter 示例：
 ```yaml
 ---
 date: YYYY-MM-DD
-keywords: computer architecture, accelerator architecture, memory hierarchy, kv cache, storage for llm, networking, rdma, interconnects, llm serving, llm inference, llm training system
+keywords: computer architecture, multicore, cache hierarchy, memory hierarchy, heterogeneous computing, accelerator architecture, cxl, interconnect, rdma, llm serving, llm inference
 tags: [daily-papers, auto-generated]
 ---
 ```

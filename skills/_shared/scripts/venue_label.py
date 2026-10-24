@@ -34,6 +34,7 @@ _NAMED_WORKSHOPS: list[tuple[str, str, int]] = [
     ("DaMoN", r"Data Management on New Hardware|\bDaMoN\b", _I),
     ("NoCArc", r"Network on Chip Architectures|\bNoCArc\b", _I),
     ("SHAW", r"SoCs, Heterogeneous Architectures and Workloads|\bSHAW\b", _I),
+    ("EuroMLSys", r"\bEuroMLSys\b", _I),
 ]
 _WORKSHOP = re.compile(r"\bWorkshops?\b", _I)
 _COMPANION = re.compile(r"^Companion\b", _I)
@@ -52,6 +53,8 @@ _RULES: list[tuple[str, str, int]] = [
     ("TODS", r"Transactions on Database Systems|Trans\. Database Syst", _I),
     ("TOS", r"Transactions on Storage|Trans\. Storage", _I),
     ("TOPC", r"Transactions on Parallel Computing", _I),
+    ("ToN", r"(?i:Transactions on Networking|Trans\. Netw\.)|\bToN\b", 0),  # 缩写区分大小写，避免误中 "ton"
+    ("JSAC", r"Selected Areas in Communications|\bJSAC\b", _I),
     ("TKDD", r"Transactions on Knowledge Discovery from Data", _I),
     ("TKDE", r"Transactions on Knowledge and Data Engineering", _I),
     ("TNNLS", r"Neural Networks and Learning Systems", _I),
@@ -97,10 +100,15 @@ _RULES: list[tuple[str, str, int]] = [
     ("DATE", r"Design,? Automation (?:and|&) Test in Europe|\bDATE\b", 0),
     ("ICCAD", r"Conference on Computer[- ]Aided Design|\bICCAD\b", _I),
     ("ICCD", r"International Conference on Computer Design|\bICCD\b", _I),
-    ("FCCM", r"Field-Programmable Custom Computing Machines|\bFCCM\b", _I),
-    ("FPGA", r"Symposium on Field-Programmable Gate Arrays|^FPGA\b", _I),
+    ("FCCM", r"Field[- ]Programmable Custom Computing Machines|\bFCCM\b", _I),
+    ("FPGA", r"Symposium on Field[- ]Programmable Gate Arrays|^FPGA\b", _I),
     ("GLSVLSI", r"Great Lakes Symposium on VLSI|\bGLSVLSI\b", _I),
     ("CICC", r"Custom Integrated Circuits Conference|\bCICC\b", _I),
+    ("VLSI", r"Symposium on VLSI Technology and Circuits|Symposium on VLSI Circuits|\bVLSI Symposium\b", _I),
+    ("ISLPED", r"Low Power Electronics and Design|\bISLPED\b", _I),
+    ("NOCS", r"Symposium on Networks-on-Chip|\bNOCS\b", _I),
+    ("MEMSYS", r"International Symposium on Memory Systems|\bMEMSYS\b", _I),
+    ("CGO", r"Code Generation and Optimization|\bCGO\b", _I),
     ("ISSCC", r"Solid-State Circuits Conference|\bISSCC\b", _I),
     ("SC", r"International Conference for High Performance Computing, Network|\bSC ?'\d\d\b|^SC\d{2}\b", _I),
     ("ICS", r"International Conference on Supercomputing|^ICS\b", _I),
@@ -119,12 +127,18 @@ _RULES: list[tuple[str, str, int]] = [
     ("NSDI", r"Networked Systems Design and Implementation|\bNSDI\b", _I),
     ("ATC", r"USENIX Annual Technical Conference|USENIX ATC|^ATC\b", _I),
     ("EuroSys", r"European Conference on Computer Systems|\bEuroSys\b", _I),
-    ("MLSys", r"Conference on Machine Learning and Systems|\bMLSys\b", _I),
+    ("FAST", r"File and Storage Technologies|\bFAST '?\d\d\b", _I),
+    ("SoCC", r"Symposium on Cloud Computing|\bSoCC\b", _I),
+    ("MLSys", r"Conference on Machine Learning and Systems|Proceedings of Machine Learning and Systems|\bMLSys\b", _I),
+    ("NeurIPS", r"Neural Information Processing Systems|\bNeurIPS\b|\bNIPS\b", _I),
+    ("ICML", r"International Conference on Machine Learning(?! and Systems)|\bICML\b", _I),
+    ("ICLR", r"Learning Representations|\bICLR\b", _I),
     ("SOSR", r"Symposium on SDN Research|\bSOSR\b", _I),
     ("SIGCOMM", r"Special Interest Group on Data Communication|\bSIGCOMM\b", _I),
     ("INFOCOM", r"\bINFOCOM\b", _I),
     ("ICNP", r"International Conference on Network Protocols|\bICNP\b", _I),
-    ("SIGMOD", r"International Conference on Management of Data|\bSIGMOD\b", _I),
+    ("CoNEXT", r"Emerging Networking Experiments|\bCoNEXT\b|ACM on Networking", _I),
+    ("SIGMOD", r"International Conference on Management of Data|ACM on Management of Data|\bSIGMOD\b", _I),
     ("WWW", r"World Wide Web Conference|ACM Web Conference|The Web Conference", _I),
     ("ICDE", r"International Conference on Data Engineering|\bICDE\b", _I),
     ("ICPE", r"International Conference on Performance Engineering|\bICPE\b", _I),
@@ -138,6 +152,7 @@ _RULES: list[tuple[str, str, int]] = [
     ("SIGGRAPH", r"\bSIGGRAPH\b", _I),
     # Preprints.
     ("arXiv", r"\barXiv\b", _I),
+    ("SSRN", r"Social Science Research Network|\bSSRN\b", _I),
 ]
 _COMPILED_WORKSHOPS = [(abbr, re.compile(pattern, flags)) for abbr, pattern, flags in _NAMED_WORKSHOPS]
 _COMPILED = [(abbr, re.compile(pattern, flags)) for abbr, pattern, flags in _RULES]

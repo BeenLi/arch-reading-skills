@@ -82,9 +82,13 @@ cat /tmp/daily_papers_top30.json | python3 skills/daily-papers/scripts/enrich_pa
 | 打分信号 | 行为 |
 |---|---|
 | `keywords` 命中标题 / 摘要 | 每个 +3 / +1 |
-| `domain_boost_keywords` 命中 | 阶梯加分 |
-| 已知 venue 或 systems 短语 | 加分 |
+| `domain_boost_keywords` 命中 1 个 / 2-3 个 / 4 个及以上 | +1 / +2 / +4 |
+| `focus_phrases` 命中（重点方向短语，如 `multicore`、`cache hierarchy`） | 每个 +1 |
+| 以上主题分为 0 | 直接 0 分，不再加 venue 分（程序页里的日程条目、主题不对的顶会论文都进不来） |
+| venue 的 CCF 等级（`venue_rank_scores`，默认 A / B / C = 3 / 2 / 1） | 加一次；arXiv、workshop、CCF 目录外的 venue 不加 |
 | `negative_keywords` 命中标题 | 直接 -999 排除；只命中摘要不排除 |
+
+venue 先经 `skills/_shared/scripts/venue_label.py` 归一成缩写，再由 `skills/_shared/scripts/ccf_rank.py` 查 `ccf_ranks.json`（取自 CCFrank4dblp，CCF 2022 版，615 个缩写）。默认配置按“体系结构为主、LLM 系统为辅”设计：关键词和重点短语来自作者 Zotero 里 Computer Architecture / LLM Infrastructure 两个分类的标题与摘要；`min_score` = 3。
 
 `enrich_papers.py` 并发补全作者、机构（委托 `extract_affiliations.py`）、章节标题、图表 caption、首图、`method_name(s)`、`method_summary`，并给出点评要用的三个信号：`has_hardware_eval`、`has_end_to_end_eval`、`has_real_workload`（如 `extract_has_hardware_eval`）。
 
@@ -283,7 +287,8 @@ python3 skills/daily-papers/scripts/download_note_images.py "<笔记>"
 | 配置 | 作用 |
 |---|---|
 | `paths.*` | vault、论文笔记目录、每日推荐目录、概念库目录、Zotero DB / storage |
-| `daily_papers.keywords` / `domain_boost_keywords` / `negative_keywords` | 打分用的三组关键词 |
+| `daily_papers.keywords` / `domain_boost_keywords` / `negative_keywords` / `focus_phrases` | 打分用的关键词、加分词、排除词、重点方向短语 |
+| `daily_papers.venue_rank_scores` | CCF A / B / C 各加几分，默认 3 / 2 / 1 |
 | `daily_papers.arxiv_categories` / `min_score` / `top_n` | arXiv 查询范围、最低分、候选上限 |
 | `automation.auto_refresh_indexes` | 写完笔记 / 概念后是否自动刷新目录页（默认开） |
 | `automation.git_commit` / `git_push` | 是否提交 vault（默认关；push 只在 commit 开启时生效） |
