@@ -1,6 +1,6 @@
 ---
 name: gpt-image-bridge
-description: Use when the user asks for an image, mockup, logo, avatar, hero image, illustration, diagram, visual reference, or any generated picture, or when a design skill needs an image produced. Bridges to OpenAI's GPT Image 2.5 through the codex CLI using a ChatGPT subscription — no API key.
+description: Use when the user asks for an image, mockup, logo, avatar, hero image, illustration, diagram, visual reference, or any generated picture, or when a design skill needs an image produced. Bridges to OpenAI's GPT Image 2.5 through the codex CLI using a ChatGPT subscription — no API key. Each call uses the user's ChatGPT/Codex quota and takes minutes, so ALWAYS list the planned images and get a clear yes from the user before running the wrapper; never generate silently.
 ---
 
 # gpt-image-bridge
@@ -9,9 +9,13 @@ This skill adds image generation to Claude Code by shelling out to the `codex` C
 
 The bridge uses the image model provided by Codex; it does not select or verify a particular backend model. The executable name `gpt-image-2` is retained for compatibility and does not pin the model to GPT Image 2. Do not pass an image-model ID to `codex --model`: that option selects the coding model, not the image backend.
 
+## Confirm before generating (mandatory)
+
+Each wrapper run consumes the user's ChatGPT/Codex quota and takes 4–6 minutes. Before running it, ask the user in one message and wait for a clear yes. List every image you plan to generate: purpose, output path, size (if any), and a one-line prompt summary. Approval covers only the images listed; ask again for retries, variations or additional images. This applies even when another skill (e.g. a design-taste skill) requests the image. If the user declines, leave a clear placeholder instead.
+
 ## When to use
 
-Invoke the wrapper any time the user wants an image produced. Examples:
+Suggest the wrapper (then confirm as above) when the user wants an image produced. Examples:
 
 - "Generate a hero image for..."
 - "Make me a mockup of..."
