@@ -1,0 +1,47 @@
+title: dcache_pipe：直接映射 D-Cache 查找流水线
+stages:
+  - {id: S0, sub: 选择 / 读阵列}
+  - {id: S1, sub: 命中判断}
+  - {id: S2, sub: 缺失 / 重放}
+  - {id: S3, sub: 响应}
+nodes:
+  - {id: req, type: in, label: req, stage: S0}
+  - {id: rmux, type: mux, stage: S0}
+  - {id: arr, type: table, label: "Cache 阵列 · 64 项", fields: [V, "Tag (20b)", "Data (32b)"], stage: S0}
+  - {id: r1a, type: reg, label: addr, between: [S0, S1]}
+  - {id: r1d, type: reg, label: "V/Tag/Data", between: [S0, S1]}
+  - {id: tcmp, type: cmp, label: Tag 比较, stage: S1, hl: true}
+  - {id: hitg, type: and, label: hit, stage: S1}
+  - {id: r2h, type: reg, label: hit, between: [S1, S2]}
+  - {id: r2a, type: reg, label: addr, between: [S1, S2]}
+  - {id: r2d, type: reg, label: data, between: [S1, S2]}
+  - {id: missg, type: and, label: miss, stage: S2}
+  - {id: refill, type: in, label: refill, stage: S2}
+  - {id: rplg, type: and, label: replay, stage: S2, hl: true}
+  - {id: missq, type: out, label: miss 请求, stage: S2}
+  - {id: r3, type: reg, label: resp, between: [S2, S3]}
+  - {id: resp, type: out, label: resp, stage: S3}
+edges:
+  - "req -> rmux : req_addr"
+  - "rmux => arr : idx | w=6"
+  - "rmux => r1a | w=32"
+  - "arr => r1d"
+  - "r1a -> tcmp : addr[31:12]"
+  - "r1d -> tcmp : tag"
+  - "r1d -> hitg : V"
+  - "tcmp -> hitg"
+  - "hitg -> r2h"
+  - "r1a => r2a"
+  - "r1d => r2d : data"
+  - "r2h -> missg"
+  - "missg -> missq"
+  - "r2a => missq"
+  - "missg -> rplg"
+  - "refill -> rplg"
+  - "rplg -> rmux.sel : replay | fb hl"
+  - "r2a => rmux : replay_addr | fb"
+  - "refill => arr : 回填写入 | fb"
+  - "r2h -> r3"
+  - "r2d => r3"
+  - "r3 => resp"
+legend: {reg: 流水寄存器（在级分界上）, fb: 反馈（重放 / 回填）, hl: 关键设计}

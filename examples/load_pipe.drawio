@@ -1,0 +1,221 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile>
+  <diagram id="autolayout" name="Page-1">
+    <mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sb0" value="" style="line;direction=south;dashed=1;strokeColor=#999999;strokeWidth=1;html=1;" vertex="1" parent="1"><mxGeometry x="563" y="-50" width="10" height="892" as="geometry" /></mxCell><mxCell id="sb1" value="" style="line;direction=south;dashed=1;strokeColor=#999999;strokeWidth=1;html=1;" vertex="1" parent="1"><mxGeometry x="1058" y="-50" width="10" height="892" as="geometry" /></mxCell><mxCell id="sh0" value="&lt;b&gt;S0&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#555555;" vertex="1" parent="1"><mxGeometry x="243" y="-80" width="80" height="26" as="geometry" /></mxCell><mxCell id="sh1" value="&lt;b&gt;S1&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#555555;" vertex="1" parent="1"><mxGeometry x="776" y="-80" width="80" height="26" as="geometry" /></mxCell><mxCell id="sh2" value="&lt;b&gt;S2&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;fontSize=16;fontColor=#555555;" vertex="1" parent="1"><mxGeometry x="1350" y="-80" width="80" height="26" as="geometry" /></mxCell><mxCell id="P:iq_valid" value="iq_valid" style="rounded=1;arcSize=50;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="20" y="600" width="80" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="P:iq_base" value="iq_base /32" style="rounded=1;arcSize=50;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="10" y="380" width="101" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="P:iq_offset" value="iq_offset /32" style="rounded=1;arcSize=50;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="0" y="320" width="115" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="P:iq_ready" value="iq_ready" style="rounded=1;arcSize=50;html=1;whiteSpace=wrap;fillColor=#333333;strokeColor=#333333;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1510" y="280" width="80" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="P:tlb_ppn" value="tlb_ppn /20" style="rounded=1;arcSize=50;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="670" y="190" width="101" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="P:tlb_hit" value="tlb_hit" style="rounded=1;arcSize=50;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="680" y="470" width="73" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="P:tag_rdata" value="tag_rdata /20" style="rounded=1;arcSize=50;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="660" y="270" width="115" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="P:data_rdata" value="data_rdata /32" style="rounded=1;arcSize=50;html=1;whiteSpace=wrap;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="350" width="122" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="P:mshr_req_valid" value="mshr_req_valid" style="rounded=1;arcSize=50;html=1;whiteSpace=wrap;fillColor=#333333;strokeColor=#333333;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1490" y="560" width="122" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="P:mshr_req_paddr" value="mshr_req_paddr /32" style="rounded=1;arcSize=50;html=1;whiteSpace=wrap;fillColor=#333333;strokeColor=#333333;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1480" y="220" width="150" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="P:wb_valid" value="wb_valid" style="rounded=1;arcSize=50;html=1;whiteSpace=wrap;fillColor=#333333;strokeColor=#333333;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1820" y="490" width="80" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="P:wb_data" value="wb_data /32" style="rounded=1;arcSize=50;html=1;whiteSpace=wrap;fillColor=#333333;strokeColor=#333333;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1810" y="360" width="101" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="P:wb_exception" value="wb_exception" style="rounded=1;arcSize=50;html=1;whiteSpace=wrap;fillColor=#333333;strokeColor=#333333;fontColor=#ffffff;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1810" y="640" width="108" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="$add$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:25$2" value="+" style="shape=stencil(jZJREoIgEEBPw79BWv9m91iVkhHBAdS6fTBrBc7U+MPwlrcLLBBW2g5GTmimYOCEXQilICc/+tCCXGSIHeIhWxnsyBuHwRmMgFpyXLHO6J4vonVrjlAdN8KFVVYRVtbQ9HejJ9UijxDMMBv0HE7zwLx1p2dMVxSlUJFYpCbNd6unP2pqvi++Qy3ob/NwTNR8d1F2js1Gass/5CffHnrYNvimDU9YSImvFJfYWj6E34NVLw==);html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=15;fontStyle=1;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="190" y="320" width="46" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:36$9" value="组合逻辑&lt;br&gt;&lt;font style='font-size:9px'&gt;tag_rdata, tlb_ppn…&lt;/font&gt;" style="ellipse;shape=cloud;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#aaaaaa;fontColor=#666666;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="850" y="250" width="120" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:39$12" value="" style="html=1;verticalLabelPosition=bottom;verticalAlign=top;fontSize=9;strokeWidth=1.5;shape=mxgraph.electrical.logic_gates.logic_gate;operation=and;fillColor=#d5e8d4;" vertex="1" parent="1">
+          <mxGeometry x="690" y="600" width="52" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:44$15" value="" style="html=1;verticalLabelPosition=bottom;verticalAlign=top;fontSize=9;strokeWidth=1.5;shape=mxgraph.electrical.logic_gates.logic_gate;operation=and;fillColor=#d5e8d4;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="280" width="52" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:47$17" value="组合逻辑&lt;br&gt;&lt;font style='font-size:9px'&gt;s2_valid, s2_hit…&lt;/font&gt;" style="ellipse;shape=cloud;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#aaaaaa;fontColor=#666666;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="470" width="120" height="64" as="geometry" />
+        </mxCell>
+        <mxCell id="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:54$26" value="" style="html=1;verticalLabelPosition=bottom;verticalAlign=top;fontSize=9;strokeWidth=1.5;shape=mxgraph.electrical.logic_gates.logic_gate;operation=and;fillColor=#d5e8d4;" vertex="1" parent="1">
+          <mxGeometry x="1190" y="640" width="52" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="$auto$ff.cc:337:slice$39" value="wb_valid" style="html=1;whiteSpace=wrap;horizontal=0;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="450" width="30" height="102" as="geometry" />
+        </mxCell>
+        <mxCell id="$auto$ff.cc:337:slice$41" value="s1_valid" style="html=1;whiteSpace=wrap;horizontal=0;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="570" width="30" height="102" as="geometry" />
+        </mxCell>
+        <mxCell id="$auto$ff.cc:337:slice$42" value="wb_data /8" style="html=1;whiteSpace=wrap;horizontal=0;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="330" width="30" height="93" as="geometry" />
+        </mxCell>
+        <mxCell id="$not$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:39$11" value="" style="html=1;verticalLabelPosition=bottom;verticalAlign=top;fontSize=9;strokeWidth=1.5;shape=mxgraph.electrical.logic_gates.inverter_2;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="1360" y="280" width="40" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="$not$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:41$14" value="" style="html=1;verticalLabelPosition=bottom;verticalAlign=top;fontSize=9;strokeWidth=1.5;shape=mxgraph.electrical.logic_gates.inverter_2;fillColor=#ffffff;" vertex="1" parent="1">
+          <mxGeometry x="890" y="480" width="40" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="$or$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:24$1" value="" style="html=1;verticalLabelPosition=bottom;verticalAlign=top;fontSize=9;strokeWidth=1.5;shape=mxgraph.electrical.logic_gates.logic_gate;operation=or;fillColor=#d5e8d4;" vertex="1" parent="1">
+          <mxGeometry x="190" y="600" width="52" height="32" as="geometry" />
+        </mxCell>
+        <mxCell id="$procdff$29" value="wb_exception" style="html=1;whiteSpace=wrap;horizontal=0;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1700" y="590" width="30" height="138" as="geometry" />
+        </mxCell>
+        <mxCell id="$procdff$37" value="s1_misalign" style="html=1;whiteSpace=wrap;horizontal=0;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="350" width="30" height="129" as="geometry" />
+        </mxCell>
+        <mxCell id="$procdff$38" value="s1_vaddr /32" style="html=1;whiteSpace=wrap;horizontal=0;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="0" width="30" height="102" as="geometry" />
+        </mxCell>
+        <mxCell id="$reduce_or$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:26$4" value="≠ 0" style="ellipse;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="370" width="48" height="48" as="geometry" />
+        </mxCell>
+        <mxCell id="$shr$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:49$20" value="&gt;&gt;" style="shape=stencil(jZJREoIgEEBPw79BWv9m91iVkhHBAdS6fTBrBc7U+MPwlrcLLBBW2g5GTmimYOCEXQilICc/+tCCXGSIHeIhWxnsyBuHwRmMgFpyXLHO6J4vonVrjlAdN8KFVVYRVtbQ9HejJ9UijxDMMBv0HE7zwLx1p2dMVxSlUJFYpCbNd6unP2pqvi++Qy3ob/NwTNR8d1F2js1Gass/5CffHnrYNvimDU9YSImvFJfYWj6E34NVLw==);html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=15;fontStyle=1;spacingLeft=10;" vertex="1" parent="1">
+          <mxGeometry x="1350" y="340" width="46" height="76" as="geometry" />
+        </mxCell>
+        <mxCell id="$ternary$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:25$3" value="MUX&lt;br&gt;&lt;font style='font-size:8px'&gt;2:1&lt;/font&gt;" style="shape=stencil(lZFLEoMgDEBPw96Ki+6tvUfUtDAiOIC/2xcmtBUXnemGyUtegADjtRMwISsLDSMyfmNlOc5bWENqJa4KQkF4KRKDm7DzlFzASmgVUsV5awZcZe9Tj9QCrfSxyhvG6xa64WnNrHviCaIZo9Es8TYb9aWT9iPdSVRSH8QqN/9Qrz/U3HwPntROGYcfCsF3iADnCR/GYsZSKXqm4xZnK6Tof3jzAg==);html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=9;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="320" width="34" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="bank1" value="S1→S2 寄存器 ×6&lt;br&gt;&lt;font style='font-size:9px'&gt;s2_valid, s2_misalign, s2_hit… · 68 bit&lt;/font&gt;" style="html=1;whiteSpace=wrap;horizontal=0;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="350" width="34" height="144" as="geometry" />
+        </mxCell>
+        <mxCell id="e0" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P:iq_valid" target="$or$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:24$1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="100" y="620" /><mxPoint x="180" y="620" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e1" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeWidth=2;" edge="1" parent="1" source="P:iq_base" target="$add$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:25$2">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="110" y="390" /><mxPoint x="180" y="390" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e2" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeWidth=2;" edge="1" parent="1" source="P:iq_offset" target="$add$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:25$2">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="120" y="340" /><mxPoint x="180" y="340" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e3" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeWidth=2;" edge="1" parent="1" source="P:tlb_ppn" target="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:36$9">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="720" y="240" /><mxPoint x="720" y="260" /><mxPoint x="720" y="260" /><mxPoint x="720" y="260" /><mxPoint x="840" y="260" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e4" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeWidth=2;" edge="1" parent="1" source="P:tlb_ppn" target="bank1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="860" y="210" /><mxPoint x="1060" y="210" /><mxPoint x="1060" y="210" /><mxPoint x="1060" y="210" /><mxPoint x="1060" y="340" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e5" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P:tlb_hit" target="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:36$9">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="800" y="480" /><mxPoint x="870" y="480" /><mxPoint x="870" y="480" /><mxPoint x="870" y="480" /><mxPoint x="870" y="320" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e6" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="P:tlb_hit" target="$not$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:41$14">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="750" y="490" /><mxPoint x="880" y="490" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e7" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeWidth=2;" edge="1" parent="1" source="P:tag_rdata" target="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:36$9">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="770" y="280" /><mxPoint x="840" y="280" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e8" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeWidth=2;" edge="1" parent="1" source="P:data_rdata" target="$shr$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:49$20">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1280" y="360" /><mxPoint x="1340" y="360" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e9" value="/32" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeWidth=2;" edge="1" parent="1" source="$add$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:25$2" target="$ternary$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:25$3">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="240" y="360" /><mxPoint x="310" y="360" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e10" value="s1_tag_hit" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:36$9" target="bank1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1010" y="300" /><mxPoint x="1060" y="300" /><mxPoint x="1060" y="300" /><mxPoint x="1060" y="300" /><mxPoint x="1060" y="340" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e11" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:39$12" target="bank1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="820" y="610" /><mxPoint x="1050" y="610" /><mxPoint x="1050" y="610" /><mxPoint x="1050" y="610" /><mxPoint x="1050" y="510" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e12" value="s1_kill" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:44$15" target="$not$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:39$11">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1240" y="290" /><mxPoint x="1350" y="290" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e13" value="s1_kill" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b85450;fontColor=#b85450;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:44$15" target="$or$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:24$1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1216" y="822" /><mxPoint x="148" y="822" /><mxPoint x="148" y="616" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e14" value="s1_kill" style="html=1;rounded=0;endArrow=block;endSize=6;dashed=1;strokeColor=#9673a6;fontColor=#7a5a8c;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b85450;fontColor=#b85450;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:44$15" target="$ternary$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:25$3">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1216" y="804" /><mxPoint x="284" y="804" /><mxPoint x="284" y="360" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e15" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:47$17" target="P:mshr_req_valid">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1260" y="550" /><mxPoint x="1260" y="560" /><mxPoint x="1260" y="560" /><mxPoint x="1260" y="560" /><mxPoint x="1480" y="560" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e16" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:47$17" target="$auto$ff.cc:337:slice$39">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1280" y="510" /><mxPoint x="1690" y="510" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e17" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:54$26" target="$procdff$29">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1240" y="660" /><mxPoint x="1690" y="660" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e18" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="$auto$ff.cc:337:slice$39" target="P:wb_valid">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1730" y="500" /><mxPoint x="1810" y="500" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e19" value="s2_valid… /2" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="bank1" target="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:44$15">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1080" y="320" /><mxPoint x="1080" y="290" /><mxPoint x="1080" y="290" /><mxPoint x="1080" y="290" /><mxPoint x="1180" y="290" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e20" value="s2_valid… /3" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="bank1" target="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:47$17">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1080" y="480" /><mxPoint x="1150" y="480" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e21" value="s2_valid… /2" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="bank1" target="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:54$26">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1070" y="560" /><mxPoint x="1070" y="650" /><mxPoint x="1070" y="650" /><mxPoint x="1070" y="650" /><mxPoint x="1180" y="650" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e22" value="s1_valid" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="$auto$ff.cc:337:slice$41" target="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:39$12">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="580" y="620" /><mxPoint x="680" y="620" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e23" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeWidth=2;" edge="1" parent="1" source="$auto$ff.cc:337:slice$42" target="P:wb_data">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1730" y="370" /><mxPoint x="1800" y="370" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e24" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="$not$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:39$11" target="P:iq_ready">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1400" y="300" /><mxPoint x="1500" y="300" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e25" value="iq_ready" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b85450;fontColor=#b85450;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="$not$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:39$11" target="$and$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:39$12">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1380" y="768" /><mxPoint x="666" y="768" /><mxPoint x="666" y="616" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e26" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="$not$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:41$14" target="bank1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="930" y="490" /><mxPoint x="1030" y="490" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e27" value="s0_valid" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="$or$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:24$1" target="$auto$ff.cc:337:slice$41">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="240" y="620" /><mxPoint x="540" y="620" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e28" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="$procdff$29" target="P:wb_exception">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1730" y="660" /><mxPoint x="1800" y="660" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e29" value="" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeWidth=2;" edge="1" parent="1" source="bank1" target="P:mshr_req_paddr">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1070" y="300" /><mxPoint x="1070" y="230" /><mxPoint x="1070" y="230" /><mxPoint x="1070" y="230" /><mxPoint x="1460" y="230" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e30" value="mshr_req_paddr /2" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeWidth=2;" edge="1" parent="1" source="bank1" target="$shr$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:49$20">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1080" y="400" /><mxPoint x="1340" y="400" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e31" value="s2_vaddr /32" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeWidth=2;strokeColor=#b85450;fontColor=#b85450;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="bank1" target="$ternary$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:25$3">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1067" y="786" /><mxPoint x="290" y="786" /><mxPoint x="290" y="360" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e32" value="s1_misalign" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="$procdff$37" target="bank1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="580" y="410" /><mxPoint x="1030" y="410" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e33" value="s1_paddr… /44" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeWidth=2;" edge="1" parent="1" source="$procdff$38" target="bank1">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="670" y="50" /><mxPoint x="1070" y="50" /><mxPoint x="1070" y="50" /><mxPoint x="1070" y="50" /><mxPoint x="1070" y="340" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e34" value="s0_misalign" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="$reduce_or$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:26$4" target="$procdff$37">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="480" y="390" /><mxPoint x="540" y="390" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e35" value="s2_byte /8" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeWidth=2;" edge="1" parent="1" source="$shr$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:49$20" target="$auto$ff.cc:337:slice$42">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="1400" y="380" /><mxPoint x="1690" y="380" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e36" value="s0_vaddr /32" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeWidth=2;" edge="1" parent="1" source="$ternary$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:25$3" target="$procdff$38">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="410" y="330" /><mxPoint x="570" y="330" /><mxPoint x="570" y="330" /><mxPoint x="570" y="330" /><mxPoint x="570" y="110" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="e37" value="s0_vaddr /2" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeWidth=2;" edge="1" parent="1" source="$ternary$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:25$3" target="$reduce_or$/Users/beenli/.claude/skills/verilog-diagram/examples/load_pipe.v:26$4">
+          <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="350" y="380" /><mxPoint x="420" y="380" /></Array></mxGeometry>
+        </mxCell>
+      <mxCell id="title" value="&lt;b&gt;module load_pipe&lt;/b&gt;&amp;nbsp;&amp;nbsp;&lt;font style='font-size:11px;color:#888888'&gt;load_pipe.v · 3 级 · 流水寄存器 7 · 状态寄存器 0 · 32 个框&lt;/font&gt;" style="text;html=1;align=left;verticalAlign=middle;fontSize=16;" vertex="1" parent="1"><mxGeometry x="0" y="-136" width="900" height="30" as="geometry" /></mxCell><mxCell id="legend" value="&lt;b&gt;图例&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#999999;verticalAlign=top;align=left;spacingLeft=8;spacingTop=4;fontSize=11;" vertex="1" parent="1"><mxGeometry x="0" y="882" width="250" height="326" as="geometry" /></mxCell><mxCell id="lg0" value="" style="shape=stencil(lZFLEoMgDEBPw96Ki+6tvUfUtDAiOIC/2xcmtBUXnemGyUtegADjtRMwISsLDSMyfmNlOc5bWENqJa4KQkF4KRKDm7DzlFzASmgVUsV5awZcZe9Tj9QCrfSxyhvG6xa64WnNrHviCaIZo9Es8TYb9aWT9iPdSVRSH8QqN/9Qrz/U3HwPntROGYcfCsF3iADnCR/GYsZSKXqm4xZnK6Tof3jzAg==);html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;x=9;fontStyle=1;" vertex="1" parent="legend"><mxGeometry x="23" y="30" width="14" height="24" as="geometry" /></mxCell><mxCell id="lgt0" value="多路选择器 MUX" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="legend"><mxGeometry x="58" y="30" width="180" height="24" as="geometry" /></mxCell><mxCell id="lg1" value="" style="shape=stencil(jZJREoIgEEBPw79BWv9m91iVkhHBAdS6fTBrBc7U+MPwlrcLLBBW2g5GTmimYOCEXQilICc/+tCCXGSIHeIhWxnsyBuHwRmMgFpyXLHO6J4vonVrjlAdN8KFVVYRVtbQ9HejJ9UijxDMMBv0HE7zwLx1p2dMVxSlUJFYpCbNd6unP2pqvi++Qy3ob/NwTNR8d1F2js1Gass/5CffHnrYNvimDU9YSImvFJfYWj6E34NVLw==);html=1;whiteSpace=wrap;fillColor=#ffe6cc;strokeColor=#d79b00;x=15;fontStyle=1;spacingLeft=10;" vertex="1" parent="legend"><mxGeometry x="22" y="60" width="16" height="24" as="geometry" /></mxCell><mxCell id="lgt1" value="运算单元" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="legend"><mxGeometry x="58" y="60" width="180" height="24" as="geometry" /></mxCell><mxCell id="lg2" value="" style="ellipse;html=1;whiteSpace=wrap;fillColor=#fff2cc;strokeColor=#d6b656;x=13;fontStyle=1;" vertex="1" parent="legend"><mxGeometry x="19" y="91" width="22" height="22" as="geometry" /></mxCell><mxCell id="lgt2" value="比较器" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="legend"><mxGeometry x="58" y="90" width="180" height="24" as="geometry" /></mxCell><mxCell id="lg3" value="" style="html=1;shape=mxgraph.electrical.logic_gates.logic_gate;operation=and;fillColor=#d5e8d4;strokeWidth=1.5;" vertex="1" parent="legend"><mxGeometry x="15" y="123" width="30" height="18" as="geometry" /></mxCell><mxCell id="lgt3" value="逻辑门（与 / 或 / 非 / 异或）" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="legend"><mxGeometry x="58" y="120" width="180" height="24" as="geometry" /></mxCell><mxCell id="lg4" value="" style="ellipse;shape=cloud;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#aaaaaa;fontColor=#666666;x=10;" vertex="1" parent="legend"><mxGeometry x="12" y="151" width="36" height="22" as="geometry" /></mxCell><mxCell id="lgt4" value="组合/控制逻辑（已折叠）" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="legend"><mxGeometry x="58" y="150" width="180" height="24" as="geometry" /></mxCell><mxCell id="lgx0" value="" style="html=1;whiteSpace=wrap;horizontal=0;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;fontSize=10;fontStyle=1;" vertex="1" parent="legend"><mxGeometry x="24" y="180" width="12" height="24" as="geometry" /></mxCell><mxCell id="lgxt0" value="流水 / 输出寄存器（放在级分界处）" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;" vertex="1" parent="legend"><mxGeometry x="58" y="180" width="180" height="24" as="geometry" /></mxCell><mxCell id="lge0" value="" edge="1" parent="legend" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;"><mxGeometry relative="1" as="geometry"><mxPoint x="12" y="221" as="sourcePoint" /><mxPoint x="48" y="221" as="targetPoint" /></mxGeometry></mxCell><mxCell id="lget0" value="数据（粗线 = 多位总线，/N 为位宽）" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="legend"><mxGeometry x="58" y="210" width="190" height="22" as="geometry" /></mxCell><mxCell id="lge1" value="" edge="1" parent="legend" style="html=1;rounded=0;endArrow=block;endSize=6;dashed=1;strokeColor=#9673a6;fontColor=#7a5a8c;fontSize=10;labelBackgroundColor=#ffffff;"><mxGeometry relative="1" as="geometry"><mxPoint x="12" y="243" as="sourcePoint" /><mxPoint x="48" y="243" as="targetPoint" /></mxGeometry></mxCell><mxCell id="lget1" value="MUX 选择信号" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="legend"><mxGeometry x="58" y="232" width="190" height="22" as="geometry" /></mxCell><mxCell id="lge2" value="" edge="1" parent="legend" style="html=1;rounded=0;endArrow=block;endSize=6;dashed=1;dashPattern=2 3;strokeColor=#6c8ebf;fontColor=#4a6a9a;fontSize=10;labelBackgroundColor=#ffffff;"><mxGeometry relative="1" as="geometry"><mxPoint x="12" y="265" as="sourcePoint" /><mxPoint x="48" y="265" as="targetPoint" /></mxGeometry></mxCell><mxCell id="lget2" value="使能信号" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="legend"><mxGeometry x="58" y="254" width="190" height="22" as="geometry" /></mxCell><mxCell id="lge3" value="" edge="1" parent="legend" style="html=1;rounded=0;endArrow=block;endSize=6;strokeColor=#333333;fontSize=10;labelBackgroundColor=#ffffff;strokeColor=#b85450;fontColor=#b85450;"><mxGeometry relative="1" as="geometry"><mxPoint x="12" y="287" as="sourcePoint" /><mxPoint x="48" y="287" as="targetPoint" /></mxGeometry></mxCell><mxCell id="lget3" value="反馈（回到左侧的逻辑）" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;" vertex="1" parent="legend"><mxGeometry x="58" y="276" width="190" height="22" as="geometry" /></mxCell><mxCell id="lgnote" value="clk / reset 连线已隐藏（--show-clock 显示）" style="text;html=1;align=left;verticalAlign=middle;fontSize=9;fontColor=#999999;" vertex="1" parent="legend"><mxGeometry x="10" y="300" width="236" height="20" as="geometry" /></mxCell></root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,28 @@
+title: MAC 处理单元（两级：乘 / 累加）
+stages:
+  - {id: S1, sub: 乘法}
+  - {id: S2, sub: 累加}
+nodes:
+  - {id: act, type: in, label: "激活 a", stage: S1}
+  - {id: wreg, type: reg, label: W, stage: S1}
+  - {id: win, type: in, label: 权重加载, stage: S1}
+  - {id: mul, type: mult, label: "8×8", stage: S1, hl: true}
+  - {id: preg, type: reg, between: [S1, S2], label: P}
+  - {id: amux, type: mux, stage: S2, row: 1}
+  - {id: zero, type: in, label: "0", stage: S2}
+  - {id: clr, type: in, label: clear, stage: S2}
+  - {id: add, type: adder, label: 32b, stage: S2, hl: true}
+  - {id: acc, type: reg, label: ACC, stage: S2}
+  - {id: out, type: out, label: psum, stage: S2}
+edges:
+  - "win -> wreg"
+  - "wreg => mul : w | w=8"
+  - "act => mul : a | w=8"
+  - "mul => preg | w=16"
+  - "preg => add"
+  - "zero -> amux"
+  - "acc => amux | fb"
+  - "clr ~> amux.sel"
+  - "amux => add"
+  - "add => acc | w=32"
+  - "acc => out"
