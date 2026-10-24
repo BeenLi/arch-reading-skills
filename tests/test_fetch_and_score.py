@@ -277,6 +277,33 @@ class FetchAndScoreTests(unittest.TestCase):
         self.assertEqual(len(attempts), 2)
         sleep.assert_called_once_with(0)
 
+    def test_fetch_url_retries_incomplete_read(self):
+        from http.client import IncompleteRead
+
+        class FakeResponse:
+            def __init__(self, body):
+                self.body = body
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, exc_type, exc, tb):
+                return False
+
+            def read(self):
+                if self.body is None:
+                    raise IncompleteRead(b"<fe", 100)  # 响应读到一半连接断开
+                return self.body
+
+        responses = [FakeResponse(None), FakeResponse(b"<feed />")]
+
+        with patch.object(self.module, "urlopen", side_effect=lambda req, timeout: responses.pop(0)), \
+                patch("time.sleep") as sleep:
+            body = self.module.fetch_url("https://export.arxiv.org/api/query", timeout=1)
+
+        self.assertEqual(body, "<feed />")
+        sleep.assert_called_once_with(5)
+
 
 class ProgramPageTests(unittest.TestCase):
     """程序页解析：fixtures 是从真实页面截下来的片段（2026-10-24 抓取），测试不联网。"""

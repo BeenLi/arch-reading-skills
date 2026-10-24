@@ -17,6 +17,7 @@ import sys
 import time
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
+from http.client import IncompleteRead
 from html import unescape
 from pathlib import Path
 from urllib.parse import quote
@@ -183,8 +184,8 @@ def fetch_url(url: str, timeout: int = 30, retries: int = 2) -> str:
                 continue
             print(f"  [WARN] fetch failed {url}: {exc}", file=sys.stderr)
             return ""
-        except (URLError, OSError) as exc:
-            # 连接被重置 / TLS EOF / 超时这类瞬时网络错误，和 5xx 一样退避重试
+        except (URLError, OSError, IncompleteRead) as exc:
+            # 连接被重置 / TLS EOF / 超时 / 响应读到一半断开这类瞬时网络错误，和 5xx 一样退避重试
             if attempt < retries:
                 delay = min(5 * (2 ** attempt), 60)
                 print(f"  [WARN] fetch failed {url}: {exc}; retrying in {delay}s", file=sys.stderr)
