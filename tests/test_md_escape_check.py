@@ -43,7 +43,7 @@ class MdEscapeCheckTest(unittest.TestCase):
 
     def test_escapes_accidental_tags(self):
         self.assertEqual(fix("| #SMs | #Warps |"), r"| \#SMs | \#Warps |")
-        self.assertEqual(fix("#include <x>"), r"\#include <x>")
+        self.assertEqual(fix("#include <x>"), r"\#include \<x\>")  # <x> is a placeholder, not HTML
         self.assertEqual(fix("ratio: #L3HitFraction / Clk"), r"ratio: \#L3HitFraction / Clk")
 
     def test_keeps_headings_numbers_and_non_tags(self):
@@ -71,6 +71,40 @@ class MdEscapeCheckTest(unittest.TestCase):
         self.assertEqual(fix(source), source)
         self.assertEqual(check(source), [])
 
+
+class NewRulesTest(unittest.TestCase):
+    def test_escapes_placeholders_but_keeps_html(self):
+        self.assertEqual(fix("写到 <note-name>.md，类型 <T>"), r"写到 \<note-name\>.md，类型 \<T\>")
+        self.assertEqual(fix("</Placeholder>"), r"\</Placeholder\>")
+        source = "第一行<br>第二行 H<sub>2</sub>O <img src=\"a.png\"> <https://x.org> a < b"
+        self.assertEqual(fix(source), source)
+
+    def test_escapes_intraword_asterisks_only(self):
+        self.assertEqual(fix("+7*MEM_LOAD 和 a*b*c"), r"+7\*MEM_LOAD 和 a\*b\*c")
+        source = "**粗体** 和 *斜体* 以及 x * y 和 *.md"
+        self.assertEqual(fix(source), source)
+
+    def test_escapes_pipes_in_table_code_and_wikilinks(self):
+        source = "| 命令 | 链接 |\n|---|---|\n| `ping <agent|all>` | [[Last Level Cache|LLC]] |\n"
+        expected = "| 命令 | 链接 |\n|---|---|\n| `ping <agent\\|all>` | [[Last Level Cache\\|LLC]] |\n"
+        self.assertEqual(fix(source), expected)
+        self.assertEqual(len(check(source)), 2)
+
+    def test_table_pipes_ignore_prose_and_fenced_code(self):
+        source = "正文 `a|b` 和 [[X|y]]\n```\n| `a|b` |\n```\n"
+        self.assertEqual(fix(source), source)
+
+    def test_new_rules_are_idempotent(self):
+        source = "| `a|b` | [[X|y]] |\n<T> 和 a*b\n"
+        once = fix(source)
+        self.assertEqual(fix(once), once)
+        self.assertEqual(check(once), [])
+
+    def test_nested_fences_stay_protected(self):
+        # a ````markdown block that shows a ```mermaid block: all of it is code
+        source = "````markdown\n```mermaid\nA[Start] -->|Yes| B\n```\n````\n"
+        self.assertEqual(fix(source), source)
+        self.assertEqual(fix(source + "C[i]\n"), source + "C\\[i\\]\n")
 
 if __name__ == "__main__":
     unittest.main()

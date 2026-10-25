@@ -276,7 +276,7 @@ python3 skills/_shared/scripts/md_escape_check.py "<笔记>"
 python3 skills/daily-papers/scripts/download_note_images.py "<笔记>"
 ```
 
-`check_note_links.py` 查断链、重复锚点、找不到的 `[[概念]]` / 嵌入文件、表格内未转义的 `|`，以及漏写链接的裸 “Figure N / 机制N”；要修到每个文件都输出 `OK`。`download_note_images.py` 把不可达的外链图片下载到 `00_assets/` 并把 `image_source` 改成 `mixed`。
+`check_note_links.py` 查断链、重复锚点、找不到的 `[[概念]]` / 嵌入文件、表格内未转义的 `|`，以及漏写链接的裸 “Figure N / 机制N”；要修到每个文件都输出 `OK`。`md_escape_check.py` 查正文里会被 Obsidian 误解析的符号：数组下标 `C[i]`、字面量 `$`、误触发的 `#标签`、尖括号占位符 `<note-name>`（`<br>` 等真 HTML 保留）、词中的 `*`，以及表格行里代码和 wikilink 中没转义的 `|`；加 `--fix` 原地转义。`==高亮==`、`~~删除线~~` 在 vault 里都是有意使用，不处理。`download_note_images.py` 把不可达的外链图片下载到 `00_assets/` 并把 `image_source` 改成 `mixed`。
 
 ### 4.6 改模板时要同步的地方
 
