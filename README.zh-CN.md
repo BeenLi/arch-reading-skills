@@ -97,11 +97,42 @@ VAULT=~/ObsidianVault
 mkdir -p "$VAULT/DailyPapers" "$VAULT/PaperNotes/_concepts" "$VAULT/PaperNotes/_inbox"
 ```
 
-共享配置在 `skills/_shared/user-config.json`。个人路径和关键词覆盖写在 `~/.config/arch-reading-skills/user-config.json`，放在 skill 目录之外，更新 skill 时不会被覆盖；想用别的文件就设环境变量 `ARCH_READING_CONFIG`。加载顺序：`user_config.py` 默认值 → `user-config.json` → 个人配置。两者都不存在时，仍兼容读取旧的 `skills/_shared/user-config.local.json`。
+### 配置
 
-| 配置组 | 说明 |
+所有个人设置都放在**一个文件**里：`~/.config/arch-reading-skills/user-config.json`。它在 skill 目录之外，`npx skills update`、plugin 更新或 `git pull` 都不会覆盖它。只写和默认值（[`skills/_shared/user-config.json`](skills/_shared/user-config.json)）不同的部分：
+
+```bash
+mkdir -p ~/.config/arch-reading-skills
+cat > ~/.config/arch-reading-skills/user-config.json <<'EOF'
+{
+  "paths": {
+    "obsidian_vault": "~/ObsidianVault",
+    "zotero_db": "~/Zotero/zotero.sqlite",
+    "zotero_storage": "~/Zotero/storage"
+  },
+  "repo_reader": {
+    "guide_dir": "~/ObsidianVault/002-notes/001 使用指南"
+  }
+}
+EOF
+```
+
+读取规则：
+
+- 先读默认值，再叠加你的文件。嵌套的对象按键逐层合并，所以 `{"daily_papers": {"min_score": 4}}` 只改这一个值。**列表会整个替换**：想加关键词，要先把默认的 `keywords` 列表复制过来再加。
+- 设置 `ARCH_READING_CONFIG=/path/to/other.json` 就改用那个文件，比如另一个 vault，或者想试一组别的关键词。设了它就不会再读默认位置，即使它指向的文件不存在（测试靠这一点隔离本机配置）。
+- 改完下次运行就生效。查看某项最终生效的值：
+
+  ```bash
+  cd skills/_shared/scripts && python3 -c "import user_config as u; print(u.paper_notes_dir(), u.daily_papers_config()['min_score'])"
+  ```
+
+| 配置项 | 说明 |
 |---|---|
-| `paths.*` | Obsidian vault、论文笔记目录、每日推荐目录、概念库目录、Zotero DB / storage |
+| `paths.obsidian_vault` | 放 `PaperNotes/` 和 `DailyPapers/` 的目录（可以是 vault 里的子目录，比如 `…/001-input/PaperRead`） |
+| `paths.paper_notes_folder` / `daily_papers_folder` / `concepts_folder` | 它下面的文件夹名，默认 `PaperNotes` / `DailyPapers` / `_concepts` |
+| `paths.zotero_db` / `zotero_storage` | Zotero 数据库和附件目录 |
+| `paths.zotero_base_attachment_path` | 以 `attachments:…` 记录的链接附件的根目录（ZotMoov 之类），可选 |
 | `daily_papers.keywords` | 论文打分主关键词（标题命中 +3，摘要命中 +1） |
 | `daily_papers.negative_keywords` | 标题命中即排除（`-999`）；只放和体系结构 / LLM 系统毫无关联的主题 |
 | `daily_papers.domain_boost_keywords` | 体系结构相关性加分词 |
@@ -110,6 +141,7 @@ mkdir -p "$VAULT/DailyPapers" "$VAULT/PaperNotes/_concepts" "$VAULT/PaperNotes/_
 | `daily_papers.arxiv_categories` / `min_score` / `top_n` | arXiv 查询范围、最低分、单日候选上限 |
 | `automation.*` | 是否自动刷新 MOC、commit、push；`git_push` 只有 `git_commit=true` 时生效 |
 | `mocs.filename_prefix` | MOC 文件名前缀，常用 `_index_` |
+| `repo_reader.guide_dir` | `repo-reader` 写架构文档的 vault 目录 |
 
 ## 工作流
 
@@ -201,7 +233,7 @@ PDF / EPUB / MOBI / TXT 按页或按章提取，分批提炼知识点，输出�
 
 - 契约：[`skills/repo-reader/references/doc-format.md`](skills/repo-reader/references/doc-format.md)；机器校验：`python3 skills/repo-reader/scripts/check_doc.py <draft> --name <Name>`
 - 原始材料：`python3 skills/repo-reader/scripts/repo_facts.py <repo>`（remote、HEAD、目录树、入口候选、README 命令、配置文件）
-- 落盘：仓库已有 `ARCHITECTURE.md` 或用户要求时写进仓库并硬链接到 vault 的使用指南目录；否则只写 vault。目录由 `~/.config/arch-reading-skills/repo-reader.json` 的 `guide_dir` 决定（从 `skills/repo-reader/config.example.json` 复制），也可用环境变量 `ARCH_DOC_GUIDE_DIR` 覆盖
+- 落盘：仓库已有 `ARCHITECTURE.md` 或用户要求时写进仓库并硬链接到 vault 的使用指南目录；否则只写 vault。目录由配置文件里的 `repo_reader.guide_dir` 决定（见[配置](#配置)）
 
 ### 画硬件图 — `verilog-diagram`
 

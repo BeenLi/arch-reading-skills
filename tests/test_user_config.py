@@ -68,3 +68,14 @@ def test_legacy_local_file_only_when_xdg_missing(setup):
     assert load() == "legacy"
     write_vault(home / ".config" / "arch-reading-skills" / "user-config.json", "xdg")
     assert load() == "xdg"
+
+
+def test_repo_reader_guide_dir_comes_from_the_same_file(setup):
+    _, shared, home = setup
+    path = home / ".config" / "arch-reading-skills" / "user-config.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps({"repo_reader": {"guide_dir": "~/guides"}}), encoding="utf-8")
+    spec = importlib.util.spec_from_file_location("user_config_guide", shared / "scripts" / "user_config.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.repo_reader_guide_dir() == home / "guides"

@@ -284,7 +284,7 @@ python3 skills/daily-papers/scripts/download_note_images.py "<笔记>"
 
 ## 5. 配置
 
-所有 skill 先读 `skills/_shared/user-config.json`，再用个人配置覆盖：`ARCH_READING_CONFIG` 指向的文件，否则 `~/.config/arch-reading-skills/user-config.json`，两者都没有时兜底读旧的 `skills/_shared/user-config.local.json`（三者只取一个）。个人配置放在 skill 目录外，`npx skills update` 覆盖 skill 目录时不会丢；Python 脚本通过 `skills/_shared/scripts/user_config.py` 读同一份配置。
+所有 skill 先读 `skills/_shared/user-config.json`，再用个人配置覆盖：`ARCH_READING_CONFIG` 指向的文件，否则 `~/.config/arch-reading-skills/user-config.json`，两者都没有时兜底读旧的 `skills/_shared/user-config.local.json`（三者只取一个）。个人配置只有这一个文件，放在 skill 目录外，`npx skills update` 覆盖 skill 目录时不会丢；repo-reader 也从这里取 `repo_reader.guide_dir`（由 agent 按 SKILL.md 读取）；Python 脚本通过 `skills/_shared/scripts/user_config.py` 读同一份配置。
 
 | 配置 | 作用 |
 |---|---|
@@ -295,6 +295,7 @@ python3 skills/daily-papers/scripts/download_note_images.py "<笔记>"
 | `automation.auto_refresh_indexes` | 写完笔记 / 概念后是否自动刷新目录页（默认开） |
 | `automation.git_commit` / `git_push` | 是否提交 vault（默认关；push 只在 commit 开启时生效） |
 | `mocs.filename_prefix` | 目录页文件名前缀，常用 `_index_` |
+| `repo_reader.guide_dir` | repo-reader 写架构文档的 vault 目录 |
 
 ## 6. 目录约定
 

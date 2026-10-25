@@ -179,5 +179,8 @@
   },
   "mocs": {
     "filename_prefix": "_index_"
+  },
+  "repo_reader": {
+    "guide_dir": "~/ObsidianVault/002-notes/001 使用指南"
   }
 }

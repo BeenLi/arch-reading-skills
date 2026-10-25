@@ -36,6 +36,9 @@ DEFAULT_CONFIG = {
     "mocs": {
         "filename_prefix": "",
     },
+    "repo_reader": {
+        "guide_dir": "~/ObsidianVault/002-notes/001 使用指南",
+    },
 }
 
 
@@ -154,3 +157,8 @@ def mocs_config() -> dict:
 
 def moc_filename_prefix() -> str:
     return str(mocs_config().get("filename_prefix", "") or "")
+
+
+def repo_reader_guide_dir() -> Path:
+    """Vault folder where repo-reader puts architecture guides."""
+    return _expand(load_user_config()["repo_reader"]["guide_dir"])

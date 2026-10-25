@@ -43,7 +43,7 @@ description: 读一个代码仓库（本地路径或 GitHub/git URL），写出�
 
 ## 落盘规则
 
-`guide_dir` 是 vault 使用指南目录，按顺序取第一个有值的：环境变量 `ARCH_DOC_GUIDE_DIR`；`~/.config/arch-reading-skills/repo-reader.json` 的 `guide_dir`（首次使用从本 skill 的 `config.example.json` 复制过去改路径，放在 skill 目录外，更新 skill 不会覆盖）；旧位置本 skill 目录下的 `config.json`。
+`guide_dir` 是 vault 使用指南目录，取个人配置文件里的 `repo_reader.guide_dir`：环境变量 `ARCH_READING_CONFIG` 指向的文件，没设时读 `~/.config/arch-reading-skills/user-config.json`（和 paper-reader 等 skill 共用这一个文件，放在 skill 目录外，更新 skill 不会覆盖）。两处都没有这个键时，问用户把文档放在哪，并提示把它写进配置文件。
 
 | 情况 | 写哪里 |
 |---|---|

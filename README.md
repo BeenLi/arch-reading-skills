@@ -97,11 +97,42 @@ VAULT=~/ObsidianVault
 mkdir -p "$VAULT/DailyPapers" "$VAULT/PaperNotes/_concepts" "$VAULT/PaperNotes/_inbox"
 ```
 
-Shared settings live in `skills/_shared/user-config.json`. Put personal paths and keyword overrides in `~/.config/arch-reading-skills/user-config.json`, outside the skill folders so updates never overwrite it; set `ARCH_READING_CONFIG` to use a different file. Load order: defaults in `user_config.py` → `user-config.json` → your personal file. The old `skills/_shared/user-config.local.json` is still read when neither of those exists.
+### Configuration
+
+All personal settings live in **one file**, `~/.config/arch-reading-skills/user-config.json`. It sits outside the skill folders, so `npx skills update`, a plugin update or `git pull` never overwrites it. Write only what differs from the defaults in [`skills/_shared/user-config.json`](skills/_shared/user-config.json):
+
+```bash
+mkdir -p ~/.config/arch-reading-skills
+cat > ~/.config/arch-reading-skills/user-config.json <<'EOF'
+{
+  "paths": {
+    "obsidian_vault": "~/ObsidianVault",
+    "zotero_db": "~/Zotero/zotero.sqlite",
+    "zotero_storage": "~/Zotero/storage"
+  },
+  "repo_reader": {
+    "guide_dir": "~/ObsidianVault/002-notes/001 使用指南"
+  }
+}
+EOF
+```
+
+How it is read:
+
+- Defaults come first, then your file on top. Nested objects merge key by key, so `{"daily_papers": {"min_score": 4}}` changes only that value. **Lists are replaced as a whole**: to add a keyword, copy the default `keywords` list into your file and extend it.
+- `ARCH_READING_CONFIG=/path/to/other.json` uses that file instead of the default location, for example a second vault or an experiment with other keywords. When it is set, the default location is not read even if the file it names is missing (the tests rely on this).
+- Changes take effect on the next run. To see the effective value of a setting:
+
+  ```bash
+  cd skills/_shared/scripts && python3 -c "import user_config as u; print(u.paper_notes_dir(), u.daily_papers_config()['min_score'])"
+  ```
 
 | Setting | Meaning |
 |---|---|
-| `paths.*` | Obsidian vault, paper-notes folder, daily-papers folder, concept folder, Zotero DB / storage |
+| `paths.obsidian_vault` | Folder that holds `PaperNotes/` and `DailyPapers/` (it can be a subfolder of the vault, such as `…/001-input/PaperRead`) |
+| `paths.paper_notes_folder` / `daily_papers_folder` / `concepts_folder` | Folder names under it, default `PaperNotes` / `DailyPapers` / `_concepts` |
+| `paths.zotero_db` / `zotero_storage` | Zotero database and attachment folder |
+| `paths.zotero_base_attachment_path` | Base folder for linked attachments stored as `attachments:…` (ZotMoov and similar); optional |
 | `daily_papers.keywords` | Main scoring keywords (+3 in the title, +1 in the abstract) |
 | `daily_papers.negative_keywords` | A title hit excludes the paper (`-999`); kept to topics unrelated to architecture or LLM systems |
 | `daily_papers.domain_boost_keywords` | Architecture relevance words, scored by how many appear |
@@ -110,6 +141,7 @@ Shared settings live in `skills/_shared/user-config.json`. Put personal paths an
 | `daily_papers.arxiv_categories` / `min_score` / `top_n` | arXiv categories, minimum score, daily candidate cap |
 | `automation.*` | Whether to refresh index pages, commit and push automatically; `git_push` only applies when `git_commit=true` |
 | `mocs.filename_prefix` | Index page file-name prefix, usually `_index_` |
+| `repo_reader.guide_dir` | Vault folder where `repo-reader` writes architecture guides |
 
 ## Workflows
 
@@ -201,7 +233,7 @@ Static source analysis only (it never runs the target repository's scripts, test
 
 - Contract: [`skills/repo-reader/references/doc-format.md`](skills/repo-reader/references/doc-format.md); checker: `python3 skills/repo-reader/scripts/check_doc.py <draft> --name <Name>`
 - Raw facts: `python3 skills/repo-reader/scripts/repo_facts.py <repo>` (remote, HEAD, directory tree, entry-point candidates, README commands, config files)
-- Output: written into the repository and hard-linked into the vault's guide folder when the repository already has an `ARCHITECTURE.md` or you ask for it; otherwise only into the vault. The folder comes from `guide_dir` in `~/.config/arch-reading-skills/repo-reader.json` (copy it from `skills/repo-reader/config.example.json`), or the `ARCH_DOC_GUIDE_DIR` environment variable
+- Output: written into the repository and hard-linked into the vault's guide folder when the repository already has an `ARCHITECTURE.md` or you ask for it; otherwise only into the vault. The folder comes from `repo_reader.guide_dir` in your config file (see [Configuration](#configuration))
 
 ### Hardware diagrams — `verilog-diagram`
 
