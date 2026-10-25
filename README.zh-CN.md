@@ -17,6 +17,7 @@ https://github.com/user-attachments/assets/1abe137d-5dd1-46b5-b766-40f239380d6c
 | `book-reader` | 读整本书，输出带全书思维导图的读书笔记 |
 | `repo-reader` | 读一个代码仓库，写出可回溯到源码的架构和使用文档 |
 | `verilog-diagram` | 把 Verilog / SystemVerilog（或论文、描述）画成可编辑的 draw.io 架构图、框图、状态机和控制结构图 |
+| `gpt-image-bridge` | 经 `codex` CLI 用 ChatGPT 订阅调用 GPT Image 生成图片；每张图生成前先征得同意 |
 
 Agent 负责理解意图、写点评和长篇笔记；Python 脚本负责确定性的抓取、打分、去重、Zotero 读取、路径规划、目录页生成和文本检查。
 
@@ -74,12 +75,18 @@ npx skills add BeenLi/arch-reading-skills -g -a claude-code
 # 3. git clone + 软链接，适合开发：仓库里的改动立即生效
 git clone https://github.com/BeenLi/arch-reading-skills.git && cd arch-reading-skills
 mkdir -p ~/.claude/skills
-for d in paper-reader concept-notes daily-papers book-reader repo-reader verilog-diagram; do
+for d in paper-reader concept-notes daily-papers book-reader repo-reader verilog-diagram gpt-image-bridge; do
   ln -sfn "$PWD/skills/$d" "$HOME/.claude/skills/$d"
 done
 ```
 
-`verilog-diagram` 还依赖第三方的 [drawio-skill](https://github.com/Agents365-ai/drawio-skill)（`npx skills add Agents365-ai/drawio-skill -g -a claude-code`），画框图和控制结构图另需 `yosys`、`sv2v` 和 Graphviz。
+`verilog-diagram` 依赖第三方的 [drawio-skill](https://github.com/Agents365-ai/drawio-skill)，skills CLI 不会自动装它；`gpt-image-bridge` 是可选的，只用于构图草图。一起安装：
+
+```bash
+npx skills add Agents365-ai/drawio-skill -g -a claude-code -y && npx skills add BeenLi/arch-reading-skills -g -a claude-code --skill verilog-diagram gpt-image-bridge -y
+```
+
+画框图和控制结构图另需 `yosys`、`sv2v` 和 Graphviz。skill 出图前会检查 drawio-skill，缺失时给出安装命令。
 
 `skills/_shared` 不是 skill，是各 skill 共用的配置、脚本和画图规则。用到它的 skill 都在自己的 `_shared/` 目录里带一份生成的副本（`paper-reader`、`concept-notes`、`daily-papers` 带整份，`repo-reader`、`book-reader` 只带用到的文件），所以不管用哪种方式安装，每个 skill 都能单独工作。
 
@@ -206,6 +213,14 @@ PDF / EPUB / MOBI / TXT 按页或按章提取，分批提炼知识点，输出�
 
 四种视角：论文插图风格的架构图（默认，agent 读代码写出排版描述，脚本确定性出图）、基于 Yosys 网表的门级框图、状态机图、整体控制结构图。产物是可编辑的 `.drawio`，有 draw.io 导出器时再出 PNG / SVG；没有 root 的 Linux 服务器用 `skills/verilog-diagram/scripts/install-drawio-linux.sh` 装导出器。
 
+### 生成图片 — `gpt-image-bridge`
+
+```text
+画一张这个系统的示意图
+```
+
+经 [`codex` CLI](https://github.com/openai/codex) 用你的 ChatGPT 登录调用 GPT Image，不需要 API key。每张图都消耗 ChatGPT 额度、要几分钟，所以 agent 先列出计划生成的图片，等你同意再生成。装了它时，`verilog-diagram` 会用它出可选的构图草图。导入自 [BeenLi/gpt-image-bridge](https://github.com/BeenLi/gpt-image-bridge)，它 fork 自 [oakplank/gpt-image-bridge](https://github.com/oakplank/gpt-image-bridge)（MIT）。
+
 ## 仓库结构
 
 ```text
@@ -216,6 +231,7 @@ skills/
 ├── book-reader/           # 整本书读书笔记与全书思维导图（MIT, Tao Jiang）
 ├── repo-reader/           # 代码仓库 → 架构和使用文档；scripts/ 仓库事实采集、文档校验；references/ 12 节契约
 ├── verilog-diagram/       # Verilog / 论文 → draw.io 图；scripts/ 生成器、导出器、Linux draw.io 安装脚本；examples/ 样例
+├── gpt-image-bridge/      # 经 codex CLI 调 GPT Image；bin/ 包装脚本（MIT, oakplank）
 └── _shared/               # 共享配置；scripts/ MOC 生成、转义检查、venue 标签、CCF 分级；references/ 画图规则
 scripts/sync_shared.py     # 把 skills/_shared 复制进用到它的 skill
 ```

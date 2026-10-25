@@ -13,10 +13,23 @@ allowed-tools: [Bash, Read, Write]
 依赖：PyYAML；导出 PNG/SVG 需要 `drawio`（查找顺序 `$DRAWIO_BIN` → PATH → macOS app → `~/.local/opt/drawio`；
 Linux 无 `$DISPLAY` 时自动套 `xvfb-run`，无 root 的服务器用本 skill 的 `scripts/install-drawio-linux.sh` 装）。**没有导出器时所有命令照常生成
 `.drawio`，只少 PNG，stderr 提示一行**。框图/控制结构另需 `yosys`、`sv2v`（SystemVerilog）、`dot`（Graphviz），以及已安装的 drawio-skill
-（默认 `~/.claude/skills/drawio-skill`，可用环境变量 `DRAWIO_SKILL_DIR` 覆盖；只调用它的 `autolayout.py`，不改它）。
+（只调用它的 `autolayout.py` 和 `validate.py`，不改它；位置见下面的依赖自检）。
 三个生成脚本都接受 `--png` / `--svg` / `--scale N`（PNG 默认 scale 3，约 1 model unit = 3 px；`$DRAWIO_SCALE` 可改默认），
 也可以单独导出：`python3 $S/scripts/drawio_export.py X.drawio --png --svg`。放进 Markdown/Obsidian 优先给 SVG，不糊。
 `$S` 指本 skill 目录。`examples/` 里有两个对照样例：`wrr_arbiter.v`（单级 + 状态寄存器）、`load_pipe.v`（带 replay 的多级流水）。
+
+## 开始前：依赖自检
+
+skills CLI 不会替本 skill 装依赖，所以第一次出图前先确认：
+
+```bash
+python3 -c "import sys; sys.path.insert(0, '$S/scripts'); import rtl2drawio as r; print(r.DRAWIO_SKILL)"
+```
+
+它按 `$DRAWIO_SKILL_DIR` → `~/.claude/skills/drawio-skill` → `~/.agents/skills/drawio-skill` → Claude Code plugin 缓存的顺序找 drawio-skill，打印找到的目录，下文记作 `$D`；目录里没有 `scripts/autolayout.py` 就是没装。
+
+- **drawio-skill 缺失**：框图、控制结构图和所有 `validate.py` 校验都用不了，架构图和状态机图的 `.drawio` 仍可生成。把安装命令告诉用户：`npx skills add Agents365-ai/drawio-skill -g -a claude-code -y`，**用户同意后**才代为执行；用户不装时只做不依赖它的部分，并在汇报里说明跳过了什么。
+- **gpt-image-bridge 缺失**（可选）：跳过第零节流程里的构图参考步骤，直接按网格排版出图，不必提示安装。
 
 ## 零、体系结构风格架构图（arch2drawio.py）——默认
 
@@ -83,7 +96,7 @@ callouts: {1: "只有在需要对照说明时才编号"}
    **只借鉴布局与视觉层次**（分区、谁在谁上方、阵型、留白、重点位置），换算成 `lane` / `row` / `col` / `groups`；
    **模块、连线、名称一律以代码为准**——草图常见错误：连错源头、多画/少画模块、深色背景。生成前按该 skill 规定
    列出图片（用途、路径、尺寸、提示词摘要）并等用户明确同意；草图存 `diagrams/sketch_*.png`，描述文件头部注释引用它。
-3. `render --png` → `validate.py`（error 必须为 0；分界虚线穿过级头/寄存器的 overlap 警告是设计如此）→ Read PNG 目视检查，
+3. `render --png` → `python3 $D/scripts/validate.py X.drawio`（error 必须为 0；分界虚线穿过级头/寄存器的 overlap 警告是设计如此）→ Read PNG 目视检查，
    用 `row` / `col` 微调最多两轮（常见：让主数据通路占 row 0 走直线，旁路 / 控制放下一行）。
 4. 交付 `.drawio` + `.png`；描述文件留在 scratchpad，用户要自己改时再给。
 
@@ -100,7 +113,7 @@ python3 $S/scripts/rtl2drawio.py src/*.sv --top gpu --module alu -o diagrams/alu
 ```
 
 流程：sv2v（遇到 .sv 自动）→ Yosys `proc; opt; opt_dff; wreduce; memory -nomap` → JSON 网表 → 单元级流水分析 → 化简 → 列约束布局。
-生成后跑 `python3 ~/.claude/skills/drawio-skill/scripts/validate.py X.drawio`（error 必须为 0；穿过级分界线/寄存器压在分界线上
+生成后跑 `python3 $D/scripts/validate.py X.drawio`（error 必须为 0；穿过级分界线/寄存器压在分界线上
 产生的 through-vertex / overlap 警告是设计如此），再 Read PNG 目视检查。
 
 ### 布局规则（`--layout pipeline`；默认 `auto`：以子模块实例为主的层次模块用自由布局，其余用流水级布局）

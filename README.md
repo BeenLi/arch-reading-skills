@@ -17,6 +17,7 @@ https://github.com/user-attachments/assets/1abe137d-5dd1-46b5-b766-40f239380d6c
 | `book-reader` | Reads a whole book and writes reading notes with a mind map of the book |
 | `repo-reader` | Reads a code repository and writes an architecture and usage guide whose claims trace back to source files |
 | `verilog-diagram` | Turns Verilog / SystemVerilog (or a paper or description) into editable draw.io architecture, block, FSM and control diagrams |
+| `gpt-image-bridge` | Generates images with GPT Image through the `codex` CLI and a ChatGPT subscription; asks before every image |
 
 The agent interprets requests and writes reviews and long notes; Python scripts do the deterministic parts: fetching, scoring, de-duplication, Zotero lookups, path planning, index generation and text checks.
 
@@ -74,12 +75,18 @@ npx skills add BeenLi/arch-reading-skills -g -a claude-code
 # 3. git clone + symlinks, for development: changes in the repo take effect immediately
 git clone https://github.com/BeenLi/arch-reading-skills.git && cd arch-reading-skills
 mkdir -p ~/.claude/skills
-for d in paper-reader concept-notes daily-papers book-reader repo-reader verilog-diagram; do
+for d in paper-reader concept-notes daily-papers book-reader repo-reader verilog-diagram gpt-image-bridge; do
   ln -sfn "$PWD/skills/$d" "$HOME/.claude/skills/$d"
 done
 ```
 
-`verilog-diagram` also needs the third-party [drawio-skill](https://github.com/Agents365-ai/drawio-skill) (`npx skills add Agents365-ai/drawio-skill -g -a claude-code`), plus `yosys`, `sv2v` and Graphviz for block and control diagrams.
+`verilog-diagram` needs the third-party [drawio-skill](https://github.com/Agents365-ai/drawio-skill), which the skills CLI does not install for you; `gpt-image-bridge` is optional and only used for layout sketches. To install them together:
+
+```bash
+npx skills add Agents365-ai/drawio-skill -g -a claude-code -y && npx skills add BeenLi/arch-reading-skills -g -a claude-code --skill verilog-diagram gpt-image-bridge -y
+```
+
+Block and control diagrams also need `yosys`, `sv2v` and Graphviz. The skill checks for drawio-skill before drawing and offers the install command if it is missing.
 
 `skills/_shared` is not a skill: it holds the configuration, scripts and diagram rules the skills share. Every skill that uses it carries a generated copy in its own `_shared/` folder (`paper-reader`, `concept-notes` and `daily-papers` the whole folder, `repo-reader` and `book-reader` only the files they use), so each skill works on its own whichever way it is installed.
 
@@ -206,6 +213,14 @@ Static source analysis only (it never runs the target repository's scripts, test
 
 Four views: a paper-style architecture diagram (default; the agent reads the code and writes a layout description, a script draws it), a gate-level block diagram from the Yosys netlist, an FSM diagram, and a control-structure diagram. Output is an editable `.drawio` file, plus PNG / SVG when a draw.io exporter is available; on a headless Linux server without root, `skills/verilog-diagram/scripts/install-drawio-linux.sh` sets one up.
 
+### Image generation — `gpt-image-bridge`
+
+```text
+画一张这个系统的示意图
+```
+
+Calls GPT Image through the [`codex` CLI](https://github.com/openai/codex) with your ChatGPT login, no API key. Every image uses ChatGPT quota and takes minutes, so the agent lists the planned images and waits for a yes first. `verilog-diagram` uses it, when installed, for an optional layout sketch. Imported from [BeenLi/gpt-image-bridge](https://github.com/BeenLi/gpt-image-bridge), a fork of [oakplank/gpt-image-bridge](https://github.com/oakplank/gpt-image-bridge) (MIT).
+
 ## Repository layout
 
 ```text
@@ -216,6 +231,7 @@ skills/
 ├── book-reader/           # Whole-book notes and mind maps (MIT, Tao Jiang)
 ├── repo-reader/           # Repository → architecture and usage guide; scripts/ facts and checker; references/ 12-section contract
 ├── verilog-diagram/       # Verilog / papers → draw.io diagrams; scripts/ generators, exporter, Linux draw.io installer; examples/
+├── gpt-image-bridge/      # GPT Image through the codex CLI; bin/ wrapper script (MIT, oakplank)
 └── _shared/               # Shared config; scripts/ index generation, escape checks, venue labels, CCF ranks; references/ diagram rules
 scripts/sync_shared.py     # Copies skills/_shared into the skills that use it
 ```

@@ -669,7 +669,7 @@ def push_routed_labels(path):
 def layout(graph, out):
     gj = out + ".graph.json"
     json.dump(graph, open(gj, "w"), ensure_ascii=False)
-    r = subprocess.run([sys.executable, R.AUTOLAYOUT, gj, "-o", out, "--tune"], capture_output=True, text=True)
+    r = subprocess.run([sys.executable, R.require_autolayout(), gj, "-o", out, "--tune"], capture_output=True, text=True)
     os.remove(gj)
     if r.returncode: R.die("autolayout failed:\n" + r.stderr[-1500:])
 

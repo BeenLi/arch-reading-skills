@@ -20,13 +20,38 @@ Usage
              share one base name, the first variant is drawn
   --list     print the modules found (with unit counts) and exit
 """
-import argparse, base64, collections, json, os, re, shutil, subprocess, sys, tempfile, urllib.parse, zlib
+import argparse, base64, collections, glob, json, os, re, shutil, subprocess, sys, tempfile, urllib.parse, zlib
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from drawio_export import export_all  # noqa: E402
 
-DRAWIO_SKILL = os.environ.get("DRAWIO_SKILL_DIR", os.path.expanduser("~/.claude/skills/drawio-skill"))
+DRAWIO_SKILL_INSTALL = "npx skills add Agents365-ai/drawio-skill -g -a claude-code -y"
+
+
+def find_drawio_skill():
+    """drawio-skill: $DRAWIO_SKILL_DIR -> ~/.claude/skills -> ~/.agents/skills -> Claude Code plugin cache."""
+    if os.environ.get("DRAWIO_SKILL_DIR"):
+        return os.path.expanduser(os.environ["DRAWIO_SKILL_DIR"])
+    home = os.path.expanduser("~")
+    candidates = [os.path.join(home, ".claude", "skills", "drawio-skill"),
+                  os.path.join(home, ".agents", "skills", "drawio-skill")]
+    candidates += sorted(glob.glob(os.path.join(home, ".claude", "plugins", "cache", "*", "*", "*",
+                                                "skills", "drawio-skill")), reverse=True)
+    for c in candidates:
+        if os.path.isfile(os.path.join(c, "scripts", "autolayout.py")):
+            return c
+    return candidates[0]
+
+
+DRAWIO_SKILL = find_drawio_skill()
 AUTOLAYOUT = os.path.join(DRAWIO_SKILL, "scripts", "autolayout.py")
+
+
+def require_autolayout():
+    if not os.path.isfile(AUTOLAYOUT):
+        die(f"drawio-skill not found (looked for {AUTOLAYOUT}); block and control diagrams need its autolayout.py.\n"
+            f"  install: {DRAWIO_SKILL_INSTALL}\n  or point DRAWIO_SKILL_DIR at an existing copy")
+    return AUTOLAYOUT
 YOSYS_PASSES = "proc; opt; opt_dff; wreduce; opt_clean; memory -nomap; opt_clean"
 
 
@@ -831,7 +856,7 @@ def pipeline_graph(nodes, edges):
 
 def load_autolayout():
     import importlib.util
-    spec = importlib.util.spec_from_file_location("autolayout", AUTOLAYOUT)
+    spec = importlib.util.spec_from_file_location("autolayout", require_autolayout())
     mod = importlib.util.module_from_spec(spec); spec.loader.exec_module(mod)
     return mod
 
@@ -1069,7 +1094,7 @@ def main():
              "nodes": [{k: v for k, v in n.items() if k != "_k"} for n in nodes], "edges": edges}
     gj = out + ".graph.json"
     json.dump(graph, open(gj, "w"), ensure_ascii=False, indent=1)
-    r = subprocess.run([sys.executable, AUTOLAYOUT, gj, "-o", out] + ([] if a.no_tune else ["--tune"]),
+    r = subprocess.run([sys.executable, require_autolayout(), gj, "-o", out] + ([] if a.no_tune else ["--tune"]),
                        capture_output=True, text=True)
     if not a.no_tune and r.stderr.strip(): print(r.stderr.strip().splitlines()[-1], file=sys.stderr)
     os.remove(gj)

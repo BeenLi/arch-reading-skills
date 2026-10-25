@@ -34,6 +34,8 @@ Do **not** invoke it for:
 ~/.claude/skills/gpt-image-bridge/bin/gpt-image-2 "<prompt>" <absolute-output-path.png> [--size WxH]
 ```
 
+The wrapper is `bin/gpt-image-2` inside this skill's folder. Installed with `npx skills add` or a symlink, that is the path above; installed as a Claude Code plugin, use the copy in the plugin's `skills/gpt-image-bridge/bin/`.
+
 - **Prompt** should be dense and art-directed: composition, lighting, camera/lens, mood, style reference. Terse prompts produce generic output.
 - **Output path** must be absolute. `/tmp/` works for throwaways; a project-local `design/` directory for kept assets.
 - **Size is optional** — if omitted, the model chooses its own dimensions. Only pass `--size` when the user specifies one or the layout requires a particular aspect ratio.
