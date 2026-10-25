@@ -311,11 +311,11 @@ python3 skills/daily-papers/scripts/download_note_images.py "<笔记>"
 
 `npx skills add` 只复制单个 skill 文件夹，`_shared` 不会跟着装；仓库里也不能放指向 `_shared` 的软链接，因为 skills CLI 按 skill 文件夹的 git tree hash 判断是否更新，只改 `_shared` 时被链接方的 hash 不变，`npx skills update` 永远不会触发。所以：
 
-- `skills/_shared` 是唯一源，没有 SKILL.md。`scripts/sync_shared.py` 把它（外加 `concept-notes/references/concept-categories.md`）复制进 `skills/{paper-reader,concept-notes,daily-papers}/_shared/`；副本提交进 git，不手改。`book-reader`、`repo-reader`、`verilog-diagram` 不带副本。
-- 这三个 skill 的文档只写 skill 目录内的相对路径 `_shared/…`，不写 `../_shared` 或兄弟 skill 的路径；`test_vendored_skills_reference_only_their_own_shared_copy` 检查这一点。
+- `skills/_shared` 是唯一源，没有 SKILL.md。`scripts/sync_shared.py` 把它（外加 `concept-notes/references/concept-categories.md`）复制进 `skills/{paper-reader,concept-notes,daily-papers}/_shared/`；`repo-reader` 只带 `md_escape_check.py` 和 `mermaid-rules.md`，`book-reader` 只带 `mermaid-rules.md`，`verilog-diagram` 不用 `_shared`。副本提交进 git，不手改。
+- 带副本的 skill 的文档只写 skill 目录内的相对路径 `_shared/…`，不写 `../_shared` 或兄弟 skill 的路径；`test_vendored_skills_reference_only_their_own_shared_copy` 检查这一点。
 - 脚本源优先：`_find_shared_scripts()` 发现 `parents[3]/scripts/sync_shared.py` 存在（即在仓库或 plugin 缓存的整仓副本里）时用 `skills/_shared/scripts`，否则用自己的 `_shared/scripts` 副本。clone 下改 `skills/_shared` 立即生效；agent 按 SKILL.md 直接运行的 `_shared/scripts/*.py` 仍是副本，改完要跑一次 sync。
 - 防漂移：`.githooks/pre-commit`（`git config core.hooksPath .githooks` 启用）和 `.github/workflows/test.yml` 都跑 `sync_shared.py --check`，`tests/test_sync_shared.py` 也跑。
-- 三种安装：`npx skills add BeenLi/arch-reading-skills -g -a claude-code`；`/plugin marketplace add BeenLi/arch-reading-skills`（`.claude-plugin/marketplace.json`，`source: "./"`、`strict: false`，不列 skills，默认扫 `skills/`）；git clone + 软链接（本机开发用）。
+- 三种安装：`npx skills add BeenLi/arch-reading-skills -g -a claude-code`；`/plugin marketplace add BeenLi/arch-reading-skills`（`.claude-plugin/marketplace.json`，`source: "./"`、`strict: false`，不列 skills，默认扫 `skills/`）；git clone + 软链接（本机开发用，只链接 6 个 skill，不链接 `_shared`）。
 
 ## 7. 测试
 

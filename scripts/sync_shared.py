@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""把 skills/_shared（外加 concept-categories.md）复制进依赖它的 skill，生成 skills/<name>/_shared/。
+"""把 skills/_shared（或其中几个文件，外加 concept-categories.md）复制进用到它的 skill，生成 skills/<name>/_shared/。
 
 `npx skills add` 只复制单个 skill 文件夹，`_shared` 不会跟着装；软链接也不行，CLI 按 skill 文件夹的
 git tree hash 判断更新，只改 `_shared` 时被链接方的 hash 不变，`skills update` 永远不触发。
@@ -18,7 +18,14 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILLS = REPO_ROOT / "skills"
 SOURCE = SKILLS / "_shared"
-TARGETS = ("paper-reader", "concept-notes", "daily-papers")
+# skill → 要复制的 _shared 内相对路径；None 表示整个 _shared。
+TARGETS = {
+    "paper-reader": None,
+    "concept-notes": None,
+    "daily-papers": None,
+    "repo-reader": ("scripts/md_escape_check.py", "references/mermaid-rules.md"),
+    "book-reader": ("references/mermaid-rules.md",),
+}
 # 跨 skill 引用的文件：npx 下只有同时装了 concept-notes 才找得到，所以也复制进依赖它的 skill。
 EXTRA_FILES = {
     SKILLS / "concept-notes" / "references" / "concept-categories.md": ("paper-reader", "daily-papers"),
@@ -33,6 +40,8 @@ def source_files(name: str) -> dict[Path, Path]:
     for path in sorted(SOURCE.rglob("*")):
         rel = path.relative_to(SOURCE)
         if any(part in EXCLUDED_NAMES for part in rel.parts) or path.suffix == ".pyc" or not path.is_file():
+            continue
+        if TARGETS[name] is not None and rel.as_posix() not in TARGETS[name]:
             continue
         files[rel] = path
     for path, users in EXTRA_FILES.items():
@@ -80,6 +89,9 @@ def main() -> int:
     stale = False
     for name in TARGETS:
         expected = source_files(name)
+        missing = set(TARGETS[name] or ()) - {rel.as_posix() for rel in expected}
+        if missing:
+            raise SystemExit(f"{name}: skills/_shared 里没有 {sorted(missing)}")
         target = SKILLS / name / "_shared"
         problems = diff(expected, target)
         if not problems:

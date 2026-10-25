@@ -74,14 +74,14 @@ npx skills add BeenLi/arch-reading-skills -g -a claude-code
 # 3. git clone + 软链接，适合开发：仓库里的改动立即生效
 git clone https://github.com/BeenLi/arch-reading-skills.git && cd arch-reading-skills
 mkdir -p ~/.claude/skills
-for d in paper-reader concept-notes daily-papers book-reader repo-reader verilog-diagram _shared; do
+for d in paper-reader concept-notes daily-papers book-reader repo-reader verilog-diagram; do
   ln -sfn "$PWD/skills/$d" "$HOME/.claude/skills/$d"
 done
 ```
 
 `verilog-diagram` 还依赖第三方的 [drawio-skill](https://github.com/Agents365-ai/drawio-skill)（`npx skills add Agents365-ai/drawio-skill -g -a claude-code`），画框图和控制结构图另需 `yosys`、`sv2v` 和 Graphviz。
 
-`skills/_shared` 不是 skill，是各 skill 共用的配置、脚本和画图规则。`paper-reader`、`concept-notes`、`daily-papers` 各自的 `_shared/` 目录里带一份生成的副本，所以三种安装方式都能单独装某个 skill。`book-reader` 和 `repo-reader` 只在 `~/.claude/skills/_shared` 存在时才用其中的转义检查和 Mermaid 规则，所以方式 3 也把它链接过去。
+`skills/_shared` 不是 skill，是各 skill 共用的配置、脚本和画图规则。用到它的 skill 都在自己的 `_shared/` 目录里带一份生成的副本（`paper-reader`、`concept-notes`、`daily-papers` 带整份，`repo-reader`、`book-reader` 只带用到的文件），所以不管用哪种方式安装，每个 skill 都能单独工作。
 
 初始化 Obsidian 目录：
 
@@ -217,7 +217,7 @@ skills/
 ├── repo-reader/           # 代码仓库 → 架构和使用文档；scripts/ 仓库事实采集、文档校验；references/ 12 节契约
 ├── verilog-diagram/       # Verilog / 论文 → draw.io 图；scripts/ 生成器、导出器、Linux draw.io 安装脚本；examples/ 样例
 └── _shared/               # 共享配置；scripts/ MOC 生成、转义检查、venue 标签、CCF 分级；references/ 画图规则
-scripts/sync_shared.py     # 把 skills/_shared 复制进用到它的三个 skill
+scripts/sync_shared.py     # 把 skills/_shared 复制进用到它的 skill
 ```
 
 ### 目录约定
@@ -234,7 +234,7 @@ scripts/sync_shared.py     # 把 skills/_shared 复制进用到它的三个 skil
 
 ## 开发维护
 
-`skills/_shared` 是唯一源；`skills/{paper-reader,concept-notes,daily-papers}/_shared/` 是生成的副本，提交进 git，但不要手改。脚本先找源、找不到再用副本，所以在 clone 下改 `skills/_shared` 立即生效。提交前重新生成副本；pre-commit hook 和 CI 都会检查：
+`skills/_shared` 是唯一源；`skills/<name>/_shared/` 是生成的副本，提交进 git，但不要手改。脚本先找源、找不到再用副本，所以在 clone 下改 `skills/_shared` 立即生效。提交前重新生成副本；pre-commit hook 和 CI 都会检查：
 
 ```bash
 git config core.hooksPath .githooks   # 每个 clone 运行一次

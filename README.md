@@ -74,14 +74,14 @@ npx skills add BeenLi/arch-reading-skills -g -a claude-code
 # 3. git clone + symlinks, for development: changes in the repo take effect immediately
 git clone https://github.com/BeenLi/arch-reading-skills.git && cd arch-reading-skills
 mkdir -p ~/.claude/skills
-for d in paper-reader concept-notes daily-papers book-reader repo-reader verilog-diagram _shared; do
+for d in paper-reader concept-notes daily-papers book-reader repo-reader verilog-diagram; do
   ln -sfn "$PWD/skills/$d" "$HOME/.claude/skills/$d"
 done
 ```
 
 `verilog-diagram` also needs the third-party [drawio-skill](https://github.com/Agents365-ai/drawio-skill) (`npx skills add Agents365-ai/drawio-skill -g -a claude-code`), plus `yosys`, `sv2v` and Graphviz for block and control diagrams.
 
-`skills/_shared` is not a skill: it holds the configuration, scripts and diagram rules the skills share. `paper-reader`, `concept-notes` and `daily-papers` each carry a generated copy in their own `_shared/` folder, so every install method works per skill. `book-reader` and `repo-reader` only use the escape checker and Mermaid rules from `~/.claude/skills/_shared` when it exists, which is why method 3 links it too.
+`skills/_shared` is not a skill: it holds the configuration, scripts and diagram rules the skills share. Every skill that uses it carries a generated copy in its own `_shared/` folder (`paper-reader`, `concept-notes` and `daily-papers` the whole folder, `repo-reader` and `book-reader` only the files they use), so each skill works on its own whichever way it is installed.
 
 Create the Obsidian folders:
 
@@ -217,7 +217,7 @@ skills/
 ├── repo-reader/           # Repository → architecture and usage guide; scripts/ facts and checker; references/ 12-section contract
 ├── verilog-diagram/       # Verilog / papers → draw.io diagrams; scripts/ generators, exporter, Linux draw.io installer; examples/
 └── _shared/               # Shared config; scripts/ index generation, escape checks, venue labels, CCF ranks; references/ diagram rules
-scripts/sync_shared.py     # Copies skills/_shared into the three skills that use it
+scripts/sync_shared.py     # Copies skills/_shared into the skills that use it
 ```
 
 ### Directory convention
@@ -234,7 +234,7 @@ New files follow this split; `tests/test_repo_layout.py` checks that `.py` files
 
 ## Development
 
-`skills/_shared` is the only source; `skills/{paper-reader,concept-notes,daily-papers}/_shared/` are generated copies that are committed but never edited by hand. Scripts look for the source first and fall back to the copy, so edits to `skills/_shared` take effect at once in a clone. Regenerate the copies before committing; the pre-commit hook and CI run the check:
+`skills/_shared` is the only source; `skills/<name>/_shared/` are generated copies that are committed but never edited by hand. Scripts look for the source first and fall back to the copy, so edits to `skills/_shared` take effect at once in a clone. Regenerate the copies before committing; the pre-commit hook and CI run the check:
 
 ```bash
 git config core.hooksPath .githooks   # once per clone

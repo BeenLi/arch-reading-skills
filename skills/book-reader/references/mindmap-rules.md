@@ -9,7 +9,7 @@
 
 `flowchart LR` 加直角折线是确定性的分层布局，节点不会重叠，在 Obsidian 的浅色和深色主题下都能稳定渲染。
 
-“渲染 → 看图 → 重排”的闭环沿用 `~/.claude/skills/_shared/references/mermaid-rules.md` §1。该文件 §2、§3 是为数据流图写的（主流向、控制流虚线、split 节点），对树状导图不适用，本图的检查以本文件 §3 为准。
+“渲染 → 看图 → 重排”的闭环沿用 book-reader skill 目录下的 `_shared/references/mermaid-rules.md` §1。该文件 §2、§3 是为数据流图写的（主流向、控制流虚线、split 节点），对树状导图不适用，本图的检查以本文件 §3 为准。
 
 ## 1. 内容结构
 

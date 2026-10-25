@@ -79,10 +79,10 @@ class RepoLayoutTests(unittest.TestCase):
         self.assertEqual(offenders, [])
 
     def test_vendored_skills_reference_only_their_own_shared_copy(self):
-        """npx 单独安装后没有 ../_shared 和兄弟 skill；这三个 skill 的文档只能引用自己 _shared/ 下存在的文件。"""
+        """npx 单独安装后没有 ../_shared 和兄弟 skill；带副本的 skill 只能引用自己 _shared/ 下存在的文件。"""
         shared_ref = re.compile(r"_shared/[\w./-]+\.(?:md|py|json)")
         offenders = []
-        for name in ("paper-reader", "concept-notes", "daily-papers"):
+        for name in ("paper-reader", "concept-notes", "daily-papers", "repo-reader", "book-reader"):
             skill = SKILLS / name
             for md in skill.rglob("*.md"):
                 if "_shared" in md.relative_to(skill).parts:

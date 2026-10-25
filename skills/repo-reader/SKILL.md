@@ -27,13 +27,15 @@ description: 读一个代码仓库（本地路径或 GitHub/git URL），写出�
    - 12 个 H2 标题逐字照抄契约（第 6、8、11 节可取完整标题或斜杠任一侧），不要按仓库"更贴切"地改词。
    - 第 3 节必须有 `### 3.1 组件职责` 表；第 2、9、10 节表头照抄。
    - 正文里的仓库路径写成相对路径或 `<repo>` / `<skill>` / `<vault>` 占位符，绝对路径只允许出现在头部"本地路径"一行。
-   - Mermaid 2–5 张，按 `~/.claude/skills/_shared/references/mermaid-rules.md` 渲染 → 看图 → 重排；该文件不存在时至少渲染一次并目视检查。
+   - Mermaid 2–5 张，按本 skill 的 `_shared/references/mermaid-rules.md` 渲染 → 看图 → 重排。
 4. **并回旧文档**：目标位置已有同名文档时，先把它复制到 scratchpad 留底，再逐节对照。旧文档里经源码核实仍成立、新稿没有的条目（排错表行、历史教训、设计原因、附录）并回；不再成立的删除并在汇报里列出。不要为了保留旧内容改动章节结构。
 5. **校验**：
 
+   在本 skill 目录下运行：
+
    ```bash
-   python3 ~/.claude/skills/repo-reader/scripts/check_doc.py <draft> --name <Name>
-   python3 ~/.claude/skills/_shared/scripts/md_escape_check.py <draft>   # 存在时
+   python3 scripts/check_doc.py <draft> --name <Name>
+   python3 _shared/scripts/md_escape_check.py <draft>
    ```
 
    任一 FAIL 回到第 3 步修稿，不要放宽校验。
