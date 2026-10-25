@@ -205,9 +205,18 @@ def render_csv(rows: list[dict]) -> str:
     return output.getvalue()
 
 
+def _find_shared_scripts() -> Path:
+    """源优先：在仓库里（含 plugin 缓存的整仓副本）用 skills/_shared，本地改动立即生效；
+    npx 单独安装的 skill 没有源，回退到 sync_shared.py 生成的 <skill>/_shared 副本。"""
+    here = Path(__file__).resolve()
+    if (here.parents[3] / "scripts" / "sync_shared.py").exists():
+        return here.parents[2] / "_shared" / "scripts"
+    return here.parents[1] / "_shared" / "scripts"
+
+
 def default_paths() -> tuple[Path, Path, Path]:
     skill_dir = Path(__file__).resolve().parents[1]
-    shared_dir = skill_dir.parent / "_shared" / "scripts"
+    shared_dir = _find_shared_scripts()
     if str(shared_dir) not in sys.path:
         sys.path.insert(0, str(shared_dir))
 

@@ -357,7 +357,7 @@ class SystemsTemplateTests(unittest.TestCase):
             for fresh in ["动机实验与核心 Insights", "### 系统架构", "执行流", "实现改动清单",
                           "diagram-rules.md", "论文原图", "[[#^"]:
                 self.assertIn(fresh, blob, f"{name} lacks {fresh}")
-        self.assertIn("../_shared/references/diagram-rules.md", skill)
+        self.assertIn("`_shared/references/diagram-rules.md`", skill)
         self.assertIn("退回 Mermaid", skill)
 
     def test_template_fig_placeholders_are_not_valid_block_ids(self):

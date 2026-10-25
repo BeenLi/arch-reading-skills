@@ -41,7 +41,7 @@ description: 读一个代码仓库（本地路径或 GitHub/git URL），写出�
 
 ## 落盘规则
 
-`config.json` 的 `guide_dir` 是 vault 使用指南目录（环境变量 `ARCH_DOC_GUIDE_DIR` 覆盖）；该文件不入库，首次使用从同目录 `config.example.json` 复制一份改路径。
+`guide_dir` 是 vault 使用指南目录，按顺序取第一个有值的：环境变量 `ARCH_DOC_GUIDE_DIR`；`~/.config/dailypaper-skills/repo-reader.json` 的 `guide_dir`（首次使用从本 skill 的 `config.example.json` 复制过去改路径，放在 skill 目录外，更新 skill 不会覆盖）；旧位置本 skill 目录下的 `config.json`。
 
 | 情况 | 写哪里 |
 |---|---|

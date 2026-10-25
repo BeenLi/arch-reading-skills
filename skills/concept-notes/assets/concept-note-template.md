@@ -10,7 +10,7 @@ tags: [status/paper-specific]  # 仅在 paper-specific 时加，否则删掉这�
 1. 8 个统一段 + 1 个按 concept_type 加的差异化段；差异化段放在 `## 核心要点` 之后、`## 边界与对比` 之前，段名按 concept-categories.md 的“按 concept_type 差异化段”表。
 2. 长度：直观例子 ≤ 100 行、其他段 ≤ 90 行（不计 frontmatter 和图的源码）。写完运行 `python3 ~/.claude/skills/concept-notes/scripts/check_concept_length.py <概念笔记>` 自检。
 3. `## 直观例子` 按 concept-categories.md 的“直观例子写作规则”写成分步推导 + 配图 + 数值算例。
-4. 自画图按 `~/.claude/skills/_shared/references/diagram-rules.md`：默认 diagram-design 导出 PNG 到 `00_assets/<note-name>_<desc>.png` 嵌入，空间结构用 matplotlib，不可用时才退回 Mermaid；不允许 ASCII 状态图。
+4. 自画图按 skill 目录下的 `_shared/references/diagram-rules.md`：默认 diagram-design 导出 PNG 到 `00_assets/<note-name>_<desc>.png` 嵌入，空间结构用 matplotlib，不可用时才退回 Mermaid；不允许 ASCII 状态图。
 5. 动机、直观例子只能从论文证据推断，禁止凭空编造；找不到证据写 `TODO`。
 -->
 

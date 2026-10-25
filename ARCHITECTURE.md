@@ -283,7 +283,7 @@ python3 skills/daily-papers/scripts/download_note_images.py "<笔记>"
 
 ## 5. 配置
 
-所有 skill 先读 `skills/_shared/user-config.json`，再用同目录的 `user-config.local.json`（git 忽略）覆盖；Python 脚本通过 `skills/_shared/scripts/user_config.py` 读同一份配置。
+所有 skill 先读 `skills/_shared/user-config.json`，再用个人配置覆盖：`DAILYPAPER_CONFIG` 指向的文件，否则 `~/.config/dailypaper-skills/user-config.json`，两者都没有时兜底读旧的 `skills/_shared/user-config.local.json`（三者只取一个）。个人配置放在 skill 目录外，`npx skills update` 覆盖 skill 目录时不会丢；Python 脚本通过 `skills/_shared/scripts/user_config.py` 读同一份配置。
 
 | 配置 | 作用 |
 |---|---|
@@ -305,7 +305,17 @@ python3 skills/daily-papers/scripts/download_note_images.py "<笔记>"
 | `references/` | agent 读进上下文的规则、指南、分类标准 | 读完影响 agent 怎么做 |
 | `assets/` | 填充或复制到输出里的模板 | 内容会出现在生成物里 |
 
-`tests/test_repo_layout.py` 检查 `.py` 只在 `scripts/` 下，并解析所有 Markdown 里的 `python3 …py` 路径。移动脚本时要同步改它们插入 `sys.path` 的路径（`skills/_shared/scripts/user_config.py` 按 `parents[2] / "_shared" / "scripts"` 被找到）和测试里的模块路径。
+`tests/test_repo_layout.py` 检查 `.py` 只在 `scripts/` 下（生成的 `<skill>/_shared/scripts/` 也算），并解析所有 Markdown 里的 `python3 …py` 路径。移动脚本时要同步改它们插入 `sys.path` 的路径和测试里的模块路径。
+
+### 6.1 `_shared` 怎么分发
+
+`npx skills add` 只复制单个 skill 文件夹，`_shared` 不会跟着装；仓库里也不能放指向 `_shared` 的软链接，因为 skills CLI 按 skill 文件夹的 git tree hash 判断是否更新，只改 `_shared` 时被链接方的 hash 不变，`npx skills update` 永远不会触发。所以：
+
+- `skills/_shared` 是唯一源，没有 SKILL.md。`scripts/sync_shared.py` 把它（外加 `concept-notes/references/concept-categories.md`）复制进 `skills/{paper-reader,concept-notes,daily-papers}/_shared/`；副本提交进 git，不手改。`book-reader`、`repo-reader`、`verilog-diagram` 不带副本。
+- 这三个 skill 的文档只写 skill 目录内的相对路径 `_shared/…`，不写 `../_shared` 或兄弟 skill 的路径；`test_vendored_skills_reference_only_their_own_shared_copy` 检查这一点。
+- 脚本源优先：`_find_shared_scripts()` 发现 `parents[3]/scripts/sync_shared.py` 存在（即在仓库或 plugin 缓存的整仓副本里）时用 `skills/_shared/scripts`，否则用自己的 `_shared/scripts` 副本。clone 下改 `skills/_shared` 立即生效；agent 按 SKILL.md 直接运行的 `_shared/scripts/*.py` 仍是副本，改完要跑一次 sync。
+- 防漂移：`.githooks/pre-commit`（`git config core.hooksPath .githooks` 启用）和 `.github/workflows/test.yml` 都跑 `sync_shared.py --check`，`tests/test_sync_shared.py` 也跑。
+- 三种安装：`npx skills add BeenLi/arch-reading-skills -g -a claude-code`；`/plugin marketplace add BeenLi/arch-reading-skills`（`.claude-plugin/marketplace.json`，`source: "./"`、`strict: false`，不列 skills，默认扫 `skills/`）；git clone + 软链接（本机开发用）。
 
 ## 7. 测试
 

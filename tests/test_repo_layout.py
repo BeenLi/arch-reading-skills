@@ -4,6 +4,7 @@ import re
 import shutil
 import tempfile
 import unittest
+import unittest.mock
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -46,11 +47,13 @@ def load_module_from_path(name: str, path: Path):
 
 class RepoLayoutTests(unittest.TestCase):
     def test_python_lives_only_in_scripts_dirs(self):
-        """每个 skill（含 _shared）的 .py 只能放在自己的 scripts/ 下。"""
+        """每个 skill（含 _shared）的 .py 只能放在自己的 scripts/ 下；sync_shared.py 生成的 <skill>/_shared/scripts/ 也算。"""
         offenders = [
             str(py.relative_to(REPO_ROOT))
             for py in SKILLS.rglob("*.py")
-            if "__pycache__" not in py.parts and py.relative_to(SKILLS).parts[1] != "scripts"
+            if "__pycache__" not in py.parts
+            and py.relative_to(SKILLS).parts[1] != "scripts"
+            and py.relative_to(SKILLS).parts[1:3] != ("_shared", "scripts")
         ]
         self.assertEqual(offenders, [])
 
@@ -75,6 +78,26 @@ class RepoLayoutTests(unittest.TestCase):
                     offenders.append(f"{md.relative_to(REPO_ROOT)} -> {ref}")
         self.assertEqual(offenders, [])
 
+    def test_vendored_skills_reference_only_their_own_shared_copy(self):
+        """npx 单独安装后没有 ../_shared 和兄弟 skill；这三个 skill 的文档只能引用自己 _shared/ 下存在的文件。"""
+        shared_ref = re.compile(r"_shared/[\w./-]+\.(?:md|py|json)")
+        offenders = []
+        for name in ("paper-reader", "concept-notes", "daily-papers"):
+            skill = SKILLS / name
+            for md in skill.rglob("*.md"):
+                if "_shared" in md.relative_to(skill).parts:
+                    continue
+                text = md.read_text(encoding="utf-8")
+                for bad in ("../_shared", "~/.claude/skills/_shared", "../concept-notes/"):
+                    if bad in text:
+                        offenders.append(f"{md.relative_to(REPO_ROOT)}: {bad}")
+                for ref in shared_ref.findall(text):
+                    if ref.endswith("user-config.local.json"):
+                        continue
+                    if not (skill / ref).exists():
+                        offenders.append(f"{md.relative_to(REPO_ROOT)} -> {ref}")
+        self.assertEqual(offenders, [])
+
     def test_rule_files_referenced_under_references_dir(self):
         offenders = [
             f"{md.relative_to(REPO_ROOT)}:{m.group(0)}"
@@ -94,7 +117,9 @@ class RepoLayoutTests(unittest.TestCase):
             )
             module = load_module_from_path("user_config_under_test", shared / "scripts" / "user_config.py")
 
-            keywords = module.load_user_config()["daily_papers"]["keywords"]
+            # 指向不存在的个人配置，避免本机 ~/.config 下的真实配置覆盖 sentinel。
+            with unittest.mock.patch.dict("os.environ", {"DAILYPAPER_CONFIG": str(Path(tmp) / "absent.json")}):
+                keywords = module.load_user_config()["daily_papers"]["keywords"]
 
         self.assertIn("sentinel-keyword-from-json", keywords)
 

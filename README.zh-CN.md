@@ -57,9 +57,22 @@ npx skills add Agents365-ai/drawio-skill -g -a claude-code
 brew install --cask drawio
 ```
 
-把 skills 软链接到 Claude Code 的 skills 目录，仓库里的改动立即生效：
+三种安装方式任选一种：
 
 ```bash
+# 1. skills CLI：把每个 skill 复制到 ~/.claude/skills；之后用 `npx skills update -g` 更新
+npx skills add BeenLi/arch-reading-skills -g -a claude-code
+```
+
+```text
+# 2. Claude Code plugin：在 Claude Code 里运行；skill 名会带上插件前缀（arch-reading:paper-reader）
+/plugin marketplace add BeenLi/arch-reading-skills
+/plugin install arch-reading@arch-reading-skills
+```
+
+```bash
+# 3. git clone + 软链接，适合开发：仓库里的改动立即生效
+git clone https://github.com/BeenLi/arch-reading-skills.git && cd arch-reading-skills
 mkdir -p ~/.claude/skills
 for d in paper-reader concept-notes daily-papers book-reader repo-reader verilog-diagram _shared; do
   ln -sfn "$PWD/skills/$d" "$HOME/.claude/skills/$d"
@@ -68,7 +81,7 @@ done
 
 `verilog-diagram` 还依赖第三方的 [drawio-skill](https://github.com/Agents365-ai/drawio-skill)（`npx skills add Agents365-ai/drawio-skill -g -a claude-code`），画框图和控制结构图另需 `yosys`、`sv2v` 和 Graphviz。
 
-`_shared` 不是 skill，是各 skill 共用的配置、脚本和画图规则；SKILL.md 里的 `../_shared/…` 相对路径依赖它和其他 skill 放在同一目录下。
+`skills/_shared` 不是 skill，是各 skill 共用的配置、脚本和画图规则。`paper-reader`、`concept-notes`、`daily-papers` 各自的 `_shared/` 目录里带一份生成的副本，所以三种安装方式都能单独装某个 skill。`book-reader` 和 `repo-reader` 只在 `~/.claude/skills/_shared` 存在时才用其中的转义检查和 Mermaid 规则，所以方式 3 也把它链接过去。
 
 初始化 Obsidian 目录：
 
@@ -77,7 +90,7 @@ VAULT=~/ObsidianVault
 mkdir -p "$VAULT/DailyPapers" "$VAULT/PaperNotes/_concepts" "$VAULT/PaperNotes/_inbox"
 ```
 
-共享配置在 `skills/_shared/user-config.json`。个人路径和关键词覆盖写在同目录的 `user-config.local.json`（git 忽略）。加载顺序：`user_config.py` 默认值 → `user-config.json` → `user-config.local.json`。
+共享配置在 `skills/_shared/user-config.json`。个人路径和关键词覆盖写在 `~/.config/dailypaper-skills/user-config.json`，放在 skill 目录之外，更新 skill 时不会被覆盖；想用别的文件就设环境变量 `DAILYPAPER_CONFIG`。加载顺序：`user_config.py` 默认值 → `user-config.json` → 个人配置。两者都不存在时，仍兼容读取旧的 `skills/_shared/user-config.local.json`。
 
 | 配置组 | 说明 |
 |---|---|
@@ -181,7 +194,7 @@ PDF / EPUB / MOBI / TXT 按页或按章提取，分批提炼知识点，输出�
 
 - 契约：[`skills/repo-reader/references/doc-format.md`](skills/repo-reader/references/doc-format.md)；机器校验：`python3 skills/repo-reader/scripts/check_doc.py <draft> --name <Name>`
 - 原始材料：`python3 skills/repo-reader/scripts/repo_facts.py <repo>`（remote、HEAD、目录树、入口候选、README 命令、配置文件）
-- 落盘：仓库已有 `ARCHITECTURE.md` 或用户要求时写进仓库并硬链接到 vault 的使用指南目录；否则只写 vault。目录由 `skills/repo-reader/config.json` 的 `guide_dir` 决定（从 `config.example.json` 复制，不入库）
+- 落盘：仓库已有 `ARCHITECTURE.md` 或用户要求时写进仓库并硬链接到 vault 的使用指南目录；否则只写 vault。目录由 `~/.config/dailypaper-skills/repo-reader.json` 的 `guide_dir` 决定（从 `skills/repo-reader/config.example.json` 复制），也可用环境变量 `ARCH_DOC_GUIDE_DIR` 覆盖
 
 ### 画硬件图 — `verilog-diagram`
 
@@ -204,6 +217,7 @@ skills/
 ├── repo-reader/           # 代码仓库 → 架构和使用文档；scripts/ 仓库事实采集、文档校验；references/ 12 节契约
 ├── verilog-diagram/       # Verilog / 论文 → draw.io 图；scripts/ 生成器、导出器、Linux draw.io 安装脚本；examples/ 样例
 └── _shared/               # 共享配置；scripts/ MOC 生成、转义检查、venue 标签、CCF 分级；references/ 画图规则
+scripts/sync_shared.py     # 把 skills/_shared 复制进用到它的三个 skill
 ```
 
 ### 目录约定
@@ -219,6 +233,14 @@ skills/
 新增文件按此归位；`tests/test_repo_layout.py` 会检查 `.py` 只在 `scripts/` 下，以及所有 Markdown 里的 `python3 …py` 路径都能解析。
 
 ## 开发维护
+
+`skills/_shared` 是唯一源；`skills/{paper-reader,concept-notes,daily-papers}/_shared/` 是生成的副本，提交进 git，但不要手改。脚本先找源、找不到再用副本，所以在 clone 下改 `skills/_shared` 立即生效。提交前重新生成副本；pre-commit hook 和 CI 都会检查：
+
+```bash
+git config core.hooksPath .githooks   # 每个 clone 运行一次
+python3 scripts/sync_shared.py         # 重新生成副本
+python3 scripts/sync_shared.py --check # 只检查
+```
 
 ```bash
 python3 -m pytest tests/ -q

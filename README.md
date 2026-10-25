@@ -57,9 +57,22 @@ npx skills add Agents365-ai/drawio-skill -g -a claude-code
 brew install --cask drawio
 ```
 
-Symlink the skills into Claude Code's skills directory so changes in the repo take effect immediately:
+Install the skills one of three ways:
 
 ```bash
+# 1. skills CLI: copies each skill into ~/.claude/skills; update later with `npx skills update -g`
+npx skills add BeenLi/arch-reading-skills -g -a claude-code
+```
+
+```text
+# 2. Claude Code plugin: run inside Claude Code; skill names get the plugin prefix (arch-reading:paper-reader)
+/plugin marketplace add BeenLi/arch-reading-skills
+/plugin install arch-reading@arch-reading-skills
+```
+
+```bash
+# 3. git clone + symlinks, for development: changes in the repo take effect immediately
+git clone https://github.com/BeenLi/arch-reading-skills.git && cd arch-reading-skills
 mkdir -p ~/.claude/skills
 for d in paper-reader concept-notes daily-papers book-reader repo-reader verilog-diagram _shared; do
   ln -sfn "$PWD/skills/$d" "$HOME/.claude/skills/$d"
@@ -68,7 +81,7 @@ done
 
 `verilog-diagram` also needs the third-party [drawio-skill](https://github.com/Agents365-ai/drawio-skill) (`npx skills add Agents365-ai/drawio-skill -g -a claude-code`), plus `yosys`, `sv2v` and Graphviz for block and control diagrams.
 
-`_shared` is not a skill: it holds the configuration, scripts and diagram rules the skills share. The `../_shared/…` paths in each SKILL.md assume it sits next to the other skills.
+`skills/_shared` is not a skill: it holds the configuration, scripts and diagram rules the skills share. `paper-reader`, `concept-notes` and `daily-papers` each carry a generated copy in their own `_shared/` folder, so every install method works per skill. `book-reader` and `repo-reader` only use the escape checker and Mermaid rules from `~/.claude/skills/_shared` when it exists, which is why method 3 links it too.
 
 Create the Obsidian folders:
 
@@ -77,7 +90,7 @@ VAULT=~/ObsidianVault
 mkdir -p "$VAULT/DailyPapers" "$VAULT/PaperNotes/_concepts" "$VAULT/PaperNotes/_inbox"
 ```
 
-Shared settings live in `skills/_shared/user-config.json`. Put personal paths and keyword overrides in `user-config.local.json` next to it (git-ignored). Load order: defaults in `user_config.py` → `user-config.json` → `user-config.local.json`.
+Shared settings live in `skills/_shared/user-config.json`. Put personal paths and keyword overrides in `~/.config/dailypaper-skills/user-config.json`, outside the skill folders so updates never overwrite it; set `DAILYPAPER_CONFIG` to use a different file. Load order: defaults in `user_config.py` → `user-config.json` → your personal file. The old `skills/_shared/user-config.local.json` is still read when neither of those exists.
 
 | Setting | Meaning |
 |---|---|
@@ -181,7 +194,7 @@ Static source analysis only (it never runs the target repository's scripts, test
 
 - Contract: [`skills/repo-reader/references/doc-format.md`](skills/repo-reader/references/doc-format.md); checker: `python3 skills/repo-reader/scripts/check_doc.py <draft> --name <Name>`
 - Raw facts: `python3 skills/repo-reader/scripts/repo_facts.py <repo>` (remote, HEAD, directory tree, entry-point candidates, README commands, config files)
-- Output: written into the repository and hard-linked into the vault's guide folder when the repository already has an `ARCHITECTURE.md` or you ask for it; otherwise only into the vault. The folder comes from `guide_dir` in `skills/repo-reader/config.json` (copy it from `config.example.json`; not committed)
+- Output: written into the repository and hard-linked into the vault's guide folder when the repository already has an `ARCHITECTURE.md` or you ask for it; otherwise only into the vault. The folder comes from `guide_dir` in `~/.config/dailypaper-skills/repo-reader.json` (copy it from `skills/repo-reader/config.example.json`), or the `ARCH_DOC_GUIDE_DIR` environment variable
 
 ### Hardware diagrams — `verilog-diagram`
 
@@ -204,6 +217,7 @@ skills/
 ├── repo-reader/           # Repository → architecture and usage guide; scripts/ facts and checker; references/ 12-section contract
 ├── verilog-diagram/       # Verilog / papers → draw.io diagrams; scripts/ generators, exporter, Linux draw.io installer; examples/
 └── _shared/               # Shared config; scripts/ index generation, escape checks, venue labels, CCF ranks; references/ diagram rules
+scripts/sync_shared.py     # Copies skills/_shared into the three skills that use it
 ```
 
 ### Directory convention
@@ -219,6 +233,14 @@ Each skill splits its files into three folders by role:
 New files follow this split; `tests/test_repo_layout.py` checks that `.py` files live only under `scripts/` and that every `python3 …py` path in the Markdown resolves.
 
 ## Development
+
+`skills/_shared` is the only source; `skills/{paper-reader,concept-notes,daily-papers}/_shared/` are generated copies that are committed but never edited by hand. Scripts look for the source first and fall back to the copy, so edits to `skills/_shared` take effect at once in a clone. Regenerate the copies before committing; the pre-commit hook and CI run the check:
+
+```bash
+git config core.hooksPath .githooks   # once per clone
+python3 scripts/sync_shared.py         # regenerate the copies
+python3 scripts/sync_shared.py --check # check only
+```
 
 ```bash
 python3 -m pytest tests/ -q

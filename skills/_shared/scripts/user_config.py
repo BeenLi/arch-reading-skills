@@ -2,6 +2,7 @@
 
 import copy
 import json
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -47,13 +48,34 @@ def _deep_merge(base: dict, override: dict) -> dict:
     return base
 
 
+# 个人配置放在 skill 目录之外，`npx skills update` / plugin 更新覆盖 skill 目录时不会丢。
+CONFIG_ENV_VAR = "DAILYPAPER_CONFIG"
+USER_CONFIG_PATH = Path("~/.config/dailypaper-skills/user-config.json")
+# 旧位置：skill 目录内、被 .gitignore 忽略的覆盖文件，只为兼容迁移前的安装。
+LEGACY_LOCAL_FILENAME = "user-config.local.json"
+
+
+def user_override_paths(shared_dir: Path) -> list[Path]:
+    """返回要叠加在默认值之上的个人配置文件：三个来源互斥，只取一个。
+
+    设置了 DAILYPAPER_CONFIG 就只用它，文件不存在也不再往下找（测试靠这一点隔离本机配置）；
+    否则用 ~/.config 下的文件；两者都没有时才兜底读旧的 skill 目录内 local 文件。
+    """
+    env_path = os.environ.get(CONFIG_ENV_VAR)
+    if env_path:
+        return [Path(env_path).expanduser()]
+    user_path = USER_CONFIG_PATH.expanduser()
+    if user_path.exists():
+        return [user_path]
+    return [shared_dir / LEGACY_LOCAL_FILENAME]
+
+
 @lru_cache(maxsize=1)
 def load_user_config() -> dict:
     config = copy.deepcopy(DEFAULT_CONFIG)
-    config_dir = Path(__file__).resolve().parent.parent
+    shared_dir = Path(__file__).resolve().parent.parent
 
-    for filename in ("user-config.json", "user-config.local.json"):
-        config_path = config_dir / filename
+    for config_path in [shared_dir / "user-config.json", *user_override_paths(shared_dir)]:
         if not config_path.exists():
             continue
         with config_path.open("r", encoding="utf-8") as f:

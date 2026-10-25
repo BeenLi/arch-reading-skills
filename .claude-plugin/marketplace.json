@@ -1,0 +1,17 @@
+{
+  "name": "arch-reading-skills",
+  "owner": {
+    "name": "BeenLi"
+  },
+  "metadata": {
+    "description": "Claude Code skills for reading computer-architecture papers into an Obsidian vault."
+  },
+  "plugins": [
+    {
+      "name": "arch-reading",
+      "source": "./",
+      "description": "Architecture-first paper reading for Claude Code: daily paper picks, structured paper notes, an Obsidian concept library, book and repo readers, and Verilog diagrams.",
+      "strict": false
+    }
+  ]
+}

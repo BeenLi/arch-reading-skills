@@ -20,7 +20,7 @@ description: |
 
 ## Step 0: 读取共享配置
 
-先读取 `../_shared/user-config.json`，如果 `../_shared/user-config.local.json` 存在，再用它覆盖默认值。
+先读取 skill 目录下的 `_shared/user-config.json` 作为默认值（从仓库安装时读仓库的 `skills/_shared/user-config.json`），再用个人配置覆盖。个人配置只取一个：环境变量 `DAILYPAPER_CONFIG` 指向的文件；没设时用 `~/.config/dailypaper-skills/user-config.json`；两者都没有时才读旧位置 `skills/_shared/user-config.local.json`。
 
 显式生成并统一使用：
 
@@ -71,13 +71,13 @@ description: |
 ### 核心质量规则
 
 1. 所有 Figure、公式、Table 都必须出现。
-2. 技术术语首次出现要加 `[[概念]]` 链接；`../concept-notes/references/concept-categories.md` 的 seed list 命中词，首次出现必须写成 `[[概念名]]`，即使作者把它当常识。
-3. 不用 ASCII 流程图；改用结构化 Markdown 和必要公式。自画图按 `../_shared/references/diagram-rules.md` 选路线：流程、模块结构、评测平台默认用 diagram-design 画并导出 PNG 嵌入；时序 / 协议交互、时间线 / 甘特、流水线分级架构图优先 draw.io 路线；画图 skill 不可用时逐级退回，最后才退回 Mermaid 代码块；汇报时写明每张自画图用了哪条路线（diagram-design / draw.io / Mermaid）以及是否退回。
+2. 技术术语首次出现要加 `[[概念]]` 链接；`_shared/references/concept-categories.md` 的 seed list 命中词，首次出现必须写成 `[[概念名]]`，即使作者把它当常识。
+3. 不用 ASCII 流程图；改用结构化 Markdown 和必要公式。自画图按 `_shared/references/diagram-rules.md` 选路线：流程、模块结构、评测平台默认用 diagram-design 画并导出 PNG 嵌入；时序 / 协议交互、时间线 / 甘特、流水线分级架构图优先 draw.io 路线；画图 skill 不可用时逐级退回，最后才退回 Mermaid 代码块；汇报时写明每张自画图用了哪条路线（diagram-design / draw.io / Mermaid）以及是否退回。
 4. 公式必须有名称和 LaTeX，并用自然段解释建模对象、变量角色及其支撑的设计或结论。
 5. 图片优先外链 arXiv HTML / 项目主页；如果图源是本地 PDF，则从 PDF 裁切图片并存放到笔记同目录下的 `00_assets/<note-name>_<原图片名>`，笔记中使用 `![[00_assets/<note-name>_<原图片名>]]`。
 6. Figure / Table / 单个公式必须嵌入对应叙事小节，不要默认用 H3/H4 图表或公式标题把素材提升为 Obsidian 大纲章节；图片标题写进图片引用的题注/alt 文本（如 `![Figure 3: ...](...)`），不要在图片上方单独写 `**Figure ...**` 标题；只有“核心结果”“消融实验”“附录图”等语义小节可以使用 `###`，只有按论文结构或 Agent 理解提炼出的机制子小节才可以使用 `####`。
 7. 论文笔记正文禁止使用 Obsidian task 语法（`- [ ]` / `- [x]`）；核查项、复现步骤、风险项一律写成普通 bullet 或 Markdown table，避免污染 Obsidian Tasks。
-8. `### 系统架构` 优先直接嵌入论文的总体架构原图并挂 `^figN`；没有原图或看不出模块边界与数据流时才自画一张，二选一。`### 执行流` 用编号步骤走读；满足任一条件时在编号步骤前加一张执行流全局图（锚点 `^diag-flow`）：执行流 ≥ 5 步（按编号列表条数计，一步对应一次模块间交接）；≥ 3 个角色或组件且有反馈闭环或回到上游模块或自身的重试 / 迭代循环（单纯的请求-响应返回不算）；有分支、并行或异步路径；系统架构图里模块之间没有带方向的箭头或步骤编号。这张图讲“怎么动”，步骤编号与列表一致，不要重画架构图的模块结构；形式按 `../_shared/references/diagram-rules.md` 选；四个条件都不满足就不画。
+8. `### 系统架构` 优先直接嵌入论文的总体架构原图并挂 `^figN`；没有原图或看不出模块边界与数据流时才自画一张，二选一。`### 执行流` 用编号步骤走读；满足任一条件时在编号步骤前加一张执行流全局图（锚点 `^diag-flow`）：执行流 ≥ 5 步（按编号列表条数计，一步对应一次模块间交接）；≥ 3 个角色或组件且有反馈闭环或回到上游模块或自身的重试 / 迭代循环（单纯的请求-响应返回不算）；有分支、并行或异步路径；系统架构图里模块之间没有带方向的箭头或步骤编号。这张图讲“怎么动”，步骤编号与列表一致，不要重画架构图的模块结构；形式按 `_shared/references/diagram-rules.md` 选；四个条件都不满足就不画。
 9. 正文引用 Figure / Table / 公式 / Insight / 机制 / 贡献一律用 `[[#^id|…]]` 或 `[[#标题|…]]` 跳转链接；锚点约定见 `references/quality-standards.md` 的“笔记内跳转”。
 
 本地图片命名规则：`note-name ≤ 48 字符` 时直接使用 `<note-name>_` 前缀；note-name 太长时使用 `截断前 40 字符 + 8 位 hash` 作为前缀，形如 `VeryLongNoteNamePrefix_xxxxxxxx_figure.png`，避免文件名过长和重名。
@@ -137,11 +137,11 @@ created: YYYY-MM-DD
 
 ### 标题标签
 
-笔记第一行标题写成 `# 论文笔记：{论文标题} ({venue_label})`，例如 `(MICRO'25)`、`(TVLSI'24)`、`(arXiv'26)`。`venue_label` 和 frontmatter 的 `venue` 分别取 `zotero_helper.py resolve` 输出里的 `venue_label` / `venue_short`；不经过 Zotero 时在 skill 目录下运行 `python3 ../_shared/scripts/venue_label.py --venue "<venue 原文>" --year <年份>`（加 `--short` 只输出缩写）。脚本识别不出 venue 或缺年份时，标题不加括号、`venue` 保留原文，不要自己编缩写。文件名不带标签，已有的 wikilink 不受影响。
+笔记第一行标题写成 `# 论文笔记：{论文标题} ({venue_label})`，例如 `(MICRO'25)`、`(TVLSI'24)`、`(arXiv'26)`。`venue_label` 和 frontmatter 的 `venue` 分别取 `zotero_helper.py resolve` 输出里的 `venue_label` / `venue_short`；不经过 Zotero 时在 skill 目录下运行 `python3 _shared/scripts/venue_label.py --venue "<venue 原文>" --year <年份>`（加 `--short` 只输出缩写）。脚本识别不出 venue 或缺年份时，标题不加括号、`venue` 保留原文，不要自己编缩写。文件名不带标签，已有的 wikilink 不受影响。
 
 ## 5. 附带生成本篇新概念
 
-论文笔记写完后，调用 `concept-notes` skill 的**模式 E**，传入本篇笔记路径：它负责找出本篇新碰到的概念、按分类和增强模板创建、做长度自检，并返回新建的概念笔记路径。概念的分类、模板和过滤规则都在 `../concept-notes/`，这里不重复。
+论文笔记写完后，调用 `concept-notes` skill 的**模式 E**，传入本篇笔记路径：它负责找出本篇新碰到的概念、按分类和增强模板创建、做长度自检，并返回新建的概念笔记路径。概念的分类、模板和过滤规则都在 `concept-notes` skill 里维护，这里不重复。
 
 ## 6. 生成后复查链接
 
@@ -160,7 +160,7 @@ python3 scripts/check_note_links.py "<笔记路径>" "<新建的概念笔记路�
 - 所有 Table 完整保留？
 - Template 检查：是否对照 `assets/paper-note-template.md` 验证必备章节与层级？尤其 `## 关键机制拆解` 到下一个 `##` 之间，所有 `###` 是否都匹配 `### 机制N：...`，且 Algorithm / pipeline / 公式解释 / 图表解读 / 实现细节没有与机制并列？章节顺序是否为 `问题定义` → `动机实验与核心 Insights` → `核心贡献` → `系统设计总览`，`实现改动清单` 是否在 `Overhead 与兼容性` 下？
 - Obsidian 大纲是否干净：没有把普通 `Figure X` / `Table X` / 单个公式提升成 `###` 或 `####` 章节？`####` 是否只用于机制内部的语义子小节？
-- `### 系统架构` 是否有且只有一张结构图（优先论文原图，否则按 `../_shared/references/diagram-rules.md` 自画并走完渲染 / 校验闭环），配组件表与 `### 执行流` 编号走读？执行流满足四个触发条件之一时，是否有且只有一张 `^diag-flow` 全局图，且编号与列表一致、没有重画模块结构？所有自画图的 PNG 都用 Read 打开看过，确认没有回头线、交叉线和语义错误的边之后才能交付；退回 Mermaid 的图按 `../_shared/references/mermaid-rules.md` 用 `mmdc` 或 `npx -y @mermaid-js/mermaid-cli` 实际渲染后再看。
+- `### 系统架构` 是否有且只有一张结构图（优先论文原图，否则按 `_shared/references/diagram-rules.md` 自画并走完渲染 / 校验闭环），配组件表与 `### 执行流` 编号走读？执行流满足四个触发条件之一时，是否有且只有一张 `^diag-flow` 全局图，且编号与列表一致、没有重画模块结构？所有自画图的 PNG 都用 Read 打开看过，确认没有回头线、交叉线和语义错误的边之后才能交付；退回 Mermaid 的图按 `_shared/references/mermaid-rules.md` 用 `mmdc` 或 `npx -y @mermaid-js/mermaid-cli` 实际渲染后再看。
 - `实验设置` 的 `模拟器与微架构参数` 小节是否包含 evaluation platform 连接关系图（diagram-design 或 draw.io 的 PNG 嵌图），并说明测试系统形态与硬件资源需求？是否删除了和图重复、且对读者理解测试系统无帮助的参数细节？
 - 第一行标题是否带 `(venue_label)`（识别不出时省略），frontmatter `venue` 是否是不带年份的缩写？
 - 正文是否没有 `- [ ]` / `- [x]` 这类 Obsidian task 语法？

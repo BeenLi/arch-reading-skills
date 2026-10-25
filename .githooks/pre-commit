@@ -1,0 +1,8 @@
+#!/bin/sh
+# skills/<name>/_shared 是 skills/_shared 的生成副本；改了源忘了同步就拒绝提交。
+# 启用：git config core.hooksPath .githooks
+python3 scripts/sync_shared.py --check >/dev/null 2>&1 || {
+    python3 scripts/sync_shared.py --check
+    echo "pre-commit: 先运行 python3 scripts/sync_shared.py，再 git add 生成的 _shared 副本。" >&2
+    exit 1
+}

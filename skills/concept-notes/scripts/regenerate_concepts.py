@@ -31,7 +31,16 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 _SCRIPTS_DIR = Path(__file__).resolve().parent  # 同目录的 scan_missing_concepts
-_SHARED_DIR = Path(__file__).resolve().parents[2] / "_shared" / "scripts"
+def _find_shared_scripts() -> Path:
+    """源优先：在仓库里（含 plugin 缓存的整仓副本）用 skills/_shared，本地改动立即生效；
+    npx 单独安装的 skill 没有源，回退到 sync_shared.py 生成的 <skill>/_shared 副本。"""
+    here = Path(__file__).resolve()
+    if (here.parents[3] / "scripts" / "sync_shared.py").exists():
+        return here.parents[2] / "_shared" / "scripts"
+    return here.parents[1] / "_shared" / "scripts"
+
+
+_SHARED_DIR = _find_shared_scripts()
 for _path in (_SCRIPTS_DIR, _SHARED_DIR):
     if str(_path) not in sys.path:
         sys.path.insert(0, str(_path))

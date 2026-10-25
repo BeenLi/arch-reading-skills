@@ -1,0 +1,127 @@
+# 概念归类规则
+
+概念库位置：`{CONCEPTS_PATH}`
+
+**分类维度**：概念库**按概念本身的性质（concept type）分类**，不按它服务的系统层或论文研究领域分类。原因是同一个算法 / 数据结构 / 度量口径会跨多个系统层被引用，按概念本质分能避免跨主题查找失败。
+
+写新概念前先用 `ls {CONCEPTS_PATH}` 查看 8 个 type 目录，再按下表选定 `concept_type`。
+
+## Type 维度 vocabulary（8 类，单一信源）
+
+| 子目录 | concept_type 取值 | 归类标准 | 示例 |
+|--------|---|---|---|
+| `data-structure/` | `data-structure` | 数据格式 / 表示 / 结构 | BFloat16, FP8, INT4, KV Cache, Radix Tree |
+| `algorithm/` | `algorithm` | **脱离系统也成立**的纯计算逻辑 | Huffman Coding, Arithmetic Coding, ANS, AllReduce |
+| `mechanism/` | `mechanism` | **绑定系统上下文**的运行时策略 | PagedAttention, Kernel Fusion, Micro-Batching, Request Admission Control |
+| `architecture/` | `architecture` | 宏观系统架构 / 服务模式 | LLM Serving, Parameter Server, Agentic AI Serving, CPU-GPU Heterogeneous Serving |
+| `hardware/` | `hardware` | 硬件部件 / 计算单元 / 物理互联 | Tensor Core, SIMT, NVLink, HBM, Systolic Array |
+| `software-abstraction/` | `software-abstraction` | OS / 框架层接口与协议 | CUDA, MPI, NCCL, vLLM Engine, OpenMP |
+| `metric/` | `metric` | 评估指标 / 测量口径 | SLO, TTFT, Tail Latency, Compute Intensity, MPKI |
+| `theory-model/` | `theory-model` | 性能数学模型 + 纯数学 / 统计基础 | Roofline Model, Amdahl's Law, Error Function, Unimodal Distribution |
+
+## 判定原则
+
+### algorithm vs mechanism 边界
+
+**"脱离系统也成立?"**
+
+- 成立 → `algorithm`（如 Huffman Coding，作为信息论算法独立存在）
+- 不成立 → `mechanism`（如 PagedAttention，必须有 attention runtime 才有意义）
+
+### 跨类如何选
+
+边缘案例按"最直接刻画本质"选：
+
+| 案例 | 选 | 不选的原因 |
+|---|---|---|
+| `KV Cache` | `data-structure` | 本质是结构，而非机制 |
+| `BFloat16` | `data-structure` | 本质是数值表示，而非硬件 |
+| `Roofline Model` | `theory-model` | 本质是性能模型，而非指标 |
+| `Compute Intensity` | `metric` | 本身是 FLOPs/Byte 测量值，是 Roofline 的输入 |
+| `Kernel Fusion` | `mechanism` | 编译器+运行时联合执行，绑定系统上下文 |
+| `Tensor Core` | `hardware` | 硬件部件 |
+
+### 过滤默认规则
+
+- 宁可漏判几个通用词，也不要误杀真正的 systems concept；不确定就创建，后续再靠 review 折回或删除。
+- `Admission Control`、`Kernel Fusion`、`RDMA`、`NVLink`、`PCIe`、`NUMA`、`HBM`、`CXL`、`AllReduce`、`NCCL`、`CUDA` 这类 systems 基石术语即使在论文中被当作常识，也应作为 concept 候选。
+- 数据集 / 仿真器不作为 concept。数据集、benchmark suite、仿真器和纯实验环境名称如果需要长期维护，应进入单独资料库；当前不创建 concept。
+- `Service-Level Objective` / `SLO` 仅在 systems paper 实际定义 SLO 数值、违约条件或调度目标时创建或保留；泛泛业务目标不建 concept。
+
+### paper-method 处理规约（采纳 qa 判定原则）
+
+**paper-method 不作为正式 `concept_type`**。它描述的是概念的"生命周期状态"，不是本质属性。
+
+判定与处理：
+
+| 情形 | 处理 |
+|---|---|
+| 论文首创 + 仅本论文实验 | 落到最接近的 `concept_type`，并在 frontmatter 加 `tags: [status/paper-specific]` 标记 |
+| 论文具名实现 + 前人工作 / 被多篇当 baseline | 直接升格为通用 concept，不加 `status/paper-specific`；在论文笔记里讲清该论文的具名实现细节 |
+| 完全是前人工作 + 该论文只是引用 | 不该独立成 concept，只在论文笔记内提及或链接已有 concept |
+
+晋升判定：至少 2 篇**作者无重叠**的独立工作（不是同实验室后续）使用该概念，且不再附加"X 论文的"前缀。
+
+## Systems Concept Seed Vocabulary
+
+这些词是 systems 论文里容易被作者当常识略过的触发词。写论文笔记时，正文首次出现这些术语必须写成 `[[概念名]]`；离线扫描脚本也会用本表发现“应该有 concept、但笔记里没有 wikilink”的盲点。
+
+| concept_type | seed terms |
+|---|---|
+| data-structure | HBM, SRAM, DRAM, CXL Memory Pool, Bloom Filter, Trie, B-tree |
+| hardware | RDMA, NVLink, PCIe, InfiniBand, NUMA, SMT, Cache Coherence, TLB, Branch Predictor, Out-of-Order, ROB, BTB, Systolic Array |
+| algorithm | AllReduce, AllGather, Reduce-Scatter, Consistent Hashing, Paxos, Raft |
+| mechanism | Speculative Execution, Pipelining, Prefetching, Speculative Decoding, Continuous Batching, Disaggregated Prefill, Tensor Parallelism |
+| architecture | Parameter Server, Map-Reduce, Mixture of Experts |
+| software-abstraction | CUDA, NCCL, MPI, OpenMP, vLLM Engine, TVM, MLIR, Triton, Ray |
+| metric | MPKI, IPC, Bandwidth Utilization, Effective FLOPs, Goodput, p99 |
+| theory-model | Amdahl's Law, Gustafson's Law, Little's Law, USL Model |
+
+## 概念笔记模板（增强版）
+
+每篇 concept 笔记由 **8 个统一段** + **1 个按 concept_type 加的差异化段** 组成。长度按两项分别计：直观例子 ≤ 100 行、其他段 ≤ 90 行（不计 frontmatter 和图的源码）。
+
+- `直观例子`：只是一个简单示例时写 10–25 行；按下面的规则写成逐步推导时目标 30–50 行。只有这一段可以因为推导而变长。
+- 其他段（`直观例子` 以外的所有段）：目标 50–70 行；超过上限说明在凑长度，请收敛。
+- 计数口径：diagram-design / matplotlib 等导出的图用一行 `![[…]]` 嵌入，按 1 行计；退回的 Mermaid 代码块（含首尾 fence）不计；空行照常计。
+
+写完运行 `python3 ~/.claude/skills/concept-notes/scripts/check_concept_length.py <概念笔记>` 自检，超限时按提示收敛对应的段。
+
+模板骨架在 `../assets/concept-note-template.md`：按它复制，填 `{…}` 占位符，把 `## {差异化段名}` 换成下面“按 concept_type 差异化段”表里对应的段名。8 个统一段依次是 `## 定义`、`## 动机与痛点`、`## 直观例子`、`## 核心要点`、`## 边界与对比`、`## 代表工作与具体用法`、`## 相关概念`、`## 学习索引`；学习索引找不到证据时整段写 `TODO: 待人工补充学习材料`，不要硬凑。
+
+## 直观例子写作规则
+
+`直观例子` 是概念笔记里最容易写得"只有结论"的一段。下面的规则来自 Loop Tiling 概念笔记的返工：初版只写了"分块后 DRAM 流量约降为 1/T"，既跳过了推导，结论也不准确（实际是约 2/T），读者没法自己核对。
+
+1. **先交代场景和假设**：问题规模（如 N×N）、资源约束（如片上容量 S、一次放几个块）、计量单位（按元素还是字节），以及简化假设（如 N 能被 T 整除、理想 scratchpad）。
+2. **分步推导，每一步用一个问题做标题**：`### 第 N 步：<这一步回答的问题>`，例如"未分块时谁在反复读 DRAM""T 能取多大"。一步只回答一个问题。
+3. **对比类结论要用"前 / 后"两张同结构的表**：行是参与者（如 A、B、C 三个矩阵），列是推导链上的中间量（复用距离 → 放得下吗 → 每个元素读几次 → 总流量），让每个数字都能在表里找到出处。
+4. **给公式，也给公式怎么来**：写出代入过程（例如 3T² ≤ S ⇒ T ≤ √(S/3)，再代回流量公式），不要只写 O(·) 结论。能关联到理论界（如下界、Roofline）时点明关系。
+5. **至少一个具体数值算例**：取真实量级的参数（如 S = 32 KB、N = 4096），算出绝对数值，并和上面的公式交叉验证（比如"约 16 倍，正好是 T/2"）。
+6. **反向核对**：换一个角度把同一结论再算一遍（例如按"每个元素读几次"核对"总流量"），能发现推导中的系数错误。
+7. **配图**：
+   - 空间结构类（矩阵分块、内存布局、数据摆放）优先用 matplotlib 等脚本画示意图，因为 Mermaid 画不了网格。图存到笔记同级的 `00_assets/<note-name>_<desc>.png`，用 `![[00_assets/...|说明]]` 嵌入，说明文字要写出图在表达什么。
+   - 流程或组件类用 diagram-design 画并导出 PNG 嵌入（skill 目录下的 `_shared/references/diagram-rules.md` §2）；不可用时退回 Mermaid，并遵守 skill 目录下的 `_shared/references/mermaid-rules.md`。
+   - 不论哪种图，都必须渲染出来、打开看过，确认没有裁切、重叠和缺字（中文字体要配回退字体，否则 ³、² 这类上标会缺字）后再嵌入。
+8. **点出最容易误解的地方**：如果直觉结论和推导结果不同（如 1/T vs 2/T），要单独说明原因。
+9. **文本转义**：正文中的 `C[i][j]`、`$`、`|` 等符号按 vault 根目录 `AGENTS.md` 的"Markdown 特殊符号转义"一节处理；写完后在 skill 目录下运行 `python3 _shared/scripts/md_escape_check.py <笔记>` 自检，发现问题用 `--fix` 修正。
+
+## 按 concept_type 差异化段(必加)
+
+放在 `## 核心要点` 之后、`## 边界与对比` 之前。8 个 concept_type 对应的差异化段如下:
+
+| concept_type | 差异化段名 | 内容要点 |
+|---|---|---|
+| `data-structure` | `## 内存视图 / 字段布局` | 字段分布、字节大小、对齐、布局图 |
+| `algorithm` | `## 步骤` + `## 复杂度` | 伪代码 / 步骤列表;时空复杂度;典型变体 |
+| `mechanism` | `## 状态与触发条件` + `## 关键参数` | 触发条件、状态转移、可调参数 |
+| `architecture` | `## 组件与接口` | **必须**画组件图：按 skill 目录下的 `_shared/references/diagram-rules.md` 用 diagram-design（Architecture 类型）导出 PNG 嵌入，看图确认后交付；diagram-design 不可用时退回 Mermaid `flowchart`（按规则选 LR / TB，遵守 skill 目录下的 `_shared/references/mermaid-rules.md`：label 引号包裹、节点 ID 语义化、配色 ≤5，渲染成 PNG 看图并重排）；不允许 ASCII 状态图替代；描述接口契约 |
+| `hardware` | `## 接口与典型参数` | 指令 / API 接口、峰值算力 / 带宽、典型规格、演进史 |
+| `software-abstraction` | `## API 与生命周期` | 关键 API 签名、初始化-使用-销毁的生命周期 |
+| `metric` | `## 测量方法` | 怎么测、单位、典型范围、好 / 坏阈值参考 |
+| `theory-model` | `## 假设与失效边界` | 模型假设、适用域、什么时候失效 |
+
+## 与论文笔记目录的关系
+
+- 论文笔记目录（`{NOTES_PATH}/<Zotero collection path>/<Method>.md`）**与本分类完全解耦**。论文按 Zotero collection path 落盘，概念按 concept_type 落盘，两套目录互相独立。
+- Obsidian wikilink 不带路径，跨目录引用没问题。

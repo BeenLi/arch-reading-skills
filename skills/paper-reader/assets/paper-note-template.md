@@ -28,10 +28,10 @@ created: {date}
    - `外部链接` 列写 `[arXiv](...)` / `[DOI](...)` / `[Paper](...)`，没有就留空。
 9. `## 这篇论文为什么重要` 和 `## 问题定义` 只写结论：不放图、表、数字；公式只允许出现在 `### 现有方法与设计空间` 作为定义。所有定量证据只在 `## 动机实验与核心 Insights` 出现一次。`## 核心贡献` 放在 Insights 之后、`## 系统设计总览` 之前：每条贡献回应前面的 Insight，需要数字时只引用 Insights 里已经给出的证据，不引入新数字。
 10. 每个 `### Insight N：…` 以 **设计启发** 收尾并链接到对应机制；没有实验证据、靠作者推理得出的 insight 标注"作者论证"而不是"实验"。纯 characterization 论文允许所有 insight 来自实验、没有机制可映射。
-11. `### 系统架构` 的结构图：论文有总体架构图时直接嵌入原图并挂 `^figN`；没有、或原图看不出模块边界与数据流时，才按 `../../_shared/references/diagram-rules.md` 自画一张（锚点 `^diag-arch`）。二选一，不并存。`### 执行流` 用编号步骤走读；满足任一条件时在编号步骤前加一张执行流全局图（锚点 `^diag-flow`）：执行流 ≥ 5 步（按编号列表条数计，一步对应一次模块间交接）；≥ 3 个角色或组件且有反馈闭环或回到上游模块或自身的重试 / 迭代循环（单纯的请求-响应返回不算）；有分支、并行或异步路径；系统架构图里模块之间没有带方向的箭头或步骤编号。这张图讲“怎么动”，步骤编号与列表一致，不要重画系统架构图的模块结构；四个条件都不满足就不画。
+11. `### 系统架构` 的结构图：论文有总体架构图时直接嵌入原图并挂 `^figN`；没有、或原图看不出模块边界与数据流时，才按 skill 目录下的 `_shared/references/diagram-rules.md` 自画一张（锚点 `^diag-arch`）。二选一，不并存。`### 执行流` 用编号步骤走读；满足任一条件时在编号步骤前加一张执行流全局图（锚点 `^diag-flow`）：执行流 ≥ 5 步（按编号列表条数计，一步对应一次模块间交接）；≥ 3 个角色或组件且有反馈闭环或回到上游模块或自身的重试 / 迭代循环（单纯的请求-响应返回不算）；有分支、并行或异步路径；系统架构图里模块之间没有带方向的箭头或步骤编号。这张图讲“怎么动”，步骤编号与列表一致，不要重画系统架构图的模块结构；四个条件都不满足就不画。
 12. 锚点与跳转：Figure 行尾 ` ^figN`（子图 `^fig8a`）；表格结束后空一行、单独一行 `^tab-…`、再空一行；公式锚点挂在公式下方解释段末尾；Insight / 机制 / 章节用标题链接 `[[#标题|短名]]`，标题部分必须与目标标题逐字一致；核心贡献条目末尾 ` ^contrib-N`。id 只用小写字母、数字、连字符，全文唯一。正文提到 Figure / Table / 公式 / Insight / 机制 / 贡献时一律写跳转链接，不写裸文字。表格单元格里的 wikilink 别名分隔符写成 `\|`，否则会切坏表格。
 13. 笔记写完、概念库补齐之后，在 paper-reader skill 目录下对论文笔记和本次新建的概念笔记一起运行 `scripts/check_note_links.py <笔记> <新建的概念笔记> ...`，复查所有跳转链接、wikilink 和嵌入，逐条修到每个文件都输出 OK 为止。
-14. 第一行标题末尾的 `({VenueLabel})` 形如 `MICRO'25`、`TVLSI'24`、`arXiv'26`：取 `zotero_helper.py resolve` 输出的 `venue_label`，或在 paper-reader skill 目录下运行 `python3 ../_shared/scripts/venue_label.py --venue "<venue 原文>" --year <年份>`。给不出时连括号一起省略，不要自己编缩写；文件名不带标签。
+14. 第一行标题末尾的 `({VenueLabel})` 形如 `MICRO'25`、`TVLSI'24`、`arXiv'26`：取 `zotero_helper.py resolve` 输出的 `venue_label`，或在 paper-reader skill 目录下运行 `python3 _shared/scripts/venue_label.py --venue "<venue 原文>" --year <年份>`。给不出时连括号一起省略，不要自己编缩写；文件名不带标签。
 -->
 
 # 论文笔记：{Title} ({VenueLabel})
@@ -143,7 +143,7 @@ $$
 
 ![Figure 1: System overview / 系统总览](...) ^fig1
 
-<!-- 结构图二选一：论文有总体架构图用上面的原图；没有或看不清模块边界与数据流时删掉原图行，改用下面按 ../../_shared/references/diagram-rules.md 自画的一张（默认 diagram-design 导出 PNG，或 draw.io 嵌图），锚点 ^diag-arch。不要原图和自画图都放。 -->
+<!-- 结构图二选一：论文有总体架构图用上面的原图；没有或看不清模块边界与数据流时删掉原图行，改用下面按 skill 目录下的 _shared/references/diagram-rules.md 自画的一张（默认 diagram-design 导出 PNG，或 draw.io 嵌图），锚点 ^diag-arch。不要原图和自画图都放。 -->
 
 ![[00_assets/<note-name>_arch.png|系统架构：{一句话说明}]] ^diag-arch
 
@@ -160,7 +160,7 @@ $$
 
 ### 执行流
 
-{满足任一条件时，在编号步骤前放一张执行流全局图（锚点 `^diag-flow`，放法同 `^diag-arch`）：执行流 ≥ 5 步（按编号列表条数计，一步对应一次模块间交接）；≥ 3 个角色或组件且有反馈闭环或回到上游模块或自身的重试 / 迭代循环（单纯的请求-响应返回不算）；有分支、并行或异步路径；系统架构图里模块之间没有带方向的箭头或步骤编号。图的形式按 `../../_shared/references/diagram-rules.md` 选（flowchart / 时序图 / 甘特图），它讲“一次请求或一个周期怎么动”，图上的步骤编号与下面的编号列表一一对应，不要重画系统架构图的模块结构。四个条件都不满足就不画，直接写列表。}
+{满足任一条件时，在编号步骤前放一张执行流全局图（锚点 `^diag-flow`，放法同 `^diag-arch`）：执行流 ≥ 5 步（按编号列表条数计，一步对应一次模块间交接）；≥ 3 个角色或组件且有反馈闭环或回到上游模块或自身的重试 / 迭代循环（单纯的请求-响应返回不算）；有分支、并行或异步路径；系统架构图里模块之间没有带方向的箭头或步骤编号。图的形式按 skill 目录下的 `_shared/references/diagram-rules.md` 选（flowchart / 时序图 / 甘特图），它讲“一次请求或一个周期怎么动”，图上的步骤编号与下面的编号列表一一对应，不要重画系统架构图的模块结构。四个条件都不满足就不画，直接写列表。}
 
 {按一次请求 / 一个周期 / 一次调度决策的时间顺序走读，每步引用结构图和 [[#^tab-components|组件表]] 里的模块名，并指向后面的机制。}
 
@@ -279,7 +279,7 @@ $$
 
 ![[00_assets/<note-name>_platform.png|测试系统连接关系：{一句话说明}]] ^diag-platform
 
-{根据论文的 evaluation platform 画这张图：只展示测试系统大概长什么样、组件如何连接、需要哪些硬件或模拟资源，典型骨架是 workload / trace → evaluation driver → system under test → compute（CPU / GPU）、memory（DRAM / HBM / cache）、network / storage（NIC / SSD / fabric）和 metrics collector。优先画 client / benchmark driver / scheduler or runtime / worker / accelerator / memory / network / storage / simulator 的连接关系；不要把 CPU pipeline、cache level、BTB、ROB 等微架构细节硬塞进图里，除非它们就是论文评测对象。按 `../../_shared/references/diagram-rules.md` 选型，默认 diagram-design 导出 PNG；若选 draw.io，改为嵌入 `![[00_assets/<note-name>_platform.drawio.png|说明]]`。}
+{根据论文的 evaluation platform 画这张图：只展示测试系统大概长什么样、组件如何连接、需要哪些硬件或模拟资源，典型骨架是 workload / trace → evaluation driver → system under test → compute（CPU / GPU）、memory（DRAM / HBM / cache）、network / storage（NIC / SSD / fabric）和 metrics collector。优先画 client / benchmark driver / scheduler or runtime / worker / accelerator / memory / network / storage / simulator 的连接关系；不要把 CPU pipeline、cache level、BTB、ROB 等微架构细节硬塞进图里，除非它们就是论文评测对象。按 skill 目录下的 `_shared/references/diagram-rules.md` 选型，默认 diagram-design 导出 PNG；若选 draw.io，改为嵌入 `![[00_assets/<note-name>_platform.drawio.png|说明]]`。}
 
 | 资源 / 组件 | 配置 | 在评测中的作用 |
 |-------------|------|----------------|

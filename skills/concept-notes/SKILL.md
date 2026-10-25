@@ -18,7 +18,7 @@ description: |
 
 ## Step 0: 读取共享配置
 
-先读取 `../_shared/user-config.json`，如果 `../_shared/user-config.local.json` 存在，再用它覆盖默认值。
+先读取 skill 目录下的 `_shared/user-config.json` 作为默认值（从仓库安装时读仓库的 `skills/_shared/user-config.json`），再用个人配置覆盖。个人配置只取一个：环境变量 `DAILYPAPER_CONFIG` 指向的文件；没设时用 `~/.config/dailypaper-skills/user-config.json`；两者都没有时才读旧位置 `skills/_shared/user-config.local.json`。
 
 显式生成并在后续统一使用这些变量：
 
@@ -74,7 +74,7 @@ description: |
 
 每篇 concept 必须按增强模板生成：含「动机与痛点 / 直观例子 / 边界与对比 / 学习索引」4 个新必选段 + 按 `concept_type` 加的差异化段。长度：直观例子 ≤ 100 行、其他段 ≤ 90 行（不计 frontmatter 和图的源码）。`学习索引` 找不到证据时允许整段写 `TODO`，禁止凭空编造。
 
-自画图按 `../_shared/references/diagram-rules.md`：默认用 diagram-design 画并导出 PNG 嵌入，不可用时才退回 Mermaid（`../_shared/references/mermaid-rules.md`）。
+自画图按 `_shared/references/diagram-rules.md`：默认用 diagram-design 画并导出 PNG 嵌入，不可用时才退回 Mermaid（`_shared/references/mermaid-rules.md`）。
 
 **A4: 自检**
 
@@ -126,14 +126,14 @@ python3 scripts/regenerate_concepts.py --install
 ## 模式 D: 刷新目录页（MOC）
 
 ```bash
-python3 ../_shared/scripts/generate_concept_mocs.py
-python3 ../_shared/scripts/generate_paper_mocs.py
+python3 _shared/scripts/generate_concept_mocs.py
+python3 _shared/scripts/generate_paper_mocs.py
 ```
 
 旧命名规则留下的目录页，先 dry-run 列出，用户确认后再 `--apply`：
 
 ```bash
-python3 ../_shared/scripts/clean_old_mocs.py
+python3 _shared/scripts/clean_old_mocs.py
 ```
 
 用户手动要求刷新目录页时，不受 `AUTO_REFRESH_INDEXES` 开关影响。目录页生成逻辑必须来自仓库自带脚本，不依赖 `VAULT_PATH/scripts/*`；重复运行应保持幂等。

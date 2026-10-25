@@ -20,7 +20,7 @@ description: |
 
 ## Step 0: 读取共享配置
 
-先读取 `../_shared/user-config.json`，如果 `../_shared/user-config.local.json` 存在，再用它覆盖默认值。
+先读取 skill 目录下的 `_shared/user-config.json` 作为默认值（从仓库安装时读仓库的 `skills/_shared/user-config.json`），再用个人配置覆盖。个人配置只取一个：环境变量 `DAILYPAPER_CONFIG` 指向的文件；没设时用 `~/.config/dailypaper-skills/user-config.json`；两者都没有时才读旧位置 `skills/_shared/user-config.local.json`。
 
 显式生成并在后续统一使用这些变量：
 
@@ -267,7 +267,7 @@ tags: [daily-papers, auto-generated]
 
 1. 扫描今天的推荐文件，提取所有 `[[...]]` 链接
 2. 额外从 `/tmp/daily_papers_enriched.json` 的 `method_name` 和 `method_names` 中提取系统名 / 方法名
-3. 读取 `../concept-notes/references/concept-categories.md` 的 seed list；命中的术语保留为候选
+3. 读取 `_shared/references/concept-categories.md` 的 seed list；命中的术语保留为候选
 4. 合并去重后，按 `concept-notes` skill 的模式 A（过滤 → 查重 → 按增强模板创建 → `check_concept_length.py` 自检）补齐缺失概念；之后每篇论文笔记里的概念由 `paper-reader` 调用 `concept-notes` 模式 E 补齐
 
 ### 3b: 论文笔记生成
@@ -280,7 +280,7 @@ tags: [daily-papers, auto-generated]
    - **行数 < 100 的视为骨架笔记，必须重新生成**（删除旧文件，重新调用 paper-reader）
    - 行数 >= 100 且包含 `## 批判性思考`、`## 复现`、`## 关联笔记`、`## 速查卡片` 的才算合格，可以跳过
 3. 对每篇需要生成/重新生成的论文，调用 `paper-reader` skill（传入 arXiv 链接）
-4. 笔记生成时，命中 `../concept-notes/references/concept-categories.md` seed list 的术语首次出现必须写成 `[[概念名]]`
+4. 笔记生成时，命中 `_shared/references/concept-categories.md` seed list 的术语首次出现必须写成 `[[概念名]]`
 5. 笔记生成后，paper-reader 会调用 `concept-notes` 模式 E 补充概念库，无需重复
 
 > **铁律**：不论论文数量多少，`主推` 的论文**全部**生成笔记，一篇不能少。
@@ -339,8 +339,8 @@ tags: [daily-papers, auto-generated]
 只有在 `AUTO_REFRESH_INDEXES=true` 时才执行：
 
 ```bash
-python3 ../_shared/scripts/generate_concept_mocs.py
-python3 ../_shared/scripts/generate_paper_mocs.py
+python3 _shared/scripts/generate_concept_mocs.py
+python3 _shared/scripts/generate_paper_mocs.py
 ```
 
 默认配置下这个开关是开启的，所以新增的概念和论文笔记通常会自动反映到各分类目录页中。
