@@ -32,7 +32,7 @@ class VersionConflict(LocalApiError):
 
 
 class ZoteroLocalApi:
-    def __init__(self, base_url: str = DEFAULT_BASE_URL, app_name: str = "dailypaper-skills", timeout: float = 30):
+    def __init__(self, base_url: str = DEFAULT_BASE_URL, app_name: str = "arch-reading-skills", timeout: float = 30):
         self.base_url = base_url.rstrip("/")
         self.app_name = app_name
         self.timeout = timeout

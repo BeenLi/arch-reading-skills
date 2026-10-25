@@ -97,7 +97,7 @@ VAULT=~/ObsidianVault
 mkdir -p "$VAULT/DailyPapers" "$VAULT/PaperNotes/_concepts" "$VAULT/PaperNotes/_inbox"
 ```
 
-共享配置在 `skills/_shared/user-config.json`。个人路径和关键词覆盖写在 `~/.config/dailypaper-skills/user-config.json`，放在 skill 目录之外，更新 skill 时不会被覆盖；想用别的文件就设环境变量 `DAILYPAPER_CONFIG`。加载顺序：`user_config.py` 默认值 → `user-config.json` → 个人配置。两者都不存在时，仍兼容读取旧的 `skills/_shared/user-config.local.json`。
+共享配置在 `skills/_shared/user-config.json`。个人路径和关键词覆盖写在 `~/.config/arch-reading-skills/user-config.json`，放在 skill 目录之外，更新 skill 时不会被覆盖；想用别的文件就设环境变量 `ARCH_READING_CONFIG`。加载顺序：`user_config.py` 默认值 → `user-config.json` → 个人配置。两者都不存在时，仍兼容读取旧的 `skills/_shared/user-config.local.json`。
 
 | 配置组 | 说明 |
 |---|---|
@@ -201,7 +201,7 @@ PDF / EPUB / MOBI / TXT 按页或按章提取，分批提炼知识点，输出�
 
 - 契约：[`skills/repo-reader/references/doc-format.md`](skills/repo-reader/references/doc-format.md)；机器校验：`python3 skills/repo-reader/scripts/check_doc.py <draft> --name <Name>`
 - 原始材料：`python3 skills/repo-reader/scripts/repo_facts.py <repo>`（remote、HEAD、目录树、入口候选、README 命令、配置文件）
-- 落盘：仓库已有 `ARCHITECTURE.md` 或用户要求时写进仓库并硬链接到 vault 的使用指南目录；否则只写 vault。目录由 `~/.config/dailypaper-skills/repo-reader.json` 的 `guide_dir` 决定（从 `skills/repo-reader/config.example.json` 复制），也可用环境变量 `ARCH_DOC_GUIDE_DIR` 覆盖
+- 落盘：仓库已有 `ARCHITECTURE.md` 或用户要求时写进仓库并硬链接到 vault 的使用指南目录；否则只写 vault。目录由 `~/.config/arch-reading-skills/repo-reader.json` 的 `guide_dir` 决定（从 `skills/repo-reader/config.example.json` 复制），也可用环境变量 `ARCH_DOC_GUIDE_DIR` 覆盖
 
 ### 画硬件图 — `verilog-diagram`
 

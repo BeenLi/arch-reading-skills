@@ -284,7 +284,7 @@ python3 skills/daily-papers/scripts/download_note_images.py "<笔记>"
 
 ## 5. 配置
 
-所有 skill 先读 `skills/_shared/user-config.json`，再用个人配置覆盖：`DAILYPAPER_CONFIG` 指向的文件，否则 `~/.config/dailypaper-skills/user-config.json`，两者都没有时兜底读旧的 `skills/_shared/user-config.local.json`（三者只取一个）。个人配置放在 skill 目录外，`npx skills update` 覆盖 skill 目录时不会丢；Python 脚本通过 `skills/_shared/scripts/user_config.py` 读同一份配置。
+所有 skill 先读 `skills/_shared/user-config.json`，再用个人配置覆盖：`ARCH_READING_CONFIG` 指向的文件，否则 `~/.config/arch-reading-skills/user-config.json`，两者都没有时兜底读旧的 `skills/_shared/user-config.local.json`（三者只取一个）。个人配置放在 skill 目录外，`npx skills update` 覆盖 skill 目录时不会丢；Python 脚本通过 `skills/_shared/scripts/user_config.py` 读同一份配置。
 
 | 配置 | 作用 |
 |---|---|
@@ -338,14 +338,14 @@ python3 -m pytest tests/ -q
 本文同时出现在 Obsidian vault 里：
 
 ```text
-<vault>/002-notes/001 使用指南/dailypaper-skills-架构和使用文档.md
+<vault>/002-notes/001 使用指南/arch-reading-skills-架构和使用文档.md
 ```
 
 它是 `<repo>/ARCHITECTURE.md` 的硬链接（`<vault>`、`<repo>` 按本机实际路径代入）。检查：
 
 ```bash
 stat -f "%d %i %l %N" <repo>/ARCHITECTURE.md \
-  "<vault>/002-notes/001 使用指南/dailypaper-skills-架构和使用文档.md"
+  "<vault>/002-notes/001 使用指南/arch-reading-skills-架构和使用文档.md"
 ```
 
 两行的 device 和 inode 必须一致，link count 至少为 2。`git checkout`、`git restore`、rebase、iCloud 同步或编辑器“写新文件再替换”都可能打断硬链接；inode 不一致时，备份 Obsidian 侧文件后删除它，再用 `ln` 重建。修改本文时原地覆盖写入，不要先写临时文件再改名。

@@ -19,7 +19,7 @@ def setup(tmp_path, monkeypatch):
     home = tmp_path / "home"
     home.mkdir()
     monkeypatch.setenv("HOME", str(home))
-    monkeypatch.delenv("DAILYPAPER_CONFIG", raising=False)
+    monkeypatch.delenv("ARCH_READING_CONFIG", raising=False)
 
     def load():
         spec = importlib.util.spec_from_file_location("user_config_isolated", shared / "scripts" / "user_config.py")
@@ -42,23 +42,23 @@ def test_defaults_only(setup):
 
 def test_xdg_config_overrides_defaults(setup):
     load, _, home = setup
-    write_vault(home / ".config" / "dailypaper-skills" / "user-config.json", "xdg")
+    write_vault(home / ".config" / "arch-reading-skills" / "user-config.json", "xdg")
     assert load() == "xdg"
 
 
 def test_env_var_wins_over_xdg(setup, monkeypatch, tmp_path):
     load, _, home = setup
-    write_vault(home / ".config" / "dailypaper-skills" / "user-config.json", "xdg")
+    write_vault(home / ".config" / "arch-reading-skills" / "user-config.json", "xdg")
     write_vault(tmp_path / "custom.json", "env")
-    monkeypatch.setenv("DAILYPAPER_CONFIG", str(tmp_path / "custom.json"))
+    monkeypatch.setenv("ARCH_READING_CONFIG", str(tmp_path / "custom.json"))
     assert load() == "env"
 
 
 def test_env_var_pointing_to_missing_file_blocks_fallbacks(setup, monkeypatch, tmp_path):
     load, shared, home = setup
-    write_vault(home / ".config" / "dailypaper-skills" / "user-config.json", "xdg")
+    write_vault(home / ".config" / "arch-reading-skills" / "user-config.json", "xdg")
     write_vault(shared / "user-config.local.json", "legacy")
-    monkeypatch.setenv("DAILYPAPER_CONFIG", str(tmp_path / "absent.json"))
+    monkeypatch.setenv("ARCH_READING_CONFIG", str(tmp_path / "absent.json"))
     assert load() == "default"
 
 
@@ -66,5 +66,5 @@ def test_legacy_local_file_only_when_xdg_missing(setup):
     load, shared, home = setup
     write_vault(shared / "user-config.local.json", "legacy")
     assert load() == "legacy"
-    write_vault(home / ".config" / "dailypaper-skills" / "user-config.json", "xdg")
+    write_vault(home / ".config" / "arch-reading-skills" / "user-config.json", "xdg")
     assert load() == "xdg"

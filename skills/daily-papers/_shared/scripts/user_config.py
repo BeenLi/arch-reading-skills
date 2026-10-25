@@ -49,8 +49,8 @@ def _deep_merge(base: dict, override: dict) -> dict:
 
 
 # 个人配置放在 skill 目录之外，`npx skills update` / plugin 更新覆盖 skill 目录时不会丢。
-CONFIG_ENV_VAR = "DAILYPAPER_CONFIG"
-USER_CONFIG_PATH = Path("~/.config/dailypaper-skills/user-config.json")
+CONFIG_ENV_VAR = "ARCH_READING_CONFIG"
+USER_CONFIG_PATH = Path("~/.config/arch-reading-skills/user-config.json")
 # 旧位置：skill 目录内、被 .gitignore 忽略的覆盖文件，只为兼容迁移前的安装。
 LEGACY_LOCAL_FILENAME = "user-config.local.json"
 
@@ -58,7 +58,7 @@ LEGACY_LOCAL_FILENAME = "user-config.local.json"
 def user_override_paths(shared_dir: Path) -> list[Path]:
     """返回要叠加在默认值之上的个人配置文件：三个来源互斥，只取一个。
 
-    设置了 DAILYPAPER_CONFIG 就只用它，文件不存在也不再往下找（测试靠这一点隔离本机配置）；
+    设置了 ARCH_READING_CONFIG 就只用它，文件不存在也不再往下找（测试靠这一点隔离本机配置）；
     否则用 ~/.config 下的文件；两者都没有时才兜底读旧的 skill 目录内 local 文件。
     """
     env_path = os.environ.get(CONFIG_ENV_VAR)

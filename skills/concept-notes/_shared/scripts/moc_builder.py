@@ -137,7 +137,7 @@ def _build_moc_content(
         [
             "---",
             "tags: [MOC, auto-generated]",
-            "generated_by: dailypaper-skills",
+            "generated_by: arch-reading-skills",
             "---",
             "",
         ]

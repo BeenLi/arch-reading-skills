@@ -4,7 +4,7 @@ clean_old_mocs: 清理使用旧命名规则（<目录名>.md，与目录同名�
 
 背景：moc_builder 支持 mocs.filename_prefix 之后，旧 MOC 文件不会被自动覆盖也不会被删除。
 此脚本会找到所有"与所在目录同名且内容明显是脚本生成 MOC"的 .md 文件，默认 dry-run 列出，
-传 --apply 才真正删除。安全网：只删带有 `generated_by: dailypaper-skills` frontmatter 标记的文件。
+传 --apply 才真正删除。安全网：只删带有 `generated_by: arch-reading-skills`（或改名前的 `generated_by: dailypaper-skills`）frontmatter 标记的文件。
 
 用法：
     python3 clean_old_mocs.py            # dry-run，列出候选
@@ -30,7 +30,8 @@ from user_config import (
 )
 
 
-MOC_MARKER = "generated_by: dailypaper-skills"
+# 仓库改名前生成的目录页带旧标记，两种都认。
+MOC_MARKERS = ("generated_by: arch-reading-skills", "generated_by: dailypaper-skills")
 
 
 def _is_generated_moc(path: Path) -> bool:
@@ -38,7 +39,7 @@ def _is_generated_moc(path: Path) -> bool:
         head = path.read_text(encoding="utf-8", errors="ignore")[:512]
     except OSError:
         return False
-    return MOC_MARKER in head
+    return any(marker in head for marker in MOC_MARKERS)
 
 
 def _walk(root: Path, excluded: set[str]) -> list[Path]:
@@ -78,7 +79,7 @@ def main() -> int:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="跳过 frontmatter 校验（不要求 generated_by: dailypaper-skills 标记，慎用）",
+        help="跳过 frontmatter 校验（不要求 generated_by 标记，慎用）",
     )
     parser.add_argument("--papers-only", action="store_true", help="只扫论文目录")
     parser.add_argument("--concepts-only", action="store_true", help="只扫概念目录")
@@ -112,7 +113,7 @@ def main() -> int:
         if args.force or _is_generated_moc(path):
             eligible.append(path)
         else:
-            skipped.append((path, "缺少 frontmatter 标记（generated_by: dailypaper-skills）"))
+            skipped.append((path, "缺少 frontmatter 标记（generated_by: arch-reading-skills）"))
 
     mode = "APPLY (deleting)" if args.apply else "DRY-RUN"
     print(f"[{mode}] 当前 prefix='{prefix}'；找到 {len(candidates)} 个旧 MOC 候选。\n")

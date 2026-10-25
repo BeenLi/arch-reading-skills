@@ -20,7 +20,7 @@ description: |
 
 ## Step 0: 读取共享配置
 
-先读取 skill 目录下的 `_shared/user-config.json` 作为默认值（从仓库安装时读仓库的 `skills/_shared/user-config.json`），再用个人配置覆盖。个人配置只取一个：环境变量 `DAILYPAPER_CONFIG` 指向的文件；没设时用 `~/.config/dailypaper-skills/user-config.json`；两者都没有时才读旧位置 `skills/_shared/user-config.local.json`。
+先读取 skill 目录下的 `_shared/user-config.json` 作为默认值（从仓库安装时读仓库的 `skills/_shared/user-config.json`），再用个人配置覆盖。个人配置只取一个：环境变量 `ARCH_READING_CONFIG` 指向的文件；没设时用 `~/.config/arch-reading-skills/user-config.json`；两者都没有时才读旧位置 `skills/_shared/user-config.local.json`。
 
 显式生成并在后续统一使用这些变量：
 

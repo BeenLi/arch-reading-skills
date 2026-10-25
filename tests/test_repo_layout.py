@@ -118,7 +118,7 @@ class RepoLayoutTests(unittest.TestCase):
             module = load_module_from_path("user_config_under_test", shared / "scripts" / "user_config.py")
 
             # 指向不存在的个人配置，避免本机 ~/.config 下的真实配置覆盖 sentinel。
-            with unittest.mock.patch.dict("os.environ", {"DAILYPAPER_CONFIG": str(Path(tmp) / "absent.json")}):
+            with unittest.mock.patch.dict("os.environ", {"ARCH_READING_CONFIG": str(Path(tmp) / "absent.json")}):
                 keywords = module.load_user_config()["daily_papers"]["keywords"]
 
         self.assertIn("sentinel-keyword-from-json", keywords)

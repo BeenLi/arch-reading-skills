@@ -97,7 +97,7 @@ VAULT=~/ObsidianVault
 mkdir -p "$VAULT/DailyPapers" "$VAULT/PaperNotes/_concepts" "$VAULT/PaperNotes/_inbox"
 ```
 
-Shared settings live in `skills/_shared/user-config.json`. Put personal paths and keyword overrides in `~/.config/dailypaper-skills/user-config.json`, outside the skill folders so updates never overwrite it; set `DAILYPAPER_CONFIG` to use a different file. Load order: defaults in `user_config.py` → `user-config.json` → your personal file. The old `skills/_shared/user-config.local.json` is still read when neither of those exists.
+Shared settings live in `skills/_shared/user-config.json`. Put personal paths and keyword overrides in `~/.config/arch-reading-skills/user-config.json`, outside the skill folders so updates never overwrite it; set `ARCH_READING_CONFIG` to use a different file. Load order: defaults in `user_config.py` → `user-config.json` → your personal file. The old `skills/_shared/user-config.local.json` is still read when neither of those exists.
 
 | Setting | Meaning |
 |---|---|
@@ -201,7 +201,7 @@ Static source analysis only (it never runs the target repository's scripts, test
 
 - Contract: [`skills/repo-reader/references/doc-format.md`](skills/repo-reader/references/doc-format.md); checker: `python3 skills/repo-reader/scripts/check_doc.py <draft> --name <Name>`
 - Raw facts: `python3 skills/repo-reader/scripts/repo_facts.py <repo>` (remote, HEAD, directory tree, entry-point candidates, README commands, config files)
-- Output: written into the repository and hard-linked into the vault's guide folder when the repository already has an `ARCHITECTURE.md` or you ask for it; otherwise only into the vault. The folder comes from `guide_dir` in `~/.config/dailypaper-skills/repo-reader.json` (copy it from `skills/repo-reader/config.example.json`), or the `ARCH_DOC_GUIDE_DIR` environment variable
+- Output: written into the repository and hard-linked into the vault's guide folder when the repository already has an `ARCHITECTURE.md` or you ask for it; otherwise only into the vault. The folder comes from `guide_dir` in `~/.config/arch-reading-skills/repo-reader.json` (copy it from `skills/repo-reader/config.example.json`), or the `ARCH_DOC_GUIDE_DIR` environment variable
 
 ### Hardware diagrams — `verilog-diagram`
 
