@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Add a paper (metadata JSON + PDF) to Zotero through the Zotero 10 local API.
 
-  python3 zotero_add.py collections [--root "Computer Architecture"]   # leaf collections with keys
+  python3 zotero_add.py collections [--root "Computer Architecture"]   # leaf collections with keys and hints
   python3 zotero_add.py search "title words"                            # duplicate check: collections + local PDF paths
   python3 zotero_add.py add --meta meta.json --pdf paper.pdf --collection KEY [--collection KEY2]
 
@@ -9,6 +9,17 @@ Writes go through the running Zotero app (http://localhost:23119/api): Zotero po
 authorization dialog; choose "Always Allow" once, otherwise every write asks again.
 """
 import argparse, glob, hashlib, json, os, re, sys, urllib.parse, urllib.request, urllib.error
+from pathlib import Path
+
+def _find_shared_scripts():
+    """Source first (repo or plugin cache), else the copy sync_shared.py vendors into <skill>/_shared."""
+    here = Path(__file__).resolve()
+    if (here.parents[3] / "scripts" / "sync_shared.py").exists():
+        return here.parents[2] / "_shared" / "scripts"
+    return here.parents[1] / "_shared" / "scripts"
+
+sys.path.insert(0, str(_find_shared_scripts()))
+from user_config import paper_to_zotero_config
 
 BASE = os.environ.get("ZOTERO_LOCAL_API", "http://localhost:23119/api")
 LIB = "users/0"
@@ -60,18 +71,40 @@ class Api:
         if 200 <= st < 300 and not self.remember: self.key = None
         return st, h, out
 
-def leaf_tree(api, root_name):
+def leaf_tree(api, root_name, hints=None):
+    """Print the tree under root_name ("" = every top-level collection); leaves get key= and their hint.
+
+    hints maps a leaf path below the root ("Memory & Storage / Storage Systems") to what belongs there.
+    """
+    hints = hints or {}
     cols = api.get(f"{LIB}/collections?limit=1000")
     by_key = {c["key"]: c["data"] for c in cols}
     kids = {}
     for k, d in by_key.items(): kids.setdefault(d.get("parentCollection") or None, []).append(k)
     roots = [k for k, d in by_key.items() if d["name"] == root_name] if root_name else kids.get(None, [])
-    def walk(k, depth):
+    if root_name and not roots:
+        tops = ", ".join(sorted(by_key[k]["name"] for k in kids.get(None, []))) or "（库里还没有任何 collection）"
+        sys.exit(
+            f"Zotero 里没有名为 {root_name!r} 的 collection，没有可放的分类，已停止。\n"
+            f"库里现有的顶层 collection：{tops}\n"
+            "任选一种处理：\n"
+            f"  1. 在 Zotero 里新建 {root_name!r} 和它下面的叶子分类；\n"
+            "  2. 在 ~/.config/arch-reading-skills/user-config.json 里指定自己的分类根（说明可选）：\n"
+            '     {"paper_to_zotero": {"collection_root": "<你的分类根>", "collection_hints": {"<子分类> / <叶子>": "放什么论文"}}}\n'
+            '  3. 把 collection_root 设成 ""，在整个库里挑叶子。'
+        )
+    def walk(k, depth, rel):
         d = by_key[k]; ch = sorted(kids.get(k, []), key=lambda x: by_key[x]["name"])
-        tag = "" if ch else f"  key={k}"
+        tag = ""
+        if not ch:
+            tag = f"  key={k}"
+            if rel in hints: tag += f"  -- {hints[rel]}"
         print("  " * depth + d["name"] + tag)
-        for c in ch: walk(c, depth + 1)
-    for r in sorted(roots, key=lambda x: by_key[x]["name"]): walk(r, 0)
+        for c in ch:
+            name = by_key[c]["name"]
+            walk(c, depth + 1, f"{rel} / {name}" if rel else name)
+    for r in sorted(roots, key=lambda x: by_key[x]["name"]):
+        walk(r, 0, "" if root_name else by_key[r]["name"])
 
 def collection_paths(api):
     """key -> 'Parent / Child / Leaf' for every collection in the library."""
@@ -175,12 +208,13 @@ def add(api, meta_path, pdf_path, col_keys):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); sub = ap.add_subparsers(dest="cmd", required=True)
-    c = sub.add_parser("collections"); c.add_argument("--root", default="Computer Architecture")
+    cfg = paper_to_zotero_config()
+    c = sub.add_parser("collections"); c.add_argument("--root", default=cfg.get("collection_root", ""))
     s = sub.add_parser("search"); s.add_argument("query")
     a = sub.add_parser("add"); a.add_argument("--meta", required=True); a.add_argument("--pdf")
     a.add_argument("--collection", action="append", default=[], help="collection key (repeatable)")
     ns = ap.parse_args(); api = Api()
-    if ns.cmd == "collections": leaf_tree(api, ns.root)
+    if ns.cmd == "collections": leaf_tree(api, ns.root, cfg.get("collection_hints") if ns.root == cfg.get("collection_root", "") else None)
     elif ns.cmd == "search": search(api, ns.query)
     else:
         if not ns.collection: sys.exit("--collection KEY 必填")

@@ -44,3 +44,54 @@ def test_pdf_paths_cover_stored_linked_and_absolute_files(monkeypatch, tmp_path)
         str(tmp_path / "Computer Architecture" / "paper two.pdf"),
         "/abs/paper three.pdf",
     ]
+
+
+TREE = {"users/0/collections": [
+    {"key": "A", "data": {"name": "Computer Architecture"}},
+    {"key": "B", "data": {"name": "Memory & Storage", "parentCollection": "A"}},
+    {"key": "C", "data": {"name": "Storage Systems", "parentCollection": "B"}},
+    {"key": "D", "data": {"name": "Runtime & Systems", "parentCollection": "A"}},
+    {"key": "E", "data": {"name": "Reading List"}},
+]}
+
+
+def test_leaf_tree_prints_hints_for_paths_below_the_root(capsys):
+    zotero_add.leaf_tree(StubApi(TREE), "Computer Architecture",
+                         {"Memory & Storage / Storage Systems": "SSD", "Runtime & Systems": "OS"})
+    out = capsys.readouterr().out.splitlines()
+    assert out == [
+        "Computer Architecture",
+        "  Memory & Storage",
+        "    Storage Systems  key=C  -- SSD",
+        "  Runtime & Systems  key=D  -- OS",
+    ]
+
+
+def test_leaf_tree_without_root_lists_every_top_level_collection(capsys):
+    zotero_add.leaf_tree(StubApi(TREE), "", {"Reading List": "later"})
+    out = capsys.readouterr().out
+    assert "Computer Architecture\n" in out and "Reading List  key=E  -- later" in out
+
+
+def test_leaf_tree_missing_root_stops_with_reason_and_fix(capsys):
+    import pytest
+    with pytest.raises(SystemExit) as stop:
+        zotero_add.leaf_tree(StubApi(TREE), "Computer Architecture (typo)")
+    message = str(stop.value.code)
+    assert "没有名为 'Computer Architecture (typo)'" in message
+    assert "Computer Architecture, Reading List" in message  # existing top-level collections
+    assert "collection_root" in message and "user-config.json" in message
+    assert capsys.readouterr().out == ""  # nothing listed to pick from
+
+
+def test_default_config_ships_reference_taxonomy(monkeypatch, tmp_path):
+    import user_config
+    monkeypatch.setenv(user_config.CONFIG_ENV_VAR, str(tmp_path / "missing.json"))
+    user_config.load_user_config.cache_clear()
+    try:
+        cfg = user_config.paper_to_zotero_config()
+        assert cfg["collection_root"] == "Computer Architecture"
+        assert len(cfg["collection_hints"]) == 18
+        assert "Memory & Storage / Storage Systems" in cfg["collection_hints"]
+    finally:
+        user_config.load_user_config.cache_clear()

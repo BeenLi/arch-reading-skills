@@ -182,5 +182,28 @@
   },
   "repo_reader": {
     "guide_dir": "~/ObsidianVault/002-notes/001 使用指南"
+  },
+  "paper_to_zotero": {
+    "collection_root": "Computer Architecture",
+    "collection_hints": {
+      "Compute & Accelerators / Memory-Side Computing": "近存 / 存内 / 缓存旁计算，NDP，PIM",
+      "Compute & Accelerators / Network-Side Computing & Offload": "SmartNIC、DPU、可编程交换机、网内计算、把功能卸载到网络侧",
+      "Compute & Accelerators / Specialized Compute Engines": "TPU/GPU/数据流架构等专用计算芯片本体",
+      "Interconnect & Network / Coherent Memory and Accelerator Fabrics": "CXL.cache、加速器一致性、CC-NIC 这类一致性互连",
+      "Interconnect & Network / On-Chip and Package Interconnects": "NoC、chiplet、UCIe、封装级互连",
+      "Interconnect & Network / System-Scale Communication": "RDMA、RNIC、机架 / 数据中心级通信、CXL over Ethernet",
+      "Memory & Storage / Cache & Locality Optimization": "替换、预取、cache 结构、局部性",
+      "Memory & Storage / Coherence, Consistency & Synchronization": "一致性协议、原子操作、fence、同步原语的硬件",
+      "Memory & Storage / Memory Expansion & Pooling": "内存池化、分离式内存、CXL 内存扩展系统",
+      "Memory & Storage / Storage Systems": "SSD、CXL-SSD、存储网络、I/O 路径",
+      "Memory & Storage / Tiering & Data Placement": "分层内存、页面放置 / 迁移、offloading",
+      "Research Methods & Evaluation / Benchmarks & Workloads / Benchmark Suites": "基准套件本身（SPEC、Mess 等）",
+      "Research Methods & Evaluation / Benchmarks & Workloads / Synthetic Workloads & Proxies": "合成负载、代理负载",
+      "Research Methods & Evaluation / Benchmarks & Workloads / Workload Sampling": "SimPoint、相位、采样仿真",
+      "Research Methods & Evaluation / Characterization": "对真机 / 真实系统的测量与刻画，结论是“它表现如何”",
+      "Research Methods & Evaluation / Evaluation Platform": "模拟器、仿真 / 原型平台、FPGA 评测框架",
+      "Research Methods & Evaluation / Performance Analysis Methods": "Top-Down、Roofline、性能计数器方法",
+      "Runtime & Systems": "运行时、编程模型、OS 层面的系统支持"
+    }
   }
 }

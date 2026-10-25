@@ -21,7 +21,7 @@ https://github.com/user-attachments/assets/1abe137d-5dd1-46b5-b766-40f239380d6c
 | `verilog-diagram` | 把 Verilog / SystemVerilog（或论文、描述）画成可编辑的 draw.io 架构图、框图、状态机和控制结构图 |
 | `gpt-image-bridge` | 经 `codex` CLI 用 ChatGPT 订阅调用 GPT Image 生成图片；每张图生成前先征得同意 |
 
-Agent 负责理解意图、写点评和长篇笔记；Python 脚本负责确定性的抓取、打分、去重、Zotero 读取、路径规划、目录页生成和文本检查。
+Agent 负责理解意图、写点评和长篇笔记；Python 脚本负责确定性的抓取、打分、去重、Zotero 读取、路径规划、目录页生成和文本检查。各部分怎么配合（数据流、文件归属、模板、打分规则、测试）见 [`ARCHITECTURE.md`](ARCHITECTURE.md)。
 
 典型 Obsidian 输出：
 
@@ -67,7 +67,7 @@ brew install --cask drawio
 npx skills add BeenLi/arch-reading-skills -g -a claude-code
 ```
 
-```text
+```bash
 # 2. Claude Code plugin：在 Claude Code 里运行；skill 名会带上插件前缀（arch-reading:paper-reader）
 /plugin marketplace add BeenLi/arch-reading-skills
 /plugin install arch-reading@arch-reading-skills
@@ -82,26 +82,75 @@ for d in paper-reader concept-notes daily-papers paper-to-zotero book-reader rep
 done
 ```
 
-`verilog-diagram` 依赖第三方的 [drawio-skill](https://github.com/Agents365-ai/drawio-skill)，skills CLI 不会自动装它；`gpt-image-bridge` 是可选的，只用于构图草图。一起安装：
+`skills/_shared` 不是 skill，是各 skill 共用的配置、脚本和画图规则。用到它的 skill 都在自己的 `_shared/` 目录里带一份生成的副本（`paper-reader`、`concept-notes`、`daily-papers` 带整份，`repo-reader`、`book-reader`、`paper-to-zotero` 只带用到的文件），所以不管用哪种方式安装，每个 skill 都能单独工作。
+
+### `verilog-diagram` 的额外依赖
+
+`gpt-image-bridge` 就在本仓库里，上面三种方式装全仓库时会一起装上，不用另装；它是可选的，只给 `verilog-diagram` 出构图草图，没装时这一步直接跳过。
+
+不在本仓库的是第三方 [drawio-skill](https://github.com/Agents365-ai/drawio-skill)：skills CLI 和 plugin 都只装本仓库里的 skill，不会顺带装它，要单独装一次（上面 macOS 依赖里那行就是它，装过可以跳过）：
 
 ```bash
-npx skills add Agents365-ai/drawio-skill -g -a claude-code -y && npx skills add BeenLi/arch-reading-skills -g -a claude-code --skill verilog-diagram gpt-image-bridge -y
+npx skills add Agents365-ai/drawio-skill -g -a claude-code -y
 ```
 
-画框图和控制结构图另需 `yosys`、`sv2v` 和 Graphviz。skill 出图前会检查 drawio-skill，缺失时给出安装命令。
-
-`skills/_shared` 不是 skill，是各 skill 共用的配置、脚本和画图规则。用到它的 skill 都在自己的 `_shared/` 目录里带一份生成的副本（`paper-reader`、`concept-notes`、`daily-papers` 带整份，`repo-reader`、`book-reader` 只带用到的文件），所以不管用哪种方式安装，每个 skill 都能单独工作。
-
-初始化 Obsidian 目录：
+只想装画图相关的 skill、不要整个仓库时，用 `--skill` 挑选：
 
 ```bash
+npx skills add BeenLi/arch-reading-skills -g -a claude-code --skill verilog-diagram gpt-image-bridge -y
+```
+
+| 用到的视图 | 需要 |
+|---|---|
+| 架构图、状态机图（`.drawio`） | 只要本 skill |
+| 框图、控制结构图、`validate.py` 校验 | drawio-skill，外加 `yosys`、`sv2v`（SystemVerilog）、Graphviz：`brew install yosys sv2v graphviz` |
+| 导出 PNG / SVG | draw.io 桌面版（`brew install --cask drawio`）；无 root 的 Linux 服务器用 `skills/verilog-diagram/scripts/install-drawio-linux.sh` |
+| 构图草图 | `gpt-image-bridge`（已随仓库安装）和登录过的 [`codex` CLI](https://github.com/openai/codex) |
+
+skill 出图前会按 `$DRAWIO_SKILL_DIR` → `~/.claude/skills/drawio-skill` → `~/.agents/skills/drawio-skill` → plugin 缓存的顺序找 drawio-skill；找不到时给出上面的安装命令，你同意后才代为安装，不装就只画不依赖它的视图。
+
+### 初始化 Obsidian vault
+
+Obsidian 的 vault 就是本地一个普通文件夹：笔记是里面的 Markdown 文件，Obsidian 在它的根目录建一个隐藏的 `.obsidian/` 放这个 vault 的设置和插件（见官方文档 [How Obsidian stores data](https://obsidian.md/help/data-storage)）。这些 skill 只往这个文件夹里写 Markdown 和图片，不依赖 Obsidian 是否开着。
+
+**1. 新建或打开 vault**（官方步骤见 [Manage vaults](https://obsidian.md/help/manage-vaults)）
+
+- 新建：打开 Obsidian → 左下角 vault 图标 → **Manage Vaults…** → **Create new vault** 右边的 **Create** → 填 vault 名，**Browse** 选存放位置 → **Create**。
+- 已有一个装笔记的文件夹：同一个菜单里选 **Open folder as vault** → **Open**，选中那个文件夹。
+
+**2. 选存放位置**
+
+- 只在这台电脑上用：放在主目录下即可，例如 `~/ObsidianVault`（也是默认配置里的路径）。
+- 要在 Mac 和 iPhone / iPad 之间同步、用 iCloud：新建时在文件选择框里选 **iCloud Drive → Obsidian**，vault 落在 `iCloud Drive/Obsidian/<vault 名>`，终端里的路径是 `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/<vault 名>`；在 Finder 里对它选“保持下载”，免得 iCloud 把文件挪到云端。其他同步方式（Obsidian Sync、Git 等）见 [Sync your notes across devices](https://obsidian.md/help/sync-notes)。
+- 不要把一个 vault 建在另一个 vault 里面（内部链接只在本 vault 内解析），也不要建在系统目录里。
+
+**3. 建这些 skill 要用的子目录**
+
+`paths.obsidian_vault`（见下方[配置](#配置)）指向的目录下要有 `DailyPapers/` 和 `PaperNotes/`。它可以是 vault 根目录，也可以是 vault 里的一个子目录，下面两种任选：
+
+```bash
+# a. 直接放在 vault 根目录
 VAULT=~/ObsidianVault
 mkdir -p "$VAULT/DailyPapers" "$VAULT/PaperNotes/_concepts" "$VAULT/PaperNotes/_inbox"
 ```
 
+```bash
+# b. 集中放进 vault 的一个子目录，例如 001-input/PaperRead，把 paths.obsidian_vault 设成这个子目录
+VAULT=~/ObsidianVault/001-input/PaperRead
+mkdir -p "$VAULT/DailyPapers" "$VAULT/PaperNotes/_concepts" "$VAULT/PaperNotes/_inbox"
+```
+
+`_concepts/` 下的 8 个分类子目录和 `_index_*.md` 目录页由 skill 第一次写入时自动创建。`repo-reader` 的架构文档另写到 `repo_reader.guide_dir`，用到时再建。
+
+**4. 建议的 Obsidian 设置**
+
+- 设置 → 文件与链接 → 附件默认存放路径：选“当前文件所在文件夹下指定的子文件夹”，填 `00_assets`。skill 生成的笔记把图片放在笔记旁边的 `00_assets/`，这样你手动粘贴的图片也落在同一处。
+- 社区插件 [Dataview](https://github.com/blacksmithgu/obsidian-dataview)：可选，想对 frontmatter（`venue`、`year`、`tags`、`zotero_collection`）做查询表时装。
+- 用 Git 备份 vault 时，按官方建议把 `.obsidian/workspace.json` 和 `.obsidian/workspaces.json` 加进 `.gitignore`；`automation.git_commit` 要在 vault 是 git 仓库时才起作用。
+
 ### 配置
 
-所有个人设置都放在**一个文件**里：`~/.config/arch-reading-skills/user-config.json`。它在 skill 目录之外，`npx skills update`、plugin 更新或 `git pull` 都不会覆盖它。只写和默认值（[`skills/_shared/user-config.json`](skills/_shared/user-config.json)）不同的部分：
+所有个人设置都放在**一个文件**里：`~/.config/arch-reading-skills/user-config.json`。它在 skill 目录之外，`npx skills update`、plugin 更新或 `git pull` 都不会覆盖它。个人配置只写和默认值（[`skills/_shared/user-config.json`](skills/_shared/user-config.json)）不同的部分：
 
 ```bash
 mkdir -p ~/.config/arch-reading-skills
@@ -121,8 +170,8 @@ EOF
 
 读取规则：
 
-- 先读默认值，再叠加你的文件。嵌套的对象按键逐层合并，所以 `{"daily_papers": {"min_score": 4}}` 只改这一个值。**列表会整个替换**：想加关键词，要先把默认的 `keywords` 列表复制过来再加。
-- 设置 `ARCH_READING_CONFIG=/path/to/other.json` 就改用那个文件，比如另一个 vault，或者想试一组别的关键词。设了它就不会再读默认位置，即使它指向的文件不存在（测试靠这一点隔离本机配置）。
+- 先读默认值，再叠加你的个人配置文件。嵌套的对象按键逐层合并，所以 `{"daily_papers": {"min_score": 4}}` 只改这一个值。**列表会整个替换**：想加关键词，要先把默认的 `keywords` 列表复制过来再加。
+- 设置 `ARCH_READING_CONFIG=/path/to/other.json` 就改用这个环境变量指定的个人配置文件：比如使用另一个 vault，或者想试一组别的关键词。设了它就不会再读`~/.config/arch-reading-skills/user-config.json`，即使它指向的文件不存在（测试靠这一点隔离本机配置）。
 - 改完下次运行就生效。查看某项最终生效的值：
 
   ```bash
@@ -144,6 +193,10 @@ EOF
 | `automation.*` | 是否自动刷新 MOC、commit、push；`git_push` 只有 `git_commit=true` 时生效 |
 | `mocs.filename_prefix` | MOC 文件名前缀，常用 `_index_` |
 | `repo_reader.guide_dir` | `repo-reader` 写架构文档的 vault 目录 |
+| `paper_to_zotero.collection_root` | `paper-to-zotero` 在哪个 Zotero 分类下挑叶子；默认 `Computer Architecture`；空字符串表示整个库。库里没有这个分类时 skill 会停下，告诉你原因和怎么改 |
+| `paper_to_zotero.collection_hints` | 叶子说明，键是相对分类根的路径（`Memory & Storage / Storage Systems`），值写这里放什么论文。默认带 18 个体系结构叶子的说明，可以照着在 Zotero 里建分类；想按自己的方式分类就在个人配置里写自己的。说明按键逐条合并，只显示在库里真实存在的叶子旁，对不上的默认说明不会出现 |
+
+哪个 skill、哪个脚本读哪一项，见 [`ARCHITECTURE.md` §5](ARCHITECTURE.md#5-配置)。
 
 ## 工作流
 
@@ -164,7 +217,7 @@ EOF
 2. 点评：生成 `{DailyPapers}/YYYY-MM-DD-论文推荐.md`（主推 1–2 篇、备选最多 3 篇），更新 `.history.json`。
 3. 笔记（可选）：为主推论文逐篇调用 `paper-reader` 生成精读笔记，并把笔记链接回填到推荐文件。
 
-默认只跑前两步，避免一次推荐直接生成大量长笔记。`跑一下论文抓取 / 点评 / 笔记` 可以单独跑某一步。
+默认只跑前两步，避免一次推荐直接生成大量长笔记。`跑一下论文抓取 / 点评 / 笔记` 可以单独跑某一步。打分规则、点评分流和中间文件见 [`ARCHITECTURE.md` §2](ARCHITECTURE.md#2-每日推荐daily-papers)。
 
 ### 读论文 — `paper-reader`
 
@@ -180,7 +233,7 @@ EOF
 
 支持本地 PDF、arXiv / DOI / 网页链接、Zotero item、Zotero 搜索和 Zotero collection（批量时由 agent 逐篇调用本 skill）。
 
-- 严格按 [`skills/paper-reader/assets/paper-note-template.md`](skills/paper-reader/assets/paper-note-template.md) 写笔记。
+- 严格按 [`skills/paper-reader/assets/paper-note-template.md`](skills/paper-reader/assets/paper-note-template.md) 写笔记；章节结构、写作硬约束和写完后的检查见 [`ARCHITECTURE.md` §4](ARCHITECTURE.md#4-论文笔记模板paper-reader)。
 - 文件名用主方法名 / 系统名：`{MethodName}.md`。有 Zotero collection 时保存到 `{PaperNotes}/{collection_path}/`，没有就保存到 `{PaperNotes}/_inbox/`。
 - `zotero_item_id`、`doi`、`arxiv_id` 写入 frontmatter，用于精确去重；批量模式默认跳过已有笔记。
 - 笔记写完后调用 `concept-notes` 的模式 E，附带生成这篇论文新碰到的概念，再用 `check_note_links.py` 一起复查论文笔记和新概念的链接。
@@ -214,7 +267,7 @@ python3 skills/_shared/scripts/generate_concept_mocs.py
 python3 skills/_shared/scripts/generate_paper_mocs.py
 ```
 
-扫描器会排除 `_concepts/`、`_inbox/`、`_index_*.md` 和论文笔记之间的互链。
+扫描器会排除 `_concepts/`、`_inbox/`、`_index_*.md` 和论文笔记之间的互链。文件归属、五种模式、过滤规则和 8 类分类见 [`ARCHITECTURE.md` §3](ARCHITECTURE.md#3-概念库concept-notes)。
 
 ### 论文入库 Zotero — `paper-to-zotero`
 
@@ -222,7 +275,7 @@ python3 skills/_shared/scripts/generate_paper_mocs.py
 把 https://arxiv.org/abs/2405.10170 加到 Zotero
 ```
 
-取元数据（Crossref / arXiv）→ 查重 → 按摘要判定放进 Computer Architecture 下的哪个叶子分类 → 下载 PDF（arXiv → 开放获取 → 出版社）→ 经 Zotero 10 本地 API 建条目并挂上 PDF。拿不到 PDF 就停下，不建条目。入库后问一次要不要用 `paper-reader` 精读。
+取元数据（Crossref / arXiv）→ 查重 → 按摘要判定放进哪个叶子分类（在 `paper_to_zotero.collection_root` 下挑，参考 `collection_hints` 的说明） → 下载 PDF（arXiv → 开放获取 → 出版社）→ 经 Zotero 10 本地 API 建条目并挂上 PDF。拿不到 PDF 就停下，不建条目。入库后问一次要不要用 `paper-reader` 精读。
 
 ### 科普调研文档 — `kepu-research-doc`
 
@@ -298,7 +351,69 @@ scripts/sync_shared.py     # 把 skills/_shared 复制进用到它的 skill
 | `references/` | agent 读进上下文的规则、指南、分类标准 | 读完影响 agent 怎么做 |
 | `assets/` | 填充或复制到输出里的模板 | 内容会出现在生成物里 |
 
-新增文件按此归位；`tests/test_repo_layout.py` 会检查 `.py` 只在 `scripts/` 下，以及所有 Markdown 里的 `python3 …py` 路径都能解析。
+新增文件按此归位；`tests/test_repo_layout.py` 会检查 `.py` 只在 `scripts/` 下，以及所有 Markdown 里的 `python3 …py` 路径都能解析。哪些 skill 带哪些 `_shared` 文件，见 [`ARCHITECTURE.md` §6.1](ARCHITECTURE.md#61-_shared-怎么分发)。
+
+## 新增一个 skill
+
+以加一个 `foo-reader` 为例。skills CLI 和 plugin 都会自动发现 `skills/*/SKILL.md`，所以不需要在什么清单里注册它，但下面几处约定要照做，否则单独安装后会缺文件。
+
+**1. 建目录和 `SKILL.md`**
+
+```text
+skills/foo-reader/
+├── SKILL.md          # 必需
+├── scripts/          # 可执行代码，SKILL.md 里相对 skill 目录调用
+├── references/       # agent 读进上下文的规则、指南
+└── assets/           # 会被填写或复制进输出的模板
+```
+
+`SKILL.md` 开头是 YAML frontmatter：
+
+```markdown
+---
+name: foo-reader
+description: 一两句话说明它做什么，再列出用户会说的触发词，比如「读一下这个 XXX」「帮我总结 XXX」。
+---
+
+# foo-reader
+
+正文：分步骤写 agent 要做什么、调用哪些脚本、产出什么、什么情况下停下来问用户。
+```
+
+- `name` 和文件夹名一致，用小写字母和短横线。
+- `description` 决定 Claude 什么时候自动调用它：先写用途，再写触发词，总长不超过约 1500 字符（Claude Code 列表里超出的部分会被截掉）。
+- 字段和写法的完整说明见 Claude Code 官方文档 [Extend Claude with skills](https://code.claude.com/docs/en/skills)；也可以在 Claude Code 里让 `skill-creator` 或 `superpowers:writing-skills` 帮你起草和测试。
+
+**2. 守住“单独安装也能用”**
+
+`npx skills add` 只复制 skill 自己的文件夹，所以：
+
+- 不要写 `../_shared/…`、`../concept-notes/…` 这类指向兄弟目录的路径，也不要在仓库里放软链接。
+- 要用 `skills/_shared` 里的脚本或配置，就在 [`scripts/sync_shared.py`](scripts/sync_shared.py) 的 `TARGETS` 里登记这个 skill（`None` 是整份，或者列出要的几个文件），运行 `python3 scripts/sync_shared.py` 生成 `skills/foo-reader/_shared/` 副本。脚本里照抄 `skills/paper-to-zotero/scripts/zotero_add.py` 的 `_find_shared_scripts()`：在仓库里用源，单独安装时用副本。
+- 个人设置（路径、分类名等）不要写死在 skill 里：在 `skills/_shared/user-config.json` 和 `user_config.py` 的 `DEFAULT_CONFIG` 里加一个通用的默认值，再加一个读取函数；你自己的值写进 `~/.config/arch-reading-skills/user-config.json`。
+- 依赖本仓库之外的 skill 或命令行工具时，在 SKILL.md 开头写一段检查：缺失时告诉用户安装命令，用户同意后才安装，不装就跳过依赖它的步骤（参考 `verilog-diagram` 对 drawio-skill 的处理）。
+- 从别处搬来的 skill 保留它的 `LICENSE`，并在 README 里写明来源（参考 `gpt-image-bridge`、`book-reader`）。
+
+**3. 测试**
+
+在 `tests/test_foo_reader.py` 里给脚本的确定性部分写测试，用到配置时用 `ARCH_READING_CONFIG` 指向临时文件，不要读本机配置。提交前跑：
+
+```bash
+python3 scripts/sync_shared.py --check
+python3 -m pytest tests/ -q
+```
+
+`tests/test_repo_layout.py` 会自动检查新 skill：`.py` 只能放在 `scripts/` 下，Markdown 里每个 `python3 …py` 路径都能找到文件。
+
+**4. 登记到文档和本机**
+
+- 两份 README：开头的 skill 表、“工作流”里加一小节（触发词 + 做什么）、“仓库结构”里加一行。
+- [`ARCHITECTURE.md`](ARCHITECTURE.md)：[§1](ARCHITECTURE.md#1-总览) 的 skill 总表和 [§6.1](ARCHITECTURE.md#61-_shared-怎么分发) 的 `_shared` 用法。它和作者 vault 里的使用指南是硬链接（见[附录](ARCHITECTURE.md#附录obsidian-硬链接)），要原地修改，不要整个替换文件。
+- “安装与配置”第 3 种方式的 `for d in …` 列表里加上新名字，然后在本机建软链接，开一个新的 Claude Code 会话就能用：
+
+  ```bash
+  ln -sfn "$PWD/skills/foo-reader" ~/.claude/skills/foo-reader
+  ```
 
 ## 开发维护
 
@@ -315,6 +430,8 @@ python3 -m pytest tests/ -q
 python3 skills/daily-papers/scripts/fetch_and_score.py > /tmp/daily_papers_top30.json
 cat /tmp/daily_papers_top30.json | python3 skills/daily-papers/scripts/enrich_papers.py /tmp/daily_papers_enriched.json
 ```
+
+每个测试文件覆盖什么，见 [`ARCHITECTURE.md` §7](ARCHITECTURE.md#7-测试)。
 
 Zotero helper 兼容期规则：
 

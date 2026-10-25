@@ -21,7 +21,7 @@ https://github.com/user-attachments/assets/1abe137d-5dd1-46b5-b766-40f239380d6c
 | `verilog-diagram` | Turns Verilog / SystemVerilog (or a paper or description) into editable draw.io architecture, block, FSM and control diagrams |
 | `gpt-image-bridge` | Generates images with GPT Image through the `codex` CLI and a ChatGPT subscription; asks before every image |
 
-The agent interprets requests and writes reviews and long notes; Python scripts do the deterministic parts: fetching, scoring, de-duplication, Zotero lookups, path planning, index generation and text checks.
+The agent interprets requests and writes reviews and long notes; Python scripts do the deterministic parts: fetching, scoring, de-duplication, Zotero lookups, path planning, index generation and text checks. How the pieces fit together (data flow, file ownership, templates, scoring rules, tests) is documented in [`ARCHITECTURE.md`](ARCHITECTURE.md) (in Chinese).
 
 Typical Obsidian output:
 
@@ -82,22 +82,71 @@ for d in paper-reader concept-notes daily-papers paper-to-zotero book-reader rep
 done
 ```
 
-`verilog-diagram` needs the third-party [drawio-skill](https://github.com/Agents365-ai/drawio-skill), which the skills CLI does not install for you; `gpt-image-bridge` is optional and only used for layout sketches. To install them together:
+`skills/_shared` is not a skill: it holds the configuration, scripts and diagram rules the skills share. Every skill that uses it carries a generated copy in its own `_shared/` folder (`paper-reader`, `concept-notes` and `daily-papers` the whole folder, `repo-reader`, `book-reader` and `paper-to-zotero` only the files they use), so each skill works on its own whichever way it is installed.
+
+### Extra dependencies of `verilog-diagram`
+
+`gpt-image-bridge` is part of this repository, so any of the three methods above installs it along with everything else. It is optional: it only provides layout sketches for `verilog-diagram`, which skips that step when it is missing.
+
+What is not in this repository is the third-party [drawio-skill](https://github.com/Agents365-ai/drawio-skill). The skills CLI and the plugin install only this repository's skills, so install it once yourself (it is the same line as in the macOS dependencies above; skip it if you ran that):
 
 ```bash
-npx skills add Agents365-ai/drawio-skill -g -a claude-code -y && npx skills add BeenLi/arch-reading-skills -g -a claude-code --skill verilog-diagram gpt-image-bridge -y
+npx skills add Agents365-ai/drawio-skill -g -a claude-code -y
 ```
 
-Block and control diagrams also need `yosys`, `sv2v` and Graphviz. The skill checks for drawio-skill before drawing and offers the install command if it is missing.
-
-`skills/_shared` is not a skill: it holds the configuration, scripts and diagram rules the skills share. Every skill that uses it carries a generated copy in its own `_shared/` folder (`paper-reader`, `concept-notes` and `daily-papers` the whole folder, `repo-reader` and `book-reader` only the files they use), so each skill works on its own whichever way it is installed.
-
-Create the Obsidian folders:
+To install only the diagram skills instead of the whole repository, pick them with `--skill`:
 
 ```bash
+npx skills add BeenLi/arch-reading-skills -g -a claude-code --skill verilog-diagram gpt-image-bridge -y
+```
+
+| View | Needs |
+|---|---|
+| Architecture and FSM diagrams (`.drawio`) | This skill only |
+| Block and control diagrams, `validate.py` checks | drawio-skill plus `yosys`, `sv2v` (SystemVerilog) and Graphviz: `brew install yosys sv2v graphviz` |
+| PNG / SVG export | draw.io desktop (`brew install --cask drawio`); on a Linux server without root, `skills/verilog-diagram/scripts/install-drawio-linux.sh` |
+| Layout sketches | `gpt-image-bridge` (installed with the repository) and a logged-in [`codex` CLI](https://github.com/openai/codex) |
+
+Before drawing, the skill looks for drawio-skill in `$DRAWIO_SKILL_DIR`, `~/.claude/skills/drawio-skill`, `~/.agents/skills/drawio-skill` and the plugin cache, in that order. If it is missing, the skill shows the install command above and runs it only after you agree; without it, it draws only the views that do not need it.
+
+### Setting up the Obsidian vault
+
+An Obsidian vault is an ordinary local folder: notes are the Markdown files in it, and Obsidian keeps that vault's settings and plugins in a hidden `.obsidian/` folder at its root (see the official [How Obsidian stores data](https://obsidian.md/help/data-storage)). The skills only write Markdown and images into this folder; Obsidian does not need to be running.
+
+**1. Create or open a vault** (official steps: [Manage vaults](https://obsidian.md/help/manage-vaults))
+
+- New vault: open Obsidian → the vault icon at the bottom left → **Manage Vaults…** → **Create** next to **Create new vault** → enter a name, **Browse** to a location → **Create**.
+- Existing folder of notes: in the same menu choose **Open folder as vault** → **Open**, and select the folder.
+
+**2. Choose where it lives**
+
+- One computer only: anywhere under your home folder, for example `~/ObsidianVault` (the path in the default configuration).
+- Syncing between a Mac and an iPhone / iPad with iCloud: when creating the vault, pick **iCloud Drive → Obsidian** in the file picker. The vault then sits in `iCloud Drive/Obsidian/<vault name>`, which is `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/<vault name>` in a terminal. In Finder, choose "Keep Downloaded" for it so iCloud does not offload the files. Other options (Obsidian Sync, Git and so on) are in [Sync your notes across devices](https://obsidian.md/help/sync-notes).
+- Do not create a vault inside another vault (internal links resolve only within one vault), or inside a system folder.
+
+**3. Create the folders the skills use**
+
+The folder that `paths.obsidian_vault` points to (see [Configuration](#configuration)) needs `DailyPapers/` and `PaperNotes/`. It can be the vault root or a subfolder of the vault:
+
+```bash
+# a. directly in the vault root
 VAULT=~/ObsidianVault
 mkdir -p "$VAULT/DailyPapers" "$VAULT/PaperNotes/_concepts" "$VAULT/PaperNotes/_inbox"
 ```
+
+```bash
+# b. grouped in a subfolder such as 001-input/PaperRead; set paths.obsidian_vault to that subfolder
+VAULT=~/ObsidianVault/001-input/PaperRead
+mkdir -p "$VAULT/DailyPapers" "$VAULT/PaperNotes/_concepts" "$VAULT/PaperNotes/_inbox"
+```
+
+The eight category folders under `_concepts/` and the `_index_*.md` index pages are created the first time a skill writes there. `repo-reader` writes guides to `repo_reader.guide_dir` instead; create that folder when you need it.
+
+**4. Suggested Obsidian settings**
+
+- Settings → Files and links → Default location for new attachments: choose "In subfolder under current folder" and enter `00_assets`. Generated notes keep their images in a `00_assets/` folder next to the note, so images you paste by hand end up in the same place.
+- The [Dataview](https://github.com/blacksmithgu/obsidian-dataview) community plugin is optional; install it if you want query tables over the frontmatter (`venue`, `year`, `tags`, `zotero_collection`).
+- If you back up the vault with Git, add `.obsidian/workspace.json` and `.obsidian/workspaces.json` to `.gitignore`, as the official docs suggest. `automation.git_commit` only works when the vault is a git repository.
 
 ### Configuration
 
@@ -144,6 +193,10 @@ How it is read:
 | `automation.*` | Whether to refresh index pages, commit and push automatically; `git_push` only applies when `git_commit=true` |
 | `mocs.filename_prefix` | Index page file-name prefix, usually `_index_` |
 | `repo_reader.guide_dir` | Vault folder where `repo-reader` writes architecture guides |
+| `paper_to_zotero.collection_root` | Zotero collection under which `paper-to-zotero` picks a leaf; default `Computer Architecture`; an empty string means the whole library. If the library has no such collection, the skill stops and tells you why and how to change it |
+| `paper_to_zotero.collection_hints` | Notes on each leaf: the key is the path below the root (`Memory & Storage / Storage Systems`), the value says which papers go there. The defaults describe 18 architecture leaves you can copy as a starting taxonomy in Zotero; to file papers your own way, write your own in your config file. Hints merge key by key and appear only next to leaves that exist in your library, so defaults that do not match never show up |
+
+Which skill and script reads which setting: [`ARCHITECTURE.md` §5](ARCHITECTURE.md#5-配置).
 
 ## Workflows
 
@@ -164,7 +217,7 @@ One skill runs three steps:
 2. Review: write `{DailyPapers}/YYYY-MM-DD-论文推荐.md` (1–2 top picks, up to 3 alternates) and update `.history.json`.
 3. Notes (optional): call `paper-reader` for each top pick and link the notes back into the recommendation file.
 
-By default only the first two steps run, so one recommendation doesn't produce a pile of long notes. `跑一下论文抓取 / 点评 / 笔记` runs a single step.
+By default only the first two steps run, so one recommendation doesn't produce a pile of long notes. `跑一下论文抓取 / 点评 / 笔记` runs a single step. Scoring rules, the review triage and the intermediate files are in [`ARCHITECTURE.md` §2](ARCHITECTURE.md#2-每日推荐daily-papers).
 
 ### Reading papers — `paper-reader`
 
@@ -180,7 +233,7 @@ By default only the first two steps run, so one recommendation doesn't produce a
 
 Inputs: local PDF, arXiv / DOI / web links, a Zotero item, a Zotero search, or a Zotero collection (the agent calls this skill once per paper).
 
-- Notes follow [`skills/paper-reader/assets/paper-note-template.md`](skills/paper-reader/assets/paper-note-template.md) exactly.
+- Notes follow [`skills/paper-reader/assets/paper-note-template.md`](skills/paper-reader/assets/paper-note-template.md) exactly; section structure, hard writing rules and post-write checks are in [`ARCHITECTURE.md` §4](ARCHITECTURE.md#4-论文笔记模板paper-reader).
 - File names use the main method or system name, `{MethodName}.md`. Papers in a Zotero collection are saved under `{PaperNotes}/{collection_path}/`, others under `{PaperNotes}/_inbox/`.
 - `zotero_item_id`, `doi` and `arxiv_id` go into the frontmatter for exact de-duplication; batch mode skips papers that already have notes.
 - After the note is written, `concept-notes` mode E creates notes for the paper's new concepts, then `check_note_links.py` checks the links of the paper note and the new concepts together.
@@ -214,7 +267,7 @@ python3 skills/_shared/scripts/generate_concept_mocs.py
 python3 skills/_shared/scripts/generate_paper_mocs.py
 ```
 
-The scanner ignores `_concepts/`, `_inbox/`, `_index_*.md` and links between paper notes.
+The scanner ignores `_concepts/`, `_inbox/`, `_index_*.md` and links between paper notes. File ownership, the five modes, filter rules and the eight categories are in [`ARCHITECTURE.md` §3](ARCHITECTURE.md#3-概念库concept-notes).
 
 ### Adding papers to Zotero — `paper-to-zotero`
 
@@ -222,7 +275,7 @@ The scanner ignores `_concepts/`, `_inbox/`, `_index_*.md` and links between pap
 把 https://arxiv.org/abs/2405.10170 加到 Zotero
 ```
 
-Fetches metadata (Crossref / arXiv), checks for duplicates, picks a leaf collection under Computer Architecture from the abstract, downloads the PDF (arXiv → open access → publisher), and creates the item with the PDF attached through the Zotero 10 local API. With no PDF it stops before creating anything. Afterwards it asks once whether to read the paper with `paper-reader`.
+Fetches metadata (Crossref / arXiv), checks for duplicates, picks a leaf collection from the abstract (under `paper_to_zotero.collection_root`, guided by `collection_hints`), downloads the PDF (arXiv → open access → publisher), and creates the item with the PDF attached through the Zotero 10 local API. With no PDF it stops before creating anything. Afterwards it asks once whether to read the paper with `paper-reader`.
 
 ### Explainer documents — `kepu-research-doc`
 
@@ -298,7 +351,69 @@ Each skill splits its files into three folders by role:
 | `references/` | Rules, guides and classifications the agent reads into context | Changes how the agent works |
 | `assets/` | Templates filled in or copied into the output | Appears in what gets generated |
 
-New files follow this split; `tests/test_repo_layout.py` checks that `.py` files live only under `scripts/` and that every `python3 …py` path in the Markdown resolves.
+New files follow this split; `tests/test_repo_layout.py` checks that `.py` files live only under `scripts/` and that every `python3 …py` path in the Markdown resolves. Which skills carry which `_shared` files: [`ARCHITECTURE.md` §6.1](ARCHITECTURE.md#61-_shared-怎么分发).
+
+## Adding a skill
+
+Take a new `foo-reader` as the example. The skills CLI and the plugin both discover `skills/*/SKILL.md` on their own, so there is no list to register it in, but follow the conventions below or the skill will be missing files when installed on its own.
+
+**1. Create the folder and `SKILL.md`**
+
+```text
+skills/foo-reader/
+├── SKILL.md          # required
+├── scripts/          # executable code, called from SKILL.md relative to the skill folder
+├── references/       # rules and guides the agent reads into context
+└── assets/           # templates filled in or copied into the output
+```
+
+`SKILL.md` starts with YAML frontmatter:
+
+```markdown
+---
+name: foo-reader
+description: One or two sentences on what it does, then the phrases users say, such as "read this XXX" or "summarise XXX".
+---
+
+# foo-reader
+
+Body: the steps the agent follows, which scripts it calls, what it produces, and when it stops to ask the user.
+```
+
+- `name` matches the folder name, in lowercase letters and hyphens.
+- `description` decides when Claude invokes the skill on its own: purpose first, then trigger phrases, under about 1,500 characters (Claude Code truncates the rest in its skill listing).
+- The full field reference is the official Claude Code page [Extend Claude with skills](https://code.claude.com/docs/en/skills). Inside Claude Code, `skill-creator` or `superpowers:writing-skills` can draft and test a skill with you.
+
+**2. Make it work when installed on its own**
+
+`npx skills add` copies only the skill's own folder, so:
+
+- Do not use paths into sibling folders such as `../_shared/…` or `../concept-notes/…`, and do not commit symlinks.
+- To use scripts or settings from `skills/_shared`, add the skill to `TARGETS` in [`scripts/sync_shared.py`](scripts/sync_shared.py) (`None` for the whole folder, or a list of files) and run `python3 scripts/sync_shared.py` to generate `skills/foo-reader/_shared/`. In scripts, copy `_find_shared_scripts()` from `skills/paper-to-zotero/scripts/zotero_add.py`: it uses the source inside the repository and the copy when installed on its own.
+- Do not hard-code personal settings such as paths or collection names. Add a generic default to `skills/_shared/user-config.json` and to `DEFAULT_CONFIG` in `user_config.py`, plus a getter; your own values go in `~/.config/arch-reading-skills/user-config.json`.
+- If the skill depends on another skill or a command-line tool outside this repository, start `SKILL.md` with a check: when it is missing, show the install command, install only after the user agrees, and otherwise skip the steps that need it (see how `verilog-diagram` handles drawio-skill).
+- A skill imported from elsewhere keeps its `LICENSE`, and the README names its source (see `gpt-image-bridge` and `book-reader`).
+
+**3. Test it**
+
+Put tests for the deterministic parts of its scripts in `tests/test_foo_reader.py`. Tests that need configuration point `ARCH_READING_CONFIG` at a temporary file instead of reading your own. Before committing:
+
+```bash
+python3 scripts/sync_shared.py --check
+python3 -m pytest tests/ -q
+```
+
+`tests/test_repo_layout.py` covers the new skill automatically: `.py` files may live only under `scripts/`, and every `python3 …py` path in its Markdown must resolve.
+
+**4. Register it in the docs and on your machine**
+
+- Both READMEs: the skill table at the top, a short section under "Workflows" (trigger phrases and what it does), and a line under "Repository layout".
+- [`ARCHITECTURE.md`](ARCHITECTURE.md): the skill table in [§1](ARCHITECTURE.md#1-总览) and the `_shared` paragraph in [§6.1](ARCHITECTURE.md#61-_shared-怎么分发). It is hard-linked into the author's vault ([appendix](ARCHITECTURE.md#附录obsidian-硬链接)), so edit it in place rather than replacing the file.
+- Add the name to the `for d in …` list in install method 3, then symlink it locally; a new Claude Code session picks it up:
+
+  ```bash
+  ln -sfn "$PWD/skills/foo-reader" ~/.claude/skills/foo-reader
+  ```
 
 ## Development
 
@@ -315,6 +430,8 @@ python3 -m pytest tests/ -q
 python3 skills/daily-papers/scripts/fetch_and_score.py > /tmp/daily_papers_top30.json
 cat /tmp/daily_papers_top30.json | python3 skills/daily-papers/scripts/enrich_papers.py /tmp/daily_papers_enriched.json
 ```
+
+What each test file covers is listed in [`ARCHITECTURE.md` §7](ARCHITECTURE.md#7-测试).
 
 Zotero helper compatibility:
 

@@ -1,6 +1,6 @@
 ---
 name: "paper-to-zotero"
-description: "Use when the user gives a paper title, DOI, arXiv ID or link and wants it downloaded or 入库 into Zotero (加到/下载到 Zotero、放进 Computer Architecture 分类、找 PDF 放进 Zotero)."
+description: "Use when the user gives a paper title, DOI, arXiv ID or link and wants it downloaded or 入库 into Zotero (加到/下载到 Zotero、放进某个分类、找 PDF 放进 Zotero)."
 ---
 
 # 论文入库 Zotero（paper-to-zotero）
@@ -56,38 +56,33 @@ python3 scripts/zotero_add.py search "<题目前几个词>"
 
 然后问是否只补 PDF 或调整分类。
 
-### 3. 判定放进 Computer Architecture 的哪个叶子分类
+### 3. 判定放进哪个叶子分类
 
 ```bash
-python3 scripts/zotero_add.py collections        # 打印 Computer Architecture 下的树和叶子 key
+python3 scripts/zotero_add.py collections        # 打印分类根下的树，叶子带 key 和说明
 ```
 
-只能放**叶子**分类（父级 Compute & Accelerators、Memory & Storage 等本身是空的，用户靠叶子组织）。读摘要和引言，按**主要贡献所在的层**判：
+分类根和每个叶子的说明来自配置的 `paper_to_zotero` 段（见 README「配置」）。默认配置 `../_shared/user-config.json` 带一套体系结构分类作参考：根是 `Computer Architecture`，下面 18 个叶子各有一句说明。用户想按自己的方式分类时，在个人配置 `~/.config/arch-reading-skills/user-config.json` 里改：
 
-| 叶子 | 放什么 |
-|------|-------|
-| Compute & Accelerators / Memory-Side Computing | 近存 / 存内 / 缓存旁计算，NDP，PIM |
-| Compute & Accelerators / Network-Side Computing & Offload | SmartNIC、DPU、可编程交换机、网内计算、把功能卸载到网络侧 |
-| Compute & Accelerators / Specialized Compute Engines | TPU/GPU/数据流架构等专用计算芯片本体 |
-| Interconnect & Network / Coherent Memory and Accelerator Fabrics | CXL.cache、加速器一致性、CC-NIC 这类一致性互连 |
-| Interconnect & Network / On-Chip and Package Interconnects | NoC、chiplet、UCIe、封装级互连 |
-| Interconnect & Network / System-Scale Communication | RDMA、RNIC、机架 / 数据中心级通信、CXL over Ethernet |
-| Memory & Storage / Cache & Locality Optimization | 替换、预取、cache 结构、局部性 |
-| Memory & Storage / Coherence, Consistency & Synchronization | 一致性协议、原子操作、fence、同步原语的硬件 |
-| Memory & Storage / Memory Expansion & Pooling | 内存池化、分离式内存、CXL 内存扩展系统 |
-| Memory & Storage / Storage Systems | SSD、CXL-SSD、存储网络、I/O 路径 |
-| Memory & Storage / Tiering & Data Placement | 分层内存、页面放置 / 迁移、offloading |
-| Research Methods & Evaluation / Benchmarks & Workloads / Benchmark Suites | 基准套件本身（SPEC、Mess 等） |
-| Research Methods & Evaluation / Benchmarks & Workloads / Synthetic Workloads & Proxies | 合成负载、代理负载 |
-| Research Methods & Evaluation / Benchmarks & Workloads / Workload Sampling | SimPoint、相位、采样仿真 |
-| Research Methods & Evaluation / Characterization | 对真机 / 真实系统的测量与刻画，结论是“它表现如何” |
-| Research Methods & Evaluation / Evaluation Platform | 模拟器、仿真 / 原型平台、FPGA 评测框架 |
-| Research Methods & Evaluation / Performance Analysis Methods | Top-Down、Roofline、性能计数器方法 |
-| Runtime & Systems | 运行时、编程模型、OS 层面的系统支持（本身就是叶子） |
+```json
+"paper_to_zotero": {
+  "collection_root": "My Papers",
+  "collection_hints": {
+    "Systems / Storage": "SSD、文件系统、I/O 路径"
+  }
+}
+```
 
-- 两个都像时取主贡献那一层：提出硬件机制归机制所在分类，只做测量归 Characterization，只做平台归 Evaluation Platform。
-- 都不像时不要硬塞：列出最接近的两个让用户选，或建议放 `_Review/Needs Classification`。
-- 论文若明显属于某个 Research Topics 子集合（如 Programmable RDMA/Congestion Control），在汇报里顺带提一句“也可加进 …”，用户点头后再加第二个 `--collection`，不要自己加。
+- `collection_root` 为空时列出整个库的所有顶层分类。
+- **库里没有 `collection_root` 这个分类时，脚本报错退出，这时整个流程停在这里，不下载、不建条目。** 把脚本输出转告用户：原因（库里没有这个分类，以及现有的顶层分类有哪些）和三种处理办法（在 Zotero 里建这个分类；在个人配置里把 `collection_root` 改成自己的分类根，可顺带写 `collection_hints`；设成 `""` 在整个库里挑）。等用户改好再从第 3 步重来；不要替用户改配置，也不要自己换一个分类根。
+- `collection_hints` 的键是叶子相对分类根的路径（` / ` 分隔），值写这个叶子放什么。说明只印在库里真实存在的叶子旁边，对不上的默认说明自动不显示；没有说明的叶子只按名字和所在路径判断。
+
+只放**叶子**分类，父级分类本身通常是空的，用户靠叶子组织。读摘要和引言，按**主要贡献所在的层**判：
+
+- 两个都像时取主贡献那一层：例如提出硬件机制归机制所在分类，只做测量归“刻画 / 测量”类，只做平台归“评测平台”类。
+- 都不像时不要硬塞：列出最接近的两个让用户选，或建议放一个待分类的集合（如 `_Review/Needs Classification`，库里有的话）。
+- 论文若明显也属于分类根之外的某个集合（如按研究课题组织的集合），在汇报里顺带提一句“也可加进 …”，用户点头后再加第二个 `--collection`，不要自己加。
+- 用户第一次用、库里分类结构和说明都很少时，可以建议用户把常用叶子的说明写进 `collection_hints`，但不要替用户改配置文件。
 
 ### 4. 下载 PDF
 
@@ -111,11 +106,13 @@ python3 scripts/zotero_add.py add --meta meta.json --pdf "<pdf 路径>" --collec
 
 ### 6. 问一次是否精读
 
-入库成功后问一句：“要不要用 paper-reader 精读这篇？”用户同意就调用本仓库的 `paper-reader` skill（带 Zotero 集成），入口写成“读一下 Zotero 里的 <题目>”，它会按 Zotero 分类路径把笔记存到 `PaperNotes/Computer Architecture/…/`。用户没回或说不用，就到此结束。
+入库成功后问一句：“要不要用 paper-reader 精读这篇？”用户同意就调用本仓库的 `paper-reader` skill（带 Zotero 集成），入口写成“读一下 Zotero 里的 <题目>”，它会按 Zotero 分类路径把笔记存到 `PaperNotes/<分类路径>/`。用户没回或说不用，就到此结束。
 
 ## 常见错误
 
-- 把条目放进 Computer Architecture 的父级分类 → 只能放叶子。
+- 分类根不存在时自己换个分类继续 → 应该停下，把原因和配置方法告诉用户。
+
+- 把条目放进父级分类 → 只能放叶子。
 - 把没有 PDF 的条目先建上 → 违反铁律，用户要的是“拿不到就停”。
 - 下载到的是 HTML 登录页当成 PDF 传上去 → 验证 `%PDF-` 头和大小。
 - 不查重直接建 → 库里出现重复条目。

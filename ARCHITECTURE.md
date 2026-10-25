@@ -298,6 +298,7 @@ python3 skills/daily-papers/scripts/download_note_images.py "<笔记>"
 | `automation.git_commit` / `git_push` | 是否提交 vault（默认关；push 只在 commit 开启时生效） |
 | `mocs.filename_prefix` | 目录页文件名前缀，常用 `_index_` |
 | `repo_reader.guide_dir` | repo-reader 写架构文档的 vault 目录 |
+| `paper_to_zotero.collection_root` / `collection_hints` | paper-to-zotero 挑叶子分类的 Zotero 根分类（默认 `Computer Architecture`，空 = 整个库；库里没有这个分类时停下并提示怎么配置）和各叶子的说明（默认 18 条体系结构分类，作参考）；`zotero_add.py collections` 把说明印在叶子旁 |
 
 ## 6. 目录约定
 
@@ -315,7 +316,7 @@ python3 skills/daily-papers/scripts/download_note_images.py "<笔记>"
 
 `npx skills add` 只复制单个 skill 文件夹，`_shared` 不会跟着装；仓库里也不能放指向 `_shared` 的软链接，因为 skills CLI 按 skill 文件夹的 git tree hash 判断是否更新，只改 `_shared` 时被链接方的 hash 不变，`npx skills update` 永远不会触发。所以：
 
-- `skills/_shared` 是唯一源，没有 SKILL.md。`scripts/sync_shared.py` 把它（外加 `concept-notes/references/concept-categories.md`）复制进 `skills/{paper-reader,concept-notes,daily-papers}/_shared/`；`repo-reader` 只带 `md_escape_check.py` 和 `mermaid-rules.md`，`book-reader` 只带 `mermaid-rules.md`，`verilog-diagram`、`gpt-image-bridge`、`paper-to-zotero`、`kepu-research-doc` 不用 `_shared`。副本提交进 git，不手改。
+- `skills/_shared` 是唯一源，没有 SKILL.md。`scripts/sync_shared.py` 把它（外加 `concept-notes/references/concept-categories.md`）复制进 `skills/{paper-reader,concept-notes,daily-papers}/_shared/`；`repo-reader` 只带 `md_escape_check.py` 和 `mermaid-rules.md`，`book-reader` 只带 `mermaid-rules.md`，`paper-to-zotero` 只带 `user_config.py` 和 `user-config.json`，`verilog-diagram`、`gpt-image-bridge`、`kepu-research-doc` 不用 `_shared`。副本提交进 git，不手改。
 - 带副本的 skill 的文档只写 skill 目录内的相对路径 `_shared/…`，不写 `../_shared` 或兄弟 skill 的路径；`test_vendored_skills_reference_only_their_own_shared_copy` 检查这一点。
 - 脚本源优先：`_find_shared_scripts()` 发现 `parents[3]/scripts/sync_shared.py` 存在（即在仓库或 plugin 缓存的整仓副本里）时用 `skills/_shared/scripts`，否则用自己的 `_shared/scripts` 副本。clone 下改 `skills/_shared` 立即生效；agent 按 SKILL.md 直接运行的 `_shared/scripts/*.py` 仍是副本，改完要跑一次 sync。
 - 防漂移：`.githooks/pre-commit`（`git config core.hooksPath .githooks` 启用）和 `.github/workflows/test.yml` 都跑 `sync_shared.py --check`，`tests/test_sync_shared.py` 也跑。
@@ -335,6 +336,14 @@ python3 -m pytest tests/ -q
 | `tests/test_scan_missing_concepts.py`、`tests/test_regenerate_concepts.py`、`tests/test_check_concept_length.py` | 概念脚本 |
 | `tests/test_generate_paper_mocs.py` | 目录页生成 |
 | `tests/test_repo_layout.py` | 目录约定和文档里的脚本路径 |
+| `tests/test_check_note_links.py` | 论文笔记链接复查：标题 / 块链接、wikilink、嵌入、裸 Figure / Table 引用 |
+| `tests/test_md_escape_check.py` | Obsidian 转义检查和 `--fix` 的幂等性 |
+| `tests/test_download_note_images.py` | 笔记图片本地化 |
+| `tests/test_ccf_rank.py`、`tests/test_venue_label.py` | CCF 等级查询、venue 缩写和标题标签 |
+| `tests/test_zotero_helper.py`、`tests/test_zotero_helper_writes.py`、`tests/test_zotero_local_api.py` | Zotero 只读解析、经本地 API 的分类调整 / 字段修改 / 回收站、版本冲突 |
+| `tests/test_paper_to_zotero.py` | paper-to-zotero 的分类树与叶子说明、查重输出的分类路径和 PDF 路径 |
+| `tests/test_repo_reader_check_doc.py`、`tests/test_repo_reader_repo_facts.py` | repo-reader 的 12 节契约检查、仓库事实采集 |
+| `tests/test_user_config.py` | 配置叠加顺序、`ARCH_READING_CONFIG` 的互斥规则 |
 
 ## 附录：Obsidian 硬链接
 

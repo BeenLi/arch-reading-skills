@@ -39,6 +39,10 @@ DEFAULT_CONFIG = {
     "repo_reader": {
         "guide_dir": "~/ObsidianVault/002-notes/001 使用指南",
     },
+    "paper_to_zotero": {
+        "collection_root": "",
+        "collection_hints": {},
+    },
 }
 
 
@@ -162,3 +166,8 @@ def moc_filename_prefix() -> str:
 def repo_reader_guide_dir() -> Path:
     """Vault folder where repo-reader puts architecture guides."""
     return _expand(load_user_config()["repo_reader"]["guide_dir"])
+
+
+def paper_to_zotero_config() -> dict:
+    """Collection root paper-to-zotero files papers under ("" = whole library) and per-leaf hints."""
+    return load_user_config()["paper_to_zotero"]

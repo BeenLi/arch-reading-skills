@@ -25,6 +25,7 @@ TARGETS = {
     "daily-papers": None,
     "repo-reader": ("scripts/md_escape_check.py", "references/mermaid-rules.md"),
     "book-reader": ("references/mermaid-rules.md",),
+    "paper-to-zotero": ("scripts/user_config.py", "user-config.json"),
 }
 # 跨 skill 引用的文件：npx 下只有同时装了 concept-notes 才找得到，所以也复制进依赖它的 skill。
 EXTRA_FILES = {
