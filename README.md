@@ -13,8 +13,10 @@ https://github.com/user-attachments/assets/1abe137d-5dd1-46b5-b766-40f239380d6c
 |---|---|
 | `daily-papers` | Daily paper recommendations: fetch → review → optional batch close reading |
 | `paper-reader` | Reads one paper, writes an Obsidian note from a template, and creates notes for the new concepts it meets |
+| `paper-to-zotero` | Adds a paper (title, DOI, arXiv ID or link) to Zotero with its PDF, in the right leaf collection, through the Zotero 10 local API |
 | `concept-notes` | Sole owner of the concept library: creates / rewrites concept notes and refreshes the paper and concept index pages |
 | `book-reader` | Reads a whole book and writes reading notes with a mind map of the book |
+| `kepu-research-doc` | Writes an illustrated Chinese explainer / survey document that sorts a confusing topic into a few independent axes |
 | `repo-reader` | Reads a code repository and writes an architecture and usage guide whose claims trace back to source files |
 | `verilog-diagram` | Turns Verilog / SystemVerilog (or a paper or description) into editable draw.io architecture, block, FSM and control diagrams |
 | `gpt-image-bridge` | Generates images with GPT Image through the `codex` CLI and a ChatGPT subscription; asks before every image |
@@ -75,7 +77,7 @@ npx skills add BeenLi/arch-reading-skills -g -a claude-code
 # 3. git clone + symlinks, for development: changes in the repo take effect immediately
 git clone https://github.com/BeenLi/arch-reading-skills.git && cd arch-reading-skills
 mkdir -p ~/.claude/skills
-for d in paper-reader concept-notes daily-papers book-reader repo-reader verilog-diagram gpt-image-bridge; do
+for d in paper-reader concept-notes daily-papers paper-to-zotero book-reader repo-reader kepu-research-doc verilog-diagram gpt-image-bridge; do
   ln -sfn "$PWD/skills/$d" "$HOME/.claude/skills/$d"
 done
 ```
@@ -214,6 +216,22 @@ python3 skills/_shared/scripts/generate_paper_mocs.py
 
 The scanner ignores `_concepts/`, `_inbox/`, `_index_*.md` and links between paper notes.
 
+### Adding papers to Zotero — `paper-to-zotero`
+
+```text
+把 https://arxiv.org/abs/2405.10170 加到 Zotero
+```
+
+Fetches metadata (Crossref / arXiv), checks for duplicates, picks a leaf collection under Computer Architecture from the abstract, downloads the PDF (arXiv → open access → publisher), and creates the item with the PDF attached through the Zotero 10 local API. With no PDF it stops before creating anything. Afterwards it asks once whether to read the paper with `paper-reader`.
+
+### Explainer documents — `kepu-research-doc`
+
+```text
+写一份科普调研文档：DPU 的来由与软硬件架构
+```
+
+Turns a topic and reference material into a Chinese Markdown + PDF document: conclusion and axes first, a glossary, one section per axis, "what each thing was originally built for", and how they combine; plus a cover image, a short promo blurb and a private notes file kept apart from the public text. The cover generator lives in a claude.ai Project (`/mnt/project-files/house-style/`); locally the skill draws the cover by hand from the style summary.
+
 ### Reading books — `book-reader`
 
 ```text
@@ -258,9 +276,11 @@ Calls GPT Image through the [`codex` CLI](https://github.com/openai/codex) with 
 ```text
 skills/
 ├── daily-papers/          # Daily recommendations: fetch → review → optional notes; scripts/ fetch, score, enrich, localise images
+├── paper-to-zotero/       # Paper → Zotero item with PDF and collection; scripts/zotero_add.py (Zotero 10 local API)
 ├── paper-reader/          # Single-paper reading and Zotero integration; scripts/ references/ assets/
 ├── concept-notes/         # Owns concepts: assets/ template; references/ classification; scripts/ scan, rewrite, length check; index refresh
 ├── book-reader/           # Whole-book notes and mind maps (MIT, Tao Jiang)
+├── kepu-research-doc/     # Chinese explainer / survey documents with figures, cover and promo blurb
 ├── repo-reader/           # Repository → architecture and usage guide; scripts/ facts and checker; references/ 12-section contract
 ├── verilog-diagram/       # Verilog / papers → draw.io diagrams; scripts/ generators, exporter, Linux draw.io installer; examples/
 ├── gpt-image-bridge/      # GPT Image through the codex CLI; bin/ wrapper script (MIT, oakplank)

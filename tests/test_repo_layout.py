@@ -25,6 +25,8 @@ def resolve_script_ref(md_path: Path, ref: str):
     ref = ref.strip("\"'")
     if "$" in ref:  # "$DRAWIO/scripts/validate.py" 这类仓库外路径
         return None
+    if ref.startswith("/"):  # 绝对路径，如 claude.ai Project 的 /mnt/project-files/…，不归仓库管
+        return None
     if ref.startswith("skills/"):
         return REPO_ROOT / ref
     for prefix in ("~/.claude/skills/", "~/.codex/skills/"):

@@ -13,8 +13,10 @@ https://github.com/user-attachments/assets/1abe137d-5dd1-46b5-b766-40f239380d6c
 |---|---|
 | `daily-papers` | 每日论文推荐：抓取 → 点评 → 可选批量精读 |
 | `paper-reader` | 读一篇论文，按模板写 Obsidian 笔记，并附带生成本篇新概念 |
+| `paper-to-zotero` | 给论文题目、DOI、arXiv ID 或链接，经 Zotero 10 本地 API 建条目、挂 PDF、放进正确的叶子分类 |
 | `concept-notes` | 概念库的唯一归属：生成 / 重写概念笔记，刷新论文与概念目录页 |
 | `book-reader` | 读整本书，输出带全书思维导图的读书笔记 |
+| `kepu-research-doc` | 写带配图的中文科普 / 调研文档，把一个说法很乱的主题拆成几条独立的坐标轴 |
 | `repo-reader` | 读一个代码仓库，写出可回溯到源码的架构和使用文档 |
 | `verilog-diagram` | 把 Verilog / SystemVerilog（或论文、描述）画成可编辑的 draw.io 架构图、框图、状态机和控制结构图 |
 | `gpt-image-bridge` | 经 `codex` CLI 用 ChatGPT 订阅调用 GPT Image 生成图片；每张图生成前先征得同意 |
@@ -75,7 +77,7 @@ npx skills add BeenLi/arch-reading-skills -g -a claude-code
 # 3. git clone + 软链接，适合开发：仓库里的改动立即生效
 git clone https://github.com/BeenLi/arch-reading-skills.git && cd arch-reading-skills
 mkdir -p ~/.claude/skills
-for d in paper-reader concept-notes daily-papers book-reader repo-reader verilog-diagram gpt-image-bridge; do
+for d in paper-reader concept-notes daily-papers paper-to-zotero book-reader repo-reader kepu-research-doc verilog-diagram gpt-image-bridge; do
   ln -sfn "$PWD/skills/$d" "$HOME/.claude/skills/$d"
 done
 ```
@@ -214,6 +216,22 @@ python3 skills/_shared/scripts/generate_paper_mocs.py
 
 扫描器会排除 `_concepts/`、`_inbox/`、`_index_*.md` 和论文笔记之间的互链。
 
+### 论文入库 Zotero — `paper-to-zotero`
+
+```text
+把 https://arxiv.org/abs/2405.10170 加到 Zotero
+```
+
+取元数据（Crossref / arXiv）→ 查重 → 按摘要判定放进 Computer Architecture 下的哪个叶子分类 → 下载 PDF（arXiv → 开放获取 → 出版社）→ 经 Zotero 10 本地 API 建条目并挂上 PDF。拿不到 PDF 就停下，不建条目。入库后问一次要不要用 `paper-reader` 精读。
+
+### 科普调研文档 — `kepu-research-doc`
+
+```text
+写一份科普调研文档：DPU 的来由与软硬件架构
+```
+
+把主题和参考资料写成中文 Markdown + PDF：先给结论和坐标轴，再给术语速查，每条轴一节，讲每个对象“原本是干什么的”和怎么组合使用；另出封面图、宣传简介，以及和公开正文分开的私人映射文档。封面生成器在 claude.ai Project 里（`/mnt/project-files/house-style/`），本地没有时按风格摘要手画封面。
+
 ### 读书 — `book-reader`
 
 ```text
@@ -258,9 +276,11 @@ PDF / EPUB / MOBI / TXT 按页或按章提取，分批提炼知识点，输出�
 ```text
 skills/
 ├── daily-papers/          # 每日推荐：抓取 → 点评 → 可选批量笔记；scripts/ 抓取、打分、富化、图片本地化
+├── paper-to-zotero/       # 论文 → 带 PDF 和分类的 Zotero 条目；scripts/zotero_add.py（Zotero 10 本地 API）
 ├── paper-reader/          # 单篇论文阅读与 Zotero 集成；scripts/ references/ assets/
 ├── concept-notes/         # 概念的唯一归属：assets/ 概念笔记模板；references/ 分类规则；scripts/ 扫描、重写、长度自检；也负责刷新目录页
 ├── book-reader/           # 整本书读书笔记与全书思维导图（MIT, Tao Jiang）
+├── kepu-research-doc/     # 带配图、封面和宣传简介的中文科普 / 调研文档
 ├── repo-reader/           # 代码仓库 → 架构和使用文档；scripts/ 仓库事实采集、文档校验；references/ 12 节契约
 ├── verilog-diagram/       # Verilog / 论文 → draw.io 图；scripts/ 生成器、导出器、Linux draw.io 安装脚本；examples/ 样例
 ├── gpt-image-bridge/      # 经 codex CLI 调 GPT Image；bin/ 包装脚本（MIT, oakplank）
