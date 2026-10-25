@@ -46,7 +46,15 @@ description: "Use when the user gives a paper title, DOI, arXiv ID or link and w
 python3 scripts/zotero_add.py search "<题目前几个词>"
 ```
 
-命中同一篇就停：告诉用户条目已存在（给 `zotero://select/library/items/<KEY>` 链接）和它现在的分类，问是否只补 PDF 或调整分类，不要再建一条。
+每个命中会列出条目链接、所在的全部 collection（完整路径）和本地 PDF 路径：导入到 Zotero 存储的读 `links.enclosure`，ZotMoov 这类链接附件（`attachments:…`）拼上 Zotero 的“链接附件根目录”（`$ZOTERO_BASE_ATTACHMENT_PATH`，没设时读 Zotero 的 `prefs.js`）；文件不在时标 `(file missing)`。
+
+命中同一篇就停，不要再建一条。把这些原样告诉用户：
+
+- 条目已存在：`zotero://select/library/items/<KEY>`
+- 所在 collections：每条完整路径一行
+- 本地 PDF：路径；没有 PDF 或标了 `(file missing)` 时直说
+
+然后问是否只补 PDF 或调整分类。
 
 ### 3. 判定放进 Computer Architecture 的哪个叶子分类
 

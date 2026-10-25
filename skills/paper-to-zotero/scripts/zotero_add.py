@@ -2,13 +2,13 @@
 """Add a paper (metadata JSON + PDF) to Zotero through the Zotero 10 local API.
 
   python3 zotero_add.py collections [--root "Computer Architecture"]   # leaf collections with keys
-  python3 zotero_add.py search "title words"                            # duplicate check
+  python3 zotero_add.py search "title words"                            # duplicate check: collections + local PDF paths
   python3 zotero_add.py add --meta meta.json --pdf paper.pdf --collection KEY [--collection KEY2]
 
 Writes go through the running Zotero app (http://localhost:23119/api): Zotero pops an
 authorization dialog; choose "Always Allow" once, otherwise every write asks again.
 """
-import argparse, hashlib, json, os, sys, urllib.parse, urllib.request, urllib.error
+import argparse, glob, hashlib, json, os, re, sys, urllib.parse, urllib.request, urllib.error
 
 BASE = os.environ.get("ZOTERO_LOCAL_API", "http://localhost:23119/api")
 LIB = "users/0"
@@ -73,12 +73,57 @@ def leaf_tree(api, root_name):
         for c in ch: walk(c, depth + 1)
     for r in sorted(roots, key=lambda x: by_key[x]["name"]): walk(r, 0)
 
+def collection_paths(api):
+    """key -> 'Parent / Child / Leaf' for every collection in the library."""
+    cols = {c["key"]: c["data"] for c in api.get(f"{LIB}/collections?limit=1000")}
+    def path(k):
+        d = cols[k]; parent = d.get("parentCollection")
+        return (path(parent) + " / " if parent in cols else "") + d["name"]
+    return {k: path(k) for k in cols}
+
+def base_attachment_dir():
+    """Zotero's 'Linked Attachment Base Directory' (used by ZotMoov etc.): env, then prefs.js."""
+    if os.environ.get("ZOTERO_BASE_ATTACHMENT_PATH"):
+        return os.path.expanduser(os.environ["ZOTERO_BASE_ATTACHMENT_PATH"])
+    pattern = os.path.expanduser("~/Library/Application Support/Zotero/Profiles/*/prefs.js")  # macOS
+    for prefs in glob.glob(pattern) + glob.glob(os.path.expanduser("~/.zotero/zotero/*/prefs.js")):
+        m = re.search(r'user_pref\("extensions\.zotero\.baseAttachmentPath",\s*"(.*?)"\);',
+                      open(prefs, encoding="utf-8").read())
+        if m: return m.group(1)
+    return None
+
+def pdf_paths(api, item_key):
+    """Local paths of the item's PDF attachments: stored files and linked files."""
+    out = []
+    for c in api.get(f"{LIB}/items/{item_key}/children"):
+        d = c["data"]
+        if d.get("itemType") != "attachment" or d.get("contentType") != "application/pdf":
+            continue
+        href = c.get("links", {}).get("enclosure", {}).get("href", "")
+        if href.startswith("file://"):                     # imported into Zotero storage
+            out.append(urllib.request.url2pathname(urllib.parse.urlparse(href).path))
+        elif d.get("path", "").startswith("attachments:"):  # linked, relative to the base directory
+            base = base_attachment_dir()
+            rel = d["path"][len("attachments:"):]
+            out.append(os.path.join(base, rel) if base else d["path"])
+        elif d.get("path"):                                 # linked, absolute
+            out.append(d["path"])
+    return out
+
 def search(api, q):
     items = api.get(f"{LIB}/items/top?q={urllib.parse.quote(q)}&qmode=titleCreatorYear&limit=20")
+    if not items: print("(no match)"); return
+    paths = collection_paths(api)
     for it in items:
         d = it["data"]
         print(f"{it['key']}  {d.get('date','')[:4]:4}  {d.get('title','')[:100]}")
-    if not items: print("(no match)")
+        print(f"    zotero://select/library/items/{it['key']}")
+        cols = [paths.get(k, k) for k in d.get("collections", [])]
+        print("    collections: " + ("; ".join(cols) if cols else "(none)"))
+        pdfs = pdf_paths(api, it["key"])
+        for pdf in pdfs:
+            print(f"    pdf: {pdf}" + ("" if os.path.exists(pdf) else "  (file missing)"))
+        if not pdfs: print("    pdf: (none)")
 
 def add(api, meta_path, pdf_path, col_keys):
     meta = json.load(open(meta_path))
