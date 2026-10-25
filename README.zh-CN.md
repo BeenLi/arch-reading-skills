@@ -230,7 +230,7 @@ python3 skills/_shared/scripts/generate_paper_mocs.py
 写一份科普调研文档：DPU 的来由与软硬件架构
 ```
 
-把主题和参考资料写成中文 Markdown + PDF：先给结论和坐标轴，再给术语速查，每条轴一节，讲每个对象“原本是干什么的”和怎么组合使用；另出封面图、宣传简介，以及和公开正文分开的私人映射文档。封面生成器在 claude.ai Project 里（`/mnt/project-files/house-style/`），本地没有时按风格摘要手画封面。
+把主题和参考资料写成中文 Markdown + PDF：先给结论和坐标轴，再给术语速查，每条轴一节，讲每个对象“原本是干什么的”和怎么组合使用；另出封面图、宣传简介，以及和公开正文分开的私人映射文档。封面由 `scripts/make_cover.py` + `scripts/export_cover.py` 生成（需要 Playwright + Chromium），规范在 `references/COVER-STYLE.md`，样例在 `assets/`。
 
 ### 读书 — `book-reader`
 
@@ -280,7 +280,7 @@ skills/
 ├── paper-reader/          # 单篇论文阅读与 Zotero 集成；scripts/ references/ assets/
 ├── concept-notes/         # 概念的唯一归属：assets/ 概念笔记模板；references/ 分类规则；scripts/ 扫描、重写、长度自检；也负责刷新目录页
 ├── book-reader/           # 整本书读书笔记与全书思维导图（MIT, Tao Jiang）
-├── kepu-research-doc/     # 带配图、封面和宣传简介的中文科普 / 调研文档
+├── kepu-research-doc/     # 带配图、封面和宣传简介的中文科普 / 调研文档；scripts/ 封面与示意图生成、PNG 导出；references/ 封面规范；assets/ 样例
 ├── repo-reader/           # 代码仓库 → 架构和使用文档；scripts/ 仓库事实采集、文档校验；references/ 12 节契约
 ├── verilog-diagram/       # Verilog / 论文 → draw.io 图；scripts/ 生成器、导出器、Linux draw.io 安装脚本；examples/ 样例
 ├── gpt-image-bridge/      # 经 codex CLI 调 GPT Image；bin/ 包装脚本（MIT, oakplank）

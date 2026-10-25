@@ -157,16 +157,14 @@ hr { border: 0; border-top: 1px solid #e3e3e3; margin: 12pt 0; }
 
 ## 10. 封面图与固定视觉风格
 
-每份文档都要一张封面，风格固定，**换主题只换内容不换版式**。规范和生成器在项目文件 `/mnt/project-files/house-style/`（`COVER-STYLE.md`、`make_cover.py`、`export_cover.py`），样板是 `/mnt/project-files/dpu/figs/cover/cover.png`。开工前先读 `COVER-STYLE.md`；若与下面的摘要不一致，以该文件为准。
-
-> `/mnt/project-files/` 是 claude.ai Project 里挂载的项目文件。在 Claude Code 等本地环境里这个目录不存在时：先问用户 house-style 文件放在哪；没有就按下面的「视觉规定摘要」用 diagram-design 手写 `cover.html` 再导出 PNG，并在回复里说明封面没用生成器。
+每份文档都要一张封面，风格固定，**换主题只换内容不换版式**。规范和生成器都在本 skill 目录里：`references/COVER-STYLE.md`（规范）、`scripts/make_cover.py`（cover.json → cover.html）、`scripts/export_cover.py`（HTML → PNG），样板是 `assets/cover-example/cover.png` 和同目录的 `cover.json`。开工前先读 `COVER-STYLE.md`；若与下面的摘要不一致，以该文件为准。下面的命令都在 skill 目录下运行（`~/.claude/skills/kepu-research-doc/`）。
 
 生成：
 ```bash
-python3 /mnt/project-files/house-style/make_cover.py <topic>/figs/cover/cover.json <topic>/figs/cover
-python3 /mnt/project-files/house-style/export_cover.py <topic>/figs/cover/cover.html   # 1242×1656 PNG（小红书 3:4 竖版）
+python3 scripts/make_cover.py <topic>/figs/cover/cover.json <topic>/figs/cover
+python3 scripts/export_cover.py <topic>/figs/cover/cover.html   # 1242×1656 PNG（小红书 3:4 竖版）
 ```
-`export_cover.py` 调 diagram-design 的 `scripts/export_png.py`，浏览器指向预装 Chromium。生成后打开 PNG 自己看一遍，再做一轮美化：文字有无溢出/重叠、圈上标签是否挤、留白是否均衡，有问题改 `cover.json` 重出，不手改 PNG。
+`export_cover.py` 只依赖 Playwright + Chromium（`python3 -m pip install --user playwright && python3 -m playwright install chromium`；装不上就按「视觉规定摘要」用 diagram-design 手写 `cover.html` 导出，并在回复里说明封面没用生成器）。生成后打开 PNG 自己看一遍，再做一轮美化：文字有无溢出/重叠、圈上标签是否挤、留白是否均衡，有问题改 `cover.json` 重出，不手改 PNG。
 
 `cover.json` 字段：
 | 字段 | 内容 |
@@ -188,11 +186,11 @@ python3 /mnt/project-files/house-style/export_cover.py <topic>/figs/cover/cover.
 - 字体：标题/大数字 Instrument Serif（中文回落 Noto Serif SC 700），正文 Geist + Noto Sans SC，eyebrow/年份/页脚 Geist Mono。
 - 不要渐变、阴影、>6px 圆角、emoji、多于一处焦点。
 
-正文示意图也沿用这套风格：节点样式只用 backend（白底 ink 描边）/ input（muted 10% 底）/ store（ink 5% 底）/ external（ink 3% 底）/ optional（虚线）/ focal（accent-tint 底 + accent 描边）；连线一律直角，快路径用 link `#2e5aa8`，慢路径/焦点用 accent 虚线，控制面用 muted 虚线；每张图最多两处 accent，图例放底部横条；中文字号 ≥12px，节点 13–14px。示例脚本见 `/mnt/project-files/dpu/figs/dd/make_dd.py`。
+正文示意图也沿用这套风格：节点样式只用 backend（白底 ink 描边）/ input（muted 10% 底）/ store（ink 5% 底）/ external（ink 3% 底）/ optional（虚线）/ focal（accent-tint 底 + accent 描边）；连线一律直角，快路径用 link `#2e5aa8`，慢路径/焦点用 accent 虚线，控制面用 muted 虚线；每张图最多两处 accent，图例放底部横条；中文字号 ≥12px，节点 13–14px。示例脚本是 `scripts/make_dd_example.py`（《看懂 DPU》的五张图）：复制到 `<topic>/figs/dd/make_dd.py`，保留 Svg 类、节点样式表和图例函数，只改画图函数；导出用同一个 `scripts/export_cover.py`（非封面画布自动按 2x 导出）。
 
 ## 11. 宣传简介（正文之外单独一份）
 
-文档写完后，另写 `<主题>_宣传简介.md`，用于发布时放在文档旁边（公众号/知乎/小红书的导语、资料包说明）。它不进正文。样板：`/mnt/project-files/dpu/DPU_宣传简介.md`（用户亲手改过的版本，以它的语气为准）。结构：
+文档写完后，另写 `<主题>_宣传简介.md`，用于发布时放在文档旁边（公众号/知乎/小红书的导语、资料包说明）。它不进正文。样板：`assets/blurb-example.md`（《看懂 DPU》的简介，用户亲手改过，以它的语气为准）。结构：
 
 ```
 # 《<文档标题>》简介

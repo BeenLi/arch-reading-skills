@@ -1,0 +1,55 @@
+{
+  "eyebrow": "SMARTNIC · DPU · IPU · 科普调研",
+  "title": [
+    "看懂 DPU",
+    "来由、作用与架构"
+  ],
+  "subtitle": [
+    "一块网卡，怎样长成",
+    "主机旁边的另一台计算机"
+  ],
+  "meta": "2026-10 · 15 PAGES · 中文",
+  "core": [
+    "主 CPU",
+    "host"
+  ],
+  "rings": [
+    {
+      "year": "1958",
+      "label": "通道处理器",
+      "sweep": 300
+    },
+    {
+      "year": "1999",
+      "label": "TOE",
+      "sweep": 300,
+      "dashed": true
+    },
+    {
+      "year": "2013",
+      "label": "DPU",
+      "sweep": 200,
+      "focal": true
+    }
+  ],
+  "motif_caption": "前两圈已转回 CPU，第三圈还在外面",
+  "desc": "DPU 科普文档封面：左侧是标题，右侧三圈同心圆代表 I/O 卸载的三次轮回，最外圈的 DPU 为焦点。",
+  "topics": [
+    [
+      "WHY",
+      "为什么 I/O 第三次被搬出 CPU"
+    ],
+    [
+      "WHAT",
+      "网络、安全、存储：DPU 替主机做了什么"
+    ],
+    [
+      "HOW",
+      "卡里怎么分工，快路径和慢路径"
+    ],
+    [
+      "WHO",
+      "Nitro、BlueField、IPU 原本为谁而造"
+    ]
+  ]
+}
