@@ -6,7 +6,7 @@
 - **概念库**（`skills/concept-notes/`）：概念笔记怎么生成、分类、维护，以及它和论文笔记的分工。
 - **论文笔记模板**（`skills/paper-reader/assets/paper-note-template.md`）和 **概念笔记模板**（`skills/concept-notes/assets/concept-note-template.md`）。
 
-安装、触发词和其他 skill（book-reader、repo-reader）见 `README.md`。本文所有路径都相对仓库根目录。
+安装、触发词和其他 skill（book-reader、repo-reader、repo-learning-path）见 `README.md`。本文所有路径都相对仓库根目录。
 
 ## 1. 总览
 
@@ -316,11 +316,11 @@ python3 skills/daily-papers/scripts/download_note_images.py "<笔记>"
 
 `npx skills add` 只复制单个 skill 文件夹，`_shared` 不会跟着装；仓库里也不能放指向 `_shared` 的软链接，因为 skills CLI 按 skill 文件夹的 git tree hash 判断是否更新，只改 `_shared` 时被链接方的 hash 不变，`npx skills update` 永远不会触发。所以：
 
-- `skills/_shared` 是唯一源，没有 SKILL.md。`scripts/sync_shared.py` 把它（外加 `concept-notes/references/concept-categories.md`）复制进 `skills/{paper-reader,concept-notes,daily-papers}/_shared/`；`repo-reader` 只带 `md_escape_check.py` 和 `mermaid-rules.md`，`book-reader` 只带 `mermaid-rules.md`，`paper-to-zotero` 只带 `user_config.py` 和 `user-config.json`，`verilog-diagram`、`gpt-image-bridge`、`kepu-research-doc` 不用 `_shared`。副本提交进 git，不手改。
+- `skills/_shared` 是唯一源，没有 SKILL.md。`scripts/sync_shared.py` 把它（外加 `concept-notes/references/concept-categories.md`）复制进 `skills/{paper-reader,concept-notes,daily-papers}/_shared/`；`repo-reader` 只带 `md_escape_check.py` 和 `mermaid-rules.md`，`book-reader` 只带 `mermaid-rules.md`，`paper-to-zotero` 只带 `user_config.py` 和 `user-config.json`，`verilog-diagram`、`gpt-image-bridge`、`kepu-research-doc`、`repo-learning-path` 不用 `_shared`。副本提交进 git，不手改。
 - 带副本的 skill 的文档只写 skill 目录内的相对路径 `_shared/…`，不写 `../_shared` 或兄弟 skill 的路径；`test_vendored_skills_reference_only_their_own_shared_copy` 检查这一点。
 - 脚本源优先：`_find_shared_scripts()` 发现 `parents[3]/scripts/sync_shared.py` 存在（即在仓库或 plugin 缓存的整仓副本里）时用 `skills/_shared/scripts`，否则用自己的 `_shared/scripts` 副本。clone 下改 `skills/_shared` 立即生效；agent 按 SKILL.md 直接运行的 `_shared/scripts/*.py` 仍是副本，改完要跑一次 sync。
 - 防漂移：`.githooks/pre-commit`（`git config core.hooksPath .githooks` 启用）和 `.github/workflows/test.yml` 都跑 `sync_shared.py --check`，`tests/test_sync_shared.py` 也跑。
-- 三种安装：`npx skills add BeenLi/arch-reading-skills -g -a claude-code`；`/plugin marketplace add BeenLi/arch-reading-skills`（`.claude-plugin/marketplace.json`，`source: "./"`、`strict: false`，不列 skills，默认扫 `skills/`）；git clone + 软链接（本机开发用，只链接 9 个 skill，不链接 `_shared`）。
+- 三种安装：`npx skills add BeenLi/arch-reading-skills -g -a claude-code`；`/plugin marketplace add BeenLi/arch-reading-skills`（`.claude-plugin/marketplace.json`，`source: "./"`、`strict: false`，不列 skills，默认扫 `skills/`）；git clone + 软链接（本机开发用，只链接 10 个 skill，不链接 `_shared`）。
 
 ## 7. 测试
 
@@ -343,6 +343,7 @@ python3 -m pytest tests/ -q
 | `tests/test_zotero_helper.py`、`tests/test_zotero_helper_writes.py`、`tests/test_zotero_local_api.py` | Zotero 只读解析、经本地 API 的分类调整 / 字段修改 / 回收站、版本冲突 |
 | `tests/test_paper_to_zotero.py` | paper-to-zotero 的分类树与叶子说明、查重输出的分类路径和 PDF 路径 |
 | `tests/test_repo_reader_check_doc.py`、`tests/test_repo_reader_repo_facts.py` | repo-reader 的 12 节契约检查、仓库事实采集 |
+| `tests/test_repo_learning_path_check_links.py` | repo-learning-path 的链接检查：相对链接和图片存在、`#L` 行号不越界、代码块里的链接不算 |
 | `tests/test_user_config.py` | 配置叠加顺序、`ARCH_READING_CONFIG` 的互斥规则 |
 
 ## 附录：Obsidian 硬链接

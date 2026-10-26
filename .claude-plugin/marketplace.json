@@ -10,7 +10,7 @@
     {
       "name": "arch-reading",
       "source": "./",
-      "description": "Architecture-first research toolkit: daily paper picks with CCF tiers, structured paper notes and a concept library in Obsidian, adding papers to Zotero, book and code-repository readers, Chinese explainer documents, Verilog-to-draw.io diagrams, and GPT Image generation.",
+      "description": "Architecture-first research toolkit: daily paper picks with CCF tiers, structured paper notes and a concept library in Obsidian, adding papers to Zotero, book and code-repository readers, staged learning roadmaps with deep-read notes for code repositories, Chinese explainer documents, Verilog-to-draw.io diagrams, and GPT Image generation.",
       "strict": false
     }
   ]

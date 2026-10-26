@@ -18,6 +18,7 @@ https://github.com/user-attachments/assets/1abe137d-5dd1-46b5-b766-40f239380d6c
 | `book-reader` | 读整本书，输出带全书思维导图的读书笔记 |
 | `kepu-research-doc` | 写带配图的中文科普 / 调研文档，把一个说法很乱的主题拆成几条独立的坐标轴 |
 | `repo-reader` | 读一个代码仓库，写出可回溯到源码的架构和使用文档 |
+| `repo-learning-path` | 按你的背景和目标给 clone 下来的仓库排一条循序渐进的学习路线，再逐篇写图文并茂、`文件:行号` 可点击的精读笔记；每一关都先和你确认 |
 | `verilog-diagram` | 把 Verilog / SystemVerilog（或论文、描述）画成可编辑的 draw.io 架构图、框图、状态机和控制结构图 |
 | `gpt-image-bridge` | 经 `codex` CLI 用 ChatGPT 订阅调用 GPT Image 生成图片；每张图生成前先征得同意 |
 
@@ -77,7 +78,7 @@ npx skills add BeenLi/arch-reading-skills -g -a claude-code
 # 3. git clone + 软链接，适合开发：仓库里的改动立即生效
 git clone https://github.com/BeenLi/arch-reading-skills.git && cd arch-reading-skills
 mkdir -p ~/.claude/skills
-for d in paper-reader concept-notes daily-papers paper-to-zotero book-reader repo-reader kepu-research-doc verilog-diagram gpt-image-bridge; do
+for d in paper-reader concept-notes daily-papers paper-to-zotero book-reader repo-reader repo-learning-path kepu-research-doc verilog-diagram gpt-image-bridge; do
   ln -sfn "$PWD/skills/$d" "$HOME/.claude/skills/$d"
 done
 ```
@@ -306,6 +307,20 @@ PDF / EPUB / MOBI / TXT 按页或按章提取，分批提炼知识点，输出�
 - 原始材料：`python3 skills/repo-reader/scripts/repo_facts.py <repo>`（remote、HEAD、目录树、入口候选、README 命令、配置文件）
 - 落盘：仓库已有 `ARCHITECTURE.md` 或用户要求时写进仓库并硬链接到 vault 的使用指南目录；否则只写 vault。目录由配置文件里的 `repo_reader.guide_dir` 决定（见[配置](#配置)）
 
+### 循序渐进学一个仓库 — `repo-learning-path`
+
+```text
+我刚 clone 了 tiny-gpu，想系统地吃透这个仓库
+帮这个项目建一条学习路线
+继续写下一篇精读
+```
+
+分四关进行，每关结束都停下来等你回答：勘察仓库，问你的背景、目标和时间；在对话里给出分阶段的学习路线；把路线写进 `docs/learning/README.md`，每个阶段搭一篇总览框架，只把最近的一个阶段拆到一篇一项；然后逐篇写精读。每篇回答一个问题，每条论断都落到带行号的相对链接，至少一张图（优先用仓库自带或官方的图，没有再用 `verilog-diagram` 或 drawio-skill 画），最后是带日期的精读结论；每写完一篇同步 README 的待办和阶段总览。仓库里已有 `docs/learning/README.md` 时，从第一个没打勾的项接着写。
+
+- 模板：[`skills/repo-learning-path/references/templates.md`](skills/repo-learning-path/references/templates.md)（学习计划 README、阶段总览、精读分篇、图源说明）
+- 链接检查：`python3 skills/repo-learning-path/scripts/check_links.py <repo>/docs/learning/`（相对链接和图片都存在，`#L` 行号不越界）
+- 和 `repo-reader` 的区别：repo-reader 一次写完一份固定 12 节的文档；本 skill 是分多次进行、每步都和你确认的学习计划
+
 ### 画硬件图 — `verilog-diagram`
 
 ```text
@@ -335,6 +350,7 @@ skills/
 ├── book-reader/           # 整本书读书笔记与全书思维导图（MIT, Tao Jiang）
 ├── kepu-research-doc/     # 带配图、封面和宣传简介的中文科普 / 调研文档；scripts/ 封面与示意图生成、PNG 导出；references/ 封面规范；assets/ 样例
 ├── repo-reader/           # 代码仓库 → 架构和使用文档；scripts/ 仓库事实采集、文档校验；references/ 12 节契约
+├── repo-learning-path/    # 代码仓库 → 分阶段学习路线与精读笔记；references/ 文档模板；scripts/ 链接检查
 ├── verilog-diagram/       # Verilog / 论文 → draw.io 图；scripts/ 生成器、导出器、Linux draw.io 安装脚本；examples/ 样例
 ├── gpt-image-bridge/      # 经 codex CLI 调 GPT Image；bin/ 包装脚本（MIT, oakplank）
 └── _shared/               # 共享配置；scripts/ MOC 生成、转义检查、venue 标签、CCF 分级；references/ 画图规则

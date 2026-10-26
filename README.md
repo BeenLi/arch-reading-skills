@@ -18,6 +18,7 @@ https://github.com/user-attachments/assets/1abe137d-5dd1-46b5-b766-40f239380d6c
 | `book-reader` | Reads a whole book and writes reading notes with a mind map of the book |
 | `kepu-research-doc` | Writes an illustrated Chinese explainer / survey document that sorts a confusing topic into a few independent axes |
 | `repo-reader` | Reads a code repository and writes an architecture and usage guide whose claims trace back to source files |
+| `repo-learning-path` | Builds a step-by-step learning roadmap for a cloned repository from your background and goals, then writes illustrated deep-read notes with clickable `file:line` links, checking with you at each stage |
 | `verilog-diagram` | Turns Verilog / SystemVerilog (or a paper or description) into editable draw.io architecture, block, FSM and control diagrams |
 | `gpt-image-bridge` | Generates images with GPT Image through the `codex` CLI and a ChatGPT subscription; asks before every image |
 
@@ -77,7 +78,7 @@ npx skills add BeenLi/arch-reading-skills -g -a claude-code
 # 3. git clone + symlinks, for development: changes in the repo take effect immediately
 git clone https://github.com/BeenLi/arch-reading-skills.git && cd arch-reading-skills
 mkdir -p ~/.claude/skills
-for d in paper-reader concept-notes daily-papers paper-to-zotero book-reader repo-reader kepu-research-doc verilog-diagram gpt-image-bridge; do
+for d in paper-reader concept-notes daily-papers paper-to-zotero book-reader repo-reader repo-learning-path kepu-research-doc verilog-diagram gpt-image-bridge; do
   ln -sfn "$PWD/skills/$d" "$HOME/.claude/skills/$d"
 done
 ```
@@ -306,6 +307,20 @@ Static source analysis only (it never runs the target repository's scripts, test
 - Raw facts: `python3 skills/repo-reader/scripts/repo_facts.py <repo>` (remote, HEAD, directory tree, entry-point candidates, README commands, config files)
 - Output: written into the repository and hard-linked into the vault's guide folder when the repository already has an `ARCHITECTURE.md` or you ask for it; otherwise only into the vault. The folder comes from `repo_reader.guide_dir` in your config file (see [Configuration](#configuration))
 
+### Learning a repository step by step — `repo-learning-path`
+
+```text
+我刚 clone 了 tiny-gpu，想系统地吃透这个仓库    # learn this repository systematically
+帮这个项目建一条学习路线                      # build a learning roadmap for this project
+继续写下一篇精读                              # continue with the next deep-read note
+```
+
+Works in four gates and stops for your answer at the end of each: survey the repository and ask about your background, goal and time; propose a staged roadmap in the chat; write it into `docs/learning/README.md` with a framework overview per stage, breaking only the nearest stage into one todo per note; then write the deep-read notes one at a time. Each note answers one question, ties every claim to a line-anchored relative link, has at least one figure (the repository's own or official figures first, otherwise drawn with `verilog-diagram` or drawio-skill) and ends with a dated conclusion; the README checklist and the stage overview are updated after every note. When `docs/learning/README.md` already exists it resumes from the first unchecked item.
+
+- Templates: [`skills/repo-learning-path/references/templates.md`](skills/repo-learning-path/references/templates.md) (plan README, stage overview, deep-read note, figure sources)
+- Link checker: `python3 skills/repo-learning-path/scripts/check_links.py <repo>/docs/learning/` (every relative link and image exists, every `#L` anchor is inside the file)
+- Versus `repo-reader`: that skill writes one fixed 12-section guide in a single pass; this one is an interactive study plan carried out over many sessions
+
 ### Hardware diagrams — `verilog-diagram`
 
 ```text
@@ -335,6 +350,7 @@ skills/
 ├── book-reader/           # Whole-book notes and mind maps (MIT, Tao Jiang)
 ├── kepu-research-doc/     # Chinese explainer / survey documents with figures, cover and promo blurb; scripts/ cover + diagram generators and PNG export; references/ cover spec; assets/ samples
 ├── repo-reader/           # Repository → architecture and usage guide; scripts/ facts and checker; references/ 12-section contract
+├── repo-learning-path/    # Repository → staged learning roadmap and deep-read notes; references/ templates; scripts/ link checker
 ├── verilog-diagram/       # Verilog / papers → draw.io diagrams; scripts/ generators, exporter, Linux draw.io installer; examples/
 ├── gpt-image-bridge/      # GPT Image through the codex CLI; bin/ wrapper script (MIT, oakplank)
 └── _shared/               # Shared config; scripts/ index generation, escape checks, venue labels, CCF ranks; references/ diagram rules
