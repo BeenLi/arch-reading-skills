@@ -319,7 +319,7 @@ PDF / EPUB / MOBI / TXT 按页或按章提取，分批提炼知识点，输出�
 
 - 模板：[`skills/repo-learning-path/references/templates.md`](skills/repo-learning-path/references/templates.md)（学习计划 README、阶段总览、精读分篇、图源说明）
 - 链接检查：`python3 skills/repo-learning-path/scripts/check_links.py <repo>/docs/learning/`（相对链接和图片都存在，`#L` 行号不越界）
-- 和 `repo-reader` 的区别：repo-reader 一次写完一份固定 12 节的文档；本 skill 是分多次进行、每步都和你确认的学习计划
+- 和 `repo-reader` 的区别：repo-reader 是对仓库代码的整体（overview）理解；本 skill 是逐步、详细地理解这个仓库，一篇一篇精读下去
 
 ### 画硬件图 — `verilog-diagram`
 

@@ -319,7 +319,7 @@ Works in four gates and stops for your answer at the end of each: survey the rep
 
 - Templates: [`skills/repo-learning-path/references/templates.md`](skills/repo-learning-path/references/templates.md) (plan README, stage overview, deep-read note, figure sources)
 - Link checker: `python3 skills/repo-learning-path/scripts/check_links.py <repo>/docs/learning/` (every relative link and image exists, every `#L` anchor is inside the file)
-- Versus `repo-reader`: that skill writes one fixed 12-section guide in a single pass; this one is an interactive study plan carried out over many sessions
+- Versus `repo-reader`: that skill gives an overview of the codebase; this one works through the repository step by step and in detail, one deep-read note at a time
 
 ### Hardware diagrams — `verilog-diagram`
 

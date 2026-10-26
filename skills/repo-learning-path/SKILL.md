@@ -1,6 +1,6 @@
 ---
 name: repo-learning-path
-description: 为一个 git clone 下来的仓库建立循序渐进的学习路线，并逐篇写图文并茂、代码行可点击的精读笔记（docs/learning/）。流程分四关，每关先和用户达成共识再往下走：问背景与目标 → 定学习路线 → 把路线落成 README 大纲 → 逐篇写精读文档。当用户说"想系统学习/吃透/精读这个仓库""帮我建学习路线/学习计划""读源码不知从哪下手""给这个项目写精读笔记/学习文档""继续写下一篇精读"，或刚 clone 了一个陌生项目想全面掌握时使用；仓库里已有 docs/learning/README.md 时也用它接着往下写。只要一份一次写完的架构和使用文档时用 repo-reader。Use for "help me learn this codebase systematically", "build a study plan / learning roadmap for this repo", "write deep-read notes for this project".
+description: 为一个 git clone 下来的仓库建立循序渐进的学习路线，并逐篇写图文并茂、代码行可点击的精读笔记（docs/learning/）。流程分四关，每关先和用户达成共识再往下走：问背景与目标 → 定学习路线 → 把路线落成 README 大纲 → 逐篇写精读文档。当用户说"想系统学习/吃透/精读这个仓库""帮我建学习路线/学习计划""读源码不知从哪下手""给这个项目写精读笔记/学习文档""继续写下一篇精读"，或刚 clone 了一个陌生项目想全面掌握时使用；仓库里已有 docs/learning/README.md 时也用它接着往下写。只想对仓库代码有个整体（overview）理解时用 repo-reader。Use for "help me learn this codebase systematically", "build a study plan / learning roadmap for this repo", "write deep-read notes for this project".
 ---
 
 # 仓库学习路线与精读笔记
@@ -21,7 +21,7 @@ description: 为一个 git clone 下来的仓库建立循序渐进的学习路�
 
 `<docs>` 用仓库已有的文档目录（`docs/` 或 `Docs/`），没有就建 `docs/`。文档语言跟用户说话的语言一致。
 
-和 repo-reader 的分工：repo-reader 一次写出一份固定 12 节的"架构和使用文档"；本 skill 是按读者背景排的多阶段学习路线，加上逐篇精读，每一步都和用户确认。用户只想快速知道"这个仓库是什么、怎么用"时，用 repo-reader。
+和 repo-reader 的分工：repo-reader 是对仓库代码的整体（overview）理解，一份文档讲清"这个仓库是什么、由哪几块组成、怎么用"；本 skill 是逐步、详细地理解这个仓库，按读者背景排多阶段路线，逐篇精读到具体的函数、信号和代码行，每一步都和用户确认。用户只想要整体理解时，用 repo-reader。
 
 ## 依赖检查
 
