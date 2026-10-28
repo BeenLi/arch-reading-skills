@@ -1,0 +1,81 @@
+{
+  "eyebrow": "AXI · PCIE · CXL · NVLINK · RDMA · 科普调研",
+  "title": [
+    "互联协议坐标系"
+  ],
+  "subtitle": [
+    "距离、语义、拓扑与可靠性"
+  ],
+  "meta": "2026-10 · 16 PAGES · 中文",
+  "motif_caption": "距离每远一级，协议栈就多长一层",
+  "desc": "互联协议科普文档封面：五级台阶从左到右是片内、封装内、板级、机柜、数据中心，每级叠起的块是该级需要的协议层，机柜级为焦点。",
+  "topics": [
+    [
+      "WHY",
+      "为什么距离一远，协议就变厚"
+    ],
+    [
+      "WHAT",
+      "一致、非一致、I/O、RDMA：协议在说什么话"
+    ],
+    [
+      "HOW",
+      "从总线监听到目录，从 NRZ 到 FLIT"
+    ],
+    [
+      "WHO",
+      "PCIe、CXL、NVLink、UALink 原本为谁而造"
+    ]
+  ],
+  "motif": "stairs",
+  "stairs": [
+    {
+      "label": "片内",
+      "sub": "AXI · CHI",
+      "layers": [
+        "并行连线",
+        "事务"
+      ]
+    },
+    {
+      "label": "封装内",
+      "sub": "UCIe",
+      "layers": [
+        "并行连线",
+        "D2D 适配",
+        "事务"
+      ]
+    },
+    {
+      "label": "板级",
+      "sub": "PCIe · CXL",
+      "layers": [
+        "SerDes",
+        "链路重传",
+        "事务"
+      ]
+    },
+    {
+      "label": "机柜",
+      "sub": "NVLink · UALink",
+      "layers": [
+        "SerDes",
+        "链路重传",
+        "交换",
+        "内存语义"
+      ],
+      "focal": true
+    },
+    {
+      "label": "数据中心",
+      "sub": "RoCE · UEC",
+      "layers": [
+        "光 + SerDes",
+        "链路",
+        "网络路由",
+        "传输重传",
+        "消息"
+      ]
+    }
+  ]
+}

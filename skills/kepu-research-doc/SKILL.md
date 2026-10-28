@@ -157,7 +157,7 @@ hr { border: 0; border-top: 1px solid #e3e3e3; margin: 12pt 0; }
 
 ## 10. 封面图与固定视觉风格
 
-每份文档都要一张封面，风格固定，**换主题只换内容不换版式**。规范和生成器都在本 skill 目录里：`references/COVER-STYLE.md`（规范）、`scripts/make_cover.py`（cover.json → cover.html）、`scripts/export_cover.py`（HTML → PNG），样板是 `assets/cover-example/cover.png` 和同目录的 `cover.json`。开工前先读 `COVER-STYLE.md`；若与下面的摘要不一致，以该文件为准。下面的命令都在 skill 目录下运行（`~/.claude/skills/kepu-research-doc/`）。
+每份文档都要一张封面，风格固定，**换主题只换内容和母题，不换版式**。母题有同心圆（rings，默认）、台阶（stairs）、时间轴（timeline）三种，按主题的形状选（见 `COVER-STYLE.md`“母题”一节），不要硬套同心圆。规范和生成器都在本 skill 目录里：`references/COVER-STYLE.md`（规范）、`scripts/make_cover.py`（cover.json → cover.html）、`scripts/export_cover.py`（HTML → PNG），样板是 `assets/cover-example/cover.png` 和同目录的 `cover.json`。开工前先读 `COVER-STYLE.md`；若与下面的摘要不一致，以该文件为准。下面的命令都在 skill 目录下运行（`~/.claude/skills/kepu-research-doc/`）。
 
 生成：
 ```bash
@@ -174,15 +174,18 @@ python3 scripts/export_cover.py <topic>/figs/cover/cover.html   # 1242×1656 PNG
 | subtitle | 1–2 行，每行 ≤12 个汉字，一句话说"原本是怎么回事" |
 | topics | 3–4 行"这篇要讲什么"：[英文标签, 一句话问题]，标签用 WHY / WHAT / HOW / WHO；不放图数、参考数等统计数字 |
 | meta | 日期 · 页数 · 语言 |
-| core | 同心圆圆心的核心对象 [中文名, 英文小字] |
-| rings | 2–4 圈 {year, label, sweep, dashed?, focal?}，只能一圈 focal |
+| motif | `rings`（默认）/ `stairs` / `timeline` |
+| core | rings 用：同心圆圆心的核心对象 [中文名, 英文小字] |
+| rings | rings 用：2–6 圈 {year, label, sweep, dashed?, focal?}，只能一圈 focal |
+| stairs | stairs 用：3–6 级 {label, sub?, layers: [自下而上], focal?}，只能一级 focal |
+| timeline | timeline 用：3–7 个 {year, label, dashed?, focal?}，只能一个 focal |
 | motif_caption | 母题下方一句斜体说明 |
 | desc | 无障碍描述，一句话 |
 
 视觉规定摘要：
 - 画幅：**小红书封面 3:4 竖版**，画布 1080×1440，导出 ×1.15 得 1242×1656 PNG；四周留 96px 安全边距，iPhone 预览裁边或底部遮挡时不切到文字。版式自上而下：标题区（eyebrow、标题、橙色短横、副标题）→ 点阵纸上的同心圆母题（上下各一条细线）→ 3–4 行 topics → 页脚。
-- 母题：圆心=核心对象，每圈=一个阶段/层级，弧线加箭头表示演进方向。弧长即信息：已走完的阶段画到约 300°，还在进行的约 200°；被淘汰或收回的阶段画虚线。
-- 色板（diagram-design 默认皮肤）：paper `#f5f5f5`、ink `#2d3142`、muted `#4f5d75`、soft `#5a6580`、rule `rgba(45,49,66,0.12)`、accent `#bf4520`。accent 只用两处：标题下短横条、焦点圈。
+- 母题：rings 的圆心=核心对象，每圈=一个阶段，弧长即信息（走完约 300°，进行中约 200°，淘汰的画虚线）；stairs 从左到右是层级，块数=该级累积的东西；timeline 是一条主线上的节点。三种都只有一处焦点。横版目前只支持 rings。
+- 色板（diagram-design 默认皮肤）：paper `#f5f5f5`、ink `#2d3142`、muted `#4f5d75`、soft `#5a6580`、rule `rgba(45,49,66,0.12)`、accent `#bf4520`。accent 只用两处：标题下短横条、焦点（圈、台阶或节点）。
 - 字体：标题/大数字 Instrument Serif（中文回落 Noto Serif SC 700），正文 Geist + Noto Sans SC，eyebrow/年份/页脚 Geist Mono。
 - 不要渐变、阴影、>6px 圆角、emoji、多于一处焦点。
 
@@ -230,7 +233,7 @@ python3 scripts/export_cover.py <topic>/figs/cover/cover.html   # 1242×1656 PNG
 - [ ] 表格列数 ≤ 5、列内词表统一、无单元格内堆列表。
 - [ ] PDF 逐页检查过，没有大块空白和溢出。
 - [ ] 已给用户推荐 3–5 个候选标题（含副标题、理由、推荐项），选定的标题已同步到 md、PDF、封面、宣传简介和文件名。
-- [ ] 封面已按 `COVER-STYLE.md` 生成并自查过（无溢出/重叠，只有一处焦点圈，topics 与正文内容对得上，竖版 3:4 尺寸且文字都在安全边距内）；正文示意图用同一色板和节点样式。
+- [ ] 封面已按 `COVER-STYLE.md` 生成并自查过（无溢出/重叠，只有一处焦点，topics 与正文内容对得上，竖版 3:4 尺寸且文字都在安全边距内）；正文示意图用同一色板和节点样式。
 - [ ] 宣传简介已单独生成：顶部封面图 + "可以了解到"编号列表（大白话，3–5 条）+ 适合谁，≤500 字，每条都能在正文里找到对应，且同样过了隐私检查。
 - [ ] md 和 PDF 内容一致（PDF 是从最新的 md 导出的），md 里图片用相对路径、在常见编辑器（Obsidian / Typora / VS Code）里能直接预览。
 

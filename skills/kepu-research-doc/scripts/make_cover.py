@@ -5,8 +5,11 @@ cover.json 写 "orientation": "landscape" 时出 4:3 横版（1440×1080）。
 用法：python3 scripts/make_cover.py <topic>/figs/cover/cover.json <topic>/figs/cover
   cover.json 字段见 references/COVER-STYLE.md，样例在 assets/cover-example/cover.json；
   输出 cover.html，再用 python3 scripts/export_cover.py <topic>/figs/cover/cover.html 导出 cover.png。
-竖版自上而下是标题区、"同心圆"母题、"这篇要讲什么"；母题圆心是主题的核心对象，
-每一圈是一个阶段或层级，焦点圈用 accent，其余用 muted。
+竖版自上而下是标题区、母题、"这篇要讲什么"。母题由 "motif" 字段选择（默认 rings）：
+  rings     同心圆：圆心是核心对象，每一圈是一个阶段或层级，弧长表示走到哪一步；
+  stairs    台阶：从左到右是层级，每级叠的块数是该级累积的东西（协议层、监管层……）；
+  timeline  时间轴：一条横线上按年份排开几个节点，适合"一件事怎么演变过来"。
+焦点（圈 / 台阶 / 节点）只能有一个，用 accent，其余用 muted。横版目前只支持 rings。
 """
 import json
 import math
@@ -55,15 +58,27 @@ def build_portrait(c):
     o.append(f'<rect x="{x}" y="{y}" width="56" height="4" fill="{ACCENT}"/>')
     for i, line in enumerate(c["subtitle"]):
         o.append(t(x, y + 60 + i * 44, line, 30, MUTED, SANS, 400))
-    # 中部：点阵纸上的同心圆母题
-    cx, cy = W / 2, 800
-    rings = c["rings"]
-    radii = [96 + 68 * i for i in range(len(rings))]
-    band0, band1 = cy - radii[-1] - 40, cy + radii[-1] + 72
+    # 中部：点阵纸上的母题
+    motif = c.get("motif", "rings")
+    if motif == "rings":
+        cx, cy = W / 2, 800
+        rings = c["rings"]
+        n = len(rings)
+        if n > 3:  # 圈多时圆心上移、外圈放大到 262，圈距按圈数均分，避免挤到标题和页脚
+            cy -= 30
+        r0 = 96 if n <= 3 else 80
+        step = 68 if n <= 3 else (262 - r0) / (n - 1)
+        radii = [r0 + step * i for i in range(n)]
+        band0, band1 = cy - radii[-1] - 40, cy + radii[-1] + 72
+        body = rings_svg(c, cx, cy, radii)
+    else:
+        band0 = y + 60 + 44 * (len(c["subtitle"]) - 1) + 72
+        band1 = 1110
+        body = (stairs_svg if motif == "stairs" else timeline_svg)(c, M, band0, W - 2 * M, band1 - band0 - 76)
     o.append(f'<rect x="0" y="{band0}" width="{W}" height="{band1 - band0}" fill="url(#dots)"/>')
     o.append(f'<line x1="{M}" y1="{band0}" x2="{W - M}" y2="{band0}" stroke="{RULE}"/>')
-    o += rings_svg(c, cx, cy, radii)
-    o.append(t(cx, band1 - 24, c["motif_caption"], 24, MUTED, SERIF, 400, "middle",
+    o += body
+    o.append(t(W / 2, band1 - 24, c["motif_caption"], 24, MUTED, SERIF, 400, "middle",
                ' font-style="italic"'))
     o.append(f'<line x1="{M}" y1="{band1}" x2="{W - M}" y2="{band1}" stroke="{RULE}"/>')
     # 下部：这篇要讲的几个问题（不放数字统计）
@@ -102,6 +117,61 @@ def rings_svg(c, cx, cy, radii):
         o.append(t(cx - 28, ny + 7, ring["year"], 18, color, MONO, 500, "end"))
         o.append(t(cx - 28 - yw - 14, ny + 7, ring["label"], 20,
                    ACCENT if focal else INK, SANS, 600 if focal else 500, "end"))
+    return o
+
+
+def stairs_svg(c, x0, y0, w, h):
+    """台阶母题：c["stairs"] = [{label, sub, layers: [自下而上的块名], focal?}]，从左到右排开。"""
+    o = []
+    st = c["stairs"]
+    n, top = len(st), max(len(s["layers"]) for s in st)
+    gap = 20
+    cw = (w - gap * (n - 1)) / n
+    lab_h = 64                                   # 底部标签区
+    bh = min(84, (h - lab_h - 40 - 8 * (top - 1)) / top)
+    base = y0 + h - lab_h                        # 台阶底线
+    o.append(f'<line x1="{x0}" y1="{base}" x2="{x0 + w}" y2="{base}" stroke="{INK}" stroke-width="1.6"/>')
+    for i, s in enumerate(st):
+        focal = s.get("focal", False)
+        x = x0 + i * (cw + gap)
+        for j, name in enumerate(s["layers"]):
+            by = base - 8 - (j + 1) * bh - j * 8
+            fill = ACCENT_TINT if focal else ("#ffffff" if j < len(s["layers"]) - 1 else PAPER2)
+            stroke = ACCENT if focal else MUTED
+            o.append(f'<rect x="{x:.1f}" y="{by:.1f}" width="{cw:.1f}" height="{bh:.1f}" rx="4" '
+                     f'fill="{fill}" stroke="{stroke}" stroke-width="{1.8 if focal else 1.2}"/>')
+            o.append(t(round(x + cw / 2, 1), round(by + bh / 2 + 7, 1), name, 19,
+                       ACCENT if focal else INK, SANS, 500, "middle"))
+        cx = round(x + cw / 2, 1)
+        o.append(t(cx, base + 34, s["label"], 22, ACCENT if focal else INK, SANS, 600, "middle"))
+        if s.get("sub"):
+            o.append(t(cx, base + 58, s["sub"], 15, ACCENT if focal else SOFT, MONO, 500, "middle"))
+    return o
+
+
+def timeline_svg(c, x0, y0, w, h):
+    """时间轴母题：c["timeline"] = [{year, label, focal?, dashed?}]，标签上下交替避免重叠。"""
+    o = []
+    ev = c["timeline"]
+    ly = y0 + h / 2
+    o.append(f'<line x1="{x0}" y1="{ly}" x2="{x0 + w}" y2="{ly}" stroke="{MUTED}" stroke-width="2" '
+             f'marker-end="url(#mm)"/>')
+    pad = 72                                     # 端点内缩，首尾标签不出安全边距
+    step = (w - 2 * pad) / max(1, len(ev) - 1)
+    tick = min(140, h * 0.28)
+    for i, e in enumerate(ev):
+        focal = e.get("focal", False)
+        color = ACCENT if focal else MUTED
+        x = round(x0 + pad + i * step, 1)
+        up = i % 2 == 0
+        y1 = ly - tick if up else ly + tick
+        dash = ' stroke-dasharray="5,4"' if e.get("dashed") else ""
+        o.append(f'<line x1="{x}" y1="{ly}" x2="{x}" y2="{y1}" stroke="{color}" stroke-width="1.4"{dash}/>')
+        o.append(f'<circle cx="{x}" cy="{ly}" r="{9 if focal else 6}" fill="{color}"/>')
+        ty = y1 - 34 if up else y1 + 30
+        o.append(t(x, ty, e["year"], 18, color, MONO, 500, "middle"))
+        o.append(t(x, ty + 30, e["label"], 21, ACCENT if focal else INK, SANS, 600 if focal else 500,
+                   "middle"))
     return o
 
 
@@ -171,6 +241,8 @@ if __name__ == "__main__":
     out = Path(sys.argv[2])
     out.mkdir(parents=True, exist_ok=True)
     build = build_landscape if cfg.get("orientation") == "landscape" else build_portrait
+    if build is build_landscape and cfg.get("motif", "rings") != "rings":
+        raise SystemExit("横版目前只支持 rings 母题；stairs / timeline 请用竖版")
     body, W, H = build(cfg)
     html = PAGE.format(title=escape("".join(cfg["title"])), desc=escape(cfg["desc"]), fonts=FONTS,
                        paper=PAPER, muted=MUTED, accent=ACCENT, w=W, h=H, body=body)
