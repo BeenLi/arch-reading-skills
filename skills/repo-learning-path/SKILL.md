@@ -25,15 +25,17 @@ description: 为一个 git clone 下来的仓库建立循序渐进的学习路�
 
 ## 依赖检查
 
-本 skill 自身只需要 Python 3。画图时用到两个可选的 skill，第一次要自己画图时检查：
+本 skill 自身只需要 Python 3。画图时用到三个可选的 skill，第一次要自己画图时检查：
 
 ```bash
-ls -d "${DRAWIO_SKILL_DIR:-$HOME/.claude/skills/drawio-skill}/scripts" "${VERILOG_DIAGRAM_DIR:-$HOME/.claude/skills/verilog-diagram}/scripts"
+ls -d "${DIAGRAM_DESIGN_DIR:-$HOME/.claude/skills/diagram-design}/scripts" "${DRAWIO_SKILL_DIR:-$HOME/.claude/skills/drawio-skill}/scripts" "${VERILOG_DIAGRAM_DIR:-$HOME/.claude/skills/verilog-diagram}/scripts"
+python3 -c "import playwright"
 ```
 
-- **drawio-skill 缺失**：一般软件的架构图、时序图画不了，drawio 图的 `validate.py` 也跑不了。把安装命令告诉用户：`npx skills add Agents365-ai/drawio-skill -g -a claude-code -y`，用户同意后才代为执行。
+- **diagram-design 或 Playwright 缺失**：一般软件的架构图、流程图、时序图默认用它画，缺了导不出 PNG。把安装命令告诉用户：`npx skills add cathrynlavery/diagram-design -g -a claude-code`，以及 `python3 -m pip install --user playwright && python3 -m playwright install chromium`，用户同意后才代为执行；不装时这类图退回 drawio-skill。
+- **drawio-skill 缺失**：diagram-design 不可用时没有退回路线，drawio 图的 `validate.py` 也跑不了。告诉用户：`npx skills add Agents365-ai/drawio-skill -g -a claude-code -y`，同样等用户同意。
 - **verilog-diagram 缺失**（它和本 skill 在同一个仓库 arch-reading-skills 里）：硬件结构图画不了。告诉用户：`npx skills add BeenLi/arch-reading-skills -g -a claude-code`，同样等用户同意。
-- 用户不装时改用手写 SVG 或 Mermaid 代码块，并在汇报里说明退回到了哪种画法。不影响找现成的图和写文字。
+- 用户都不装时改用手写 SVG 或 Mermaid 代码块，并在汇报里说明退回到了哪种画法。不影响找现成的图和写文字。
 
 ## 为什么要分关、每关都停下来
 
@@ -104,7 +106,7 @@ ls -d "${DRAWIO_SKILL_DIR:-$HOME/.claude/skills/drawio-skill}/scripts" "${VERILO
 - **每篇至少一张图，图文配合**：放在相关段落旁边，图前或图后用一两句话告诉读者"看图里哪几处"。找图的顺序：
   1. 仓库自带的图（`docs/`、`images/`）直接用相对路径引用，不复制。
   2. 官方文档站、论文或成熟博客里的图：下载到 `figs/official/`，在 `figs/README.md` 写明来源链接。下载前确认是那个项目或版本的图，不要拿名字相近的别的项目的图。
-  3. 都没有时自己画，放 `figs/drawn/`：硬件/RTL 结构优先用 verilog-diagram skill（`.yaml`、`.drawio`、`.png` 三件，yaml 头部注释写清依据的代码行）；一般软件架构、时序、流程用 drawio-skill；位域、指针位置这类结构图可以手写 SVG；都不可用时用 Mermaid 代码块。画完渲染出 PNG 并**亲自打开看一遍**（拥挤、重叠、文字截断都要修），drawio 图跑 validate 要求 0 error。在 `figs/README.md` 记一行。
+  3. 都没有时自己画，放 `figs/drawn/`：硬件/RTL 结构优先用 verilog-diagram skill（`.yaml`、`.drawio`、`.png` 三件，yaml 头部注释写清依据的代码行）；一般软件架构、时序、流程默认用 diagram-design（`.html` 源文件和导出的 `.png` 两件），不可用时用 drawio-skill；位域、指针位置这类结构图可以手写 SVG；都不可用时用 Mermaid 代码块。画完渲染出 PNG 并**亲自打开看一遍**（拥挤、重叠、文字截断都要修），diagram-design 图跑 `self_check.py` 要求 OK，drawio 图跑 validate 要求 0 error。在 `figs/README.md` 记一行。
 - 写完运行链接检查，修好所有报错。在本 skill 目录下运行（`<docs>` 写绝对路径）：
 
   ```bash

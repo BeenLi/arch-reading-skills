@@ -47,7 +47,7 @@ Requirements:
 - `poppler` (`pdftotext`, `pdfimages`): affiliation extraction in `daily-papers` and PDF figure extraction
 - Optional, for self-drawn diagrams in notes (see `skills/_shared/references/diagram-rules.md`):
   - [diagram-design](https://github.com/cathrynlavery/diagram-design) plus Playwright: the default route, exported as PNG
-  - draw.io desktop and [drawio-skill](https://github.com/Agents365-ai/drawio-skill): sequence, Gantt and pipeline diagrams; also needed by `verilog-diagram`
+  - draw.io desktop and [drawio-skill](https://github.com/Agents365-ai/drawio-skill): pipeline diagrams, and the fallback when diagram-design is unavailable; also needed by `verilog-diagram`
   - `mmdc` (mermaid-cli): renders the Mermaid fallback so it can be checked by eye
 
 On macOS:
@@ -315,7 +315,7 @@ Static source analysis only (it never runs the target repository's scripts, test
 继续写下一篇精读                              # continue with the next deep-read note
 ```
 
-Works in four gates and stops for your answer at the end of each: survey the repository and ask about your background, goal and time; propose a staged roadmap in the chat; write it into `docs/learning/README.md` with a framework overview per stage, breaking only the nearest stage into one todo per note; then write the deep-read notes one at a time. Each note answers one question, ties every claim to a line-anchored relative link, has at least one figure (the repository's own or official figures first, otherwise drawn with `verilog-diagram` or drawio-skill) and ends with a dated conclusion; the README checklist and the stage overview are updated after every note. When `docs/learning/README.md` already exists it resumes from the first unchecked item.
+Works in four gates and stops for your answer at the end of each: survey the repository and ask about your background, goal and time; propose a staged roadmap in the chat; write it into `docs/learning/README.md` with a framework overview per stage, breaking only the nearest stage into one todo per note; then write the deep-read notes one at a time. Each note answers one question, ties every claim to a line-anchored relative link, has at least one figure (the repository's own or official figures first, otherwise drawn with `verilog-diagram` for hardware and diagram-design for software, falling back to drawio-skill) and ends with a dated conclusion; the README checklist and the stage overview are updated after every note. When `docs/learning/README.md` already exists it resumes from the first unchecked item.
 
 - Templates: [`skills/repo-learning-path/references/templates.md`](skills/repo-learning-path/references/templates.md) (plan README, stage overview, deep-read note, figure sources)
 - Link checker: `python3 skills/repo-learning-path/scripts/check_links.py <repo>/docs/learning/` (every relative link and image exists, every `#L` anchor is inside the file)

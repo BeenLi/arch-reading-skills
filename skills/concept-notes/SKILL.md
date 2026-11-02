@@ -74,7 +74,7 @@ description: |
 
 每篇 concept 必须按增强模板生成：含「动机与痛点 / 直观例子 / 边界与对比 / 学习索引」4 个新必选段 + 按 `concept_type` 加的差异化段。长度：直观例子 ≤ 100 行、其他段 ≤ 90 行（不计 frontmatter 和图的源码）。`学习索引` 找不到证据时允许整段写 `TODO`，禁止凭空编造。
 
-自画图按 `_shared/references/diagram-rules.md`：默认用 diagram-design 画并导出 PNG 嵌入，不可用时才退回 Mermaid（`_shared/references/mermaid-rules.md`）。
+自画图按 `_shared/references/diagram-rules.md`：默认用 diagram-design 画并导出 PNG 嵌入，不可用时先退回 draw.io，最后才退回 Mermaid（`_shared/references/mermaid-rules.md`）。
 
 **A4: 自检**
 

@@ -143,7 +143,7 @@ $$
 
 ![Figure 1: System overview / 系统总览](...) ^fig1
 
-<!-- 结构图二选一：论文有总体架构图用上面的原图；没有或看不清模块边界与数据流时删掉原图行，改用下面按 skill 目录下的 _shared/references/diagram-rules.md 自画的一张（默认 diagram-design 导出 PNG，或 draw.io 嵌图），锚点 ^diag-arch。不要原图和自画图都放。 -->
+<!-- 结构图二选一：论文有总体架构图用上面的原图；没有或看不清模块边界与数据流时删掉原图行，改用下面按 skill 目录下的 _shared/references/diagram-rules.md 自画的一张（默认 diagram-design 导出 PNG，不可用时才退回 draw.io），锚点 ^diag-arch。不要原图和自画图都放。 -->
 
 ![[00_assets/<note-name>_arch.png|系统架构：{一句话说明}]] ^diag-arch
 
@@ -279,7 +279,7 @@ $$
 
 ![[00_assets/<note-name>_platform.png|测试系统连接关系：{一句话说明}]] ^diag-platform
 
-{根据论文的 evaluation platform 画这张图：只展示测试系统大概长什么样、组件如何连接、需要哪些硬件或模拟资源，典型骨架是 workload / trace → evaluation driver → system under test → compute（CPU / GPU）、memory（DRAM / HBM / cache）、network / storage（NIC / SSD / fabric）和 metrics collector。优先画 client / benchmark driver / scheduler or runtime / worker / accelerator / memory / network / storage / simulator 的连接关系；不要把 CPU pipeline、cache level、BTB、ROB 等微架构细节硬塞进图里，除非它们就是论文评测对象。按 skill 目录下的 `_shared/references/diagram-rules.md` 选型，默认 diagram-design 导出 PNG；若选 draw.io，改为嵌入 `![[00_assets/<note-name>_platform.drawio.png|说明]]`。}
+{根据论文的 evaluation platform 画这张图：只展示测试系统大概长什么样、组件如何连接、需要哪些硬件或模拟资源，典型骨架是 workload / trace → evaluation driver → system under test → compute（CPU / GPU）、memory（DRAM / HBM / cache）、network / storage（NIC / SSD / fabric）和 metrics collector。优先画 client / benchmark driver / scheduler or runtime / worker / accelerator / memory / network / storage / simulator 的连接关系；不要把 CPU pipeline、cache level、BTB、ROB 等微架构细节硬塞进图里，除非它们就是论文评测对象。按 skill 目录下的 `_shared/references/diagram-rules.md` 选型，默认 diagram-design 导出 PNG；只有 diagram-design 不可用、退回 draw.io 时，才改为嵌入 `![[00_assets/<note-name>_platform.drawio.png|说明]]`。}
 
 | 资源 / 组件 | 配置 | 在评测中的作用 |
 |-------------|------|----------------|

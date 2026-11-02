@@ -303,6 +303,25 @@ class SystemsTemplateTests(unittest.TestCase):
         self.assertIn("-f xml", text)          # .mmd 先转 .drawio，再导出
         self.assertNotIn("-f svg", text)       # 不走 SVG
 
+    def test_diagram_rules_default_to_diagram_design_then_drawio(self):
+        text = DIAGRAM_RULES.read_text(encoding="utf-8")
+
+        for phrase in [
+            "DIAGRAM_DESIGN_DIR", "import playwright", "self_check.py", "export_png.py",
+            "退回 draw.io", "Noto Sans SC",
+        ]:
+            self.assertIn(phrase, text, phrase)
+        rows = {line.split("|")[1].strip(): line.split("|")[2] for line in text.splitlines()
+                if line.startswith("| ") and line.count("|") >= 4}
+        # 时序与甘特默认也走 diagram-design，draw.io 只作退回
+        self.assertIn("diagram-design", rows["多角色时序 / 协议交互"])
+        self.assertIn("diagram-design", rows["时间线 / 甘特 / 调度与流水时序"])
+        # 流水线数据通路仍是 verilog-diagram 专用路线
+        self.assertIn("arch2drawio.py", rows["流水线分级架构图、硬件数据通路"])
+        # 退回顺序：diagram-design → draw.io → Mermaid
+        self.assertLess(text.index("## 1. diagram-design"), text.index("## 2. draw.io"))
+        self.assertLess(text.index("## 2. draw.io"), text.index("## 3. Mermaid"))
+
     def test_template_section_order_follows_problem_evidence_design_chain(self):
         text = ASSET_TEMPLATE.read_text(encoding="utf-8")
         idx = lambda heading: heading_index(text, heading)

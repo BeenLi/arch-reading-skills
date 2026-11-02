@@ -47,7 +47,7 @@ ObsidianVault/
 - `poppler`（`pdftotext`、`pdfimages`）：`daily-papers` 抽取作者机构、从 PDF 裁图
 - 可选，笔记里的自画图用（见 `skills/_shared/references/diagram-rules.md`）：
   - [diagram-design](https://github.com/cathrynlavery/diagram-design) 加 Playwright：默认路线，导出 PNG
-  - draw.io 桌面版和 [drawio-skill](https://github.com/Agents365-ai/drawio-skill)：时序图、甘特图、流水线图；`verilog-diagram` 也需要
+  - draw.io 桌面版和 [drawio-skill](https://github.com/Agents365-ai/drawio-skill)：流水线图，以及 diagram-design 不可用时的退回路线；`verilog-diagram` 也需要
   - `mmdc`（mermaid-cli）：渲染退回的 Mermaid 图，供目检
 
 macOS 上：
@@ -315,7 +315,7 @@ PDF / EPUB / MOBI / TXT 按页或按章提取，分批提炼知识点，输出�
 继续写下一篇精读
 ```
 
-分四关进行，每关结束都停下来等你回答：勘察仓库，问你的背景、目标和时间；在对话里给出分阶段的学习路线；把路线写进 `docs/learning/README.md`，每个阶段搭一篇总览框架，只把最近的一个阶段拆到一篇一项；然后逐篇写精读。每篇回答一个问题，每条论断都落到带行号的相对链接，至少一张图（优先用仓库自带或官方的图，没有再用 `verilog-diagram` 或 drawio-skill 画），最后是带日期的精读结论；每写完一篇同步 README 的待办和阶段总览。仓库里已有 `docs/learning/README.md` 时，从第一个没打勾的项接着写。
+分四关进行，每关结束都停下来等你回答：勘察仓库，问你的背景、目标和时间；在对话里给出分阶段的学习路线；把路线写进 `docs/learning/README.md`，每个阶段搭一篇总览框架，只把最近的一个阶段拆到一篇一项；然后逐篇写精读。每篇回答一个问题，每条论断都落到带行号的相对链接，至少一张图（优先用仓库自带或官方的图，没有再自己画：硬件用 `verilog-diagram`，软件用 diagram-design，不可用时退回 drawio-skill），最后是带日期的精读结论；每写完一篇同步 README 的待办和阶段总览。仓库里已有 `docs/learning/README.md` 时，从第一个没打勾的项接着写。
 
 - 模板：[`skills/repo-learning-path/references/templates.md`](skills/repo-learning-path/references/templates.md)（学习计划 README、阶段总览、精读分篇、图源说明）
 - 链接检查：`python3 skills/repo-learning-path/scripts/check_links.py <repo>/docs/learning/`（相对链接和图片都存在，`#L` 行号不越界）

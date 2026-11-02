@@ -263,12 +263,12 @@ frontmatter：`title`、`method_name`、`authors`、`year`、`venue`（不带年
 
 | 图的类型 | 默认路线 | 不可用时 |
 |---|---|---|
-| 流程、模块结构、系统架构、评测平台、概念组件图 | diagram-design 画 HTML，导出 PNG 到 `00_assets/` 嵌入 | 退回 Mermaid（遵守 `skills/_shared/references/mermaid-rules.md`） |
-| 多角色时序 / 协议交互、时间线 / 甘特 | draw.io | diagram-design → Mermaid |
+| 流程、模块结构、系统架构、评测平台、概念组件图 | diagram-design 画 HTML，导出 PNG 到 `00_assets/` 嵌入 | draw.io → Mermaid（遵守 `skills/_shared/references/mermaid-rules.md`） |
+| 多角色时序 / 协议交互、时间线 / 甘特 | diagram-design（Sequence / Timeline / Gantt） | draw.io → Mermaid |
 | 流水线分级架构图、硬件数据通路 | verilog-diagram 的 `arch2drawio.py` | diagram-design → Mermaid |
 | 矩阵分块、内存布局等空间结构 | matplotlib | — |
 
-diagram-design 的 PNG 导出依赖 Playwright；缺少时直接走 Mermaid 退回路线，并在汇报里写明。
+diagram-design 的 PNG 导出依赖 Playwright；缺少时先给出安装命令，用户不装才依次退回 draw.io、Mermaid，并在汇报里写明。
 
 ### 4.5 写完后的检查
 
