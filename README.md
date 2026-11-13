@@ -348,7 +348,7 @@ skills/
 ├── paper-reader/          # Single-paper reading and Zotero integration; scripts/ references/ assets/
 ├── concept-notes/         # Owns concepts: assets/ template; references/ classification; scripts/ scan, rewrite, length check; index refresh
 ├── book-reader/           # Whole-book notes and mind maps (MIT, Tao Jiang)
-├── kepu-research-doc/     # Chinese explainer / survey documents with figures, cover and promo blurb; scripts/ cover + diagram generators and PNG export; references/ cover spec; assets/ samples
+├── kepu-research-doc/     # Chinese explainer / survey documents with figures, cover and promo blurb; scripts/ cover + diagram generators, PNG export, citation-link check; references/ cover spec; assets/ samples
 ├── repo-reader/           # Repository → architecture and usage guide; scripts/ facts and checker; references/ 12-section contract
 ├── repo-learning-path/    # Repository → staged learning roadmap and deep-read notes; references/ templates; scripts/ link checker
 ├── verilog-diagram/       # Verilog / papers → draw.io diagrams; scripts/ generators, exporter, Linux draw.io installer; examples/

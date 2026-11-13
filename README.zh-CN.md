@@ -348,7 +348,7 @@ skills/
 ├── paper-reader/          # 单篇论文阅读与 Zotero 集成；scripts/ references/ assets/
 ├── concept-notes/         # 概念的唯一归属：assets/ 概念笔记模板；references/ 分类规则；scripts/ 扫描、重写、长度自检；也负责刷新目录页
 ├── book-reader/           # 整本书读书笔记与全书思维导图（MIT, Tao Jiang）
-├── kepu-research-doc/     # 带配图、封面和宣传简介的中文科普 / 调研文档；scripts/ 封面与示意图生成、PNG 导出；references/ 封面规范；assets/ 样例
+├── kepu-research-doc/     # 带配图、封面和宣传简介的中文科普 / 调研文档；scripts/ 封面与示意图生成、PNG 导出、引用跳转检查；references/ 封面规范；assets/ 样例
 ├── repo-reader/           # 代码仓库 → 架构和使用文档；scripts/ 仓库事实采集、文档校验；references/ 12 节契约
 ├── repo-learning-path/    # 代码仓库 → 分阶段学习路线与精读笔记；references/ 文档模板；scripts/ 链接检查
 ├── verilog-diagram/       # Verilog / 论文 → draw.io 图；scripts/ 生成器、导出器、Linux draw.io 安装脚本；examples/ 样例
