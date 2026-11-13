@@ -344,6 +344,7 @@ python3 -m pytest tests/ -q
 | `tests/test_paper_to_zotero.py` | paper-to-zotero 的分类树与叶子说明、查重输出的分类路径和 PDF 路径 |
 | `tests/test_repo_reader_check_doc.py`、`tests/test_repo_reader_repo_facts.py` | repo-reader 的 12 节契约检查、仓库事实采集 |
 | `tests/test_repo_learning_path_check_links.py` | repo-learning-path 的链接检查：相对链接和图片存在、`#L` 行号不越界、代码块里的链接不算 |
+| `tests/test_kepu_check_refs.py` | kepu-research-doc 的引用检查：裸“参考 N”、指向不存在的锚点、链接文字和目标编号不一致、条目缺锚点 |
 | `tests/test_user_config.py` | 配置叠加顺序、`ARCH_READING_CONFIG` 的互斥规则 |
 
 ## 附录：Obsidian 硬链接
